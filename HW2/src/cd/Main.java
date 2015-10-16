@@ -20,6 +20,10 @@ import cd.frontend.parser.ParseFailure;
 import cd.ir.Ast.ClassDecl;
 import cd.util.debug.AstDump;
 
+import cd.frontend.parser.JavaliLexer;
+import cd.frontend.parser.JavaliParser;
+import cd.frontend.parser.JavaliParser.UnitContext;
+
 /** 
  * The main entrypoint for the compiler.  Consists of a series
  * of routines which must be invoked in order.  The main()
