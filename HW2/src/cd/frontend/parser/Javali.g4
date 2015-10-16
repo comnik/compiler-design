@@ -6,17 +6,142 @@ grammar Javali; // parser grammar, parses streams of tokens
 }
 
 
+// Start node
+
+start
+	: unit EOF
+	;
+
 
 // PARSER RULES
 
-//* // TODO: declare appropriate parser rules
-//* // NOTE: Remove //* from the beginning of each line.
-//* 
-//* unit
-//* 	: classDecl+ EOF
-//* 	;
+// TODO: declare appropriate parser rules
 
-        
+// types
+primitiveType
+	: 'int'
+	| 'boolean'
+	;
+
+type
+	: primitiveType
+	| referenceType
+	;
+
+referenceType
+	: Identifier
+	| arrayType
+	;
+
+arrayType
+	: Identifier '[' ']'
+	| primitiveType '[' ']'
+	;
+
+// program structure
+ unit
+ 	: classDecl+
+ 	;
+
+classDecl
+	: 'class' Identifier ('extends' Identifier)? '{' memberList '}'
+	;
+
+memberList
+	: (varDecl | methodDecl)*
+	;
+
+varDecl
+	: type Identifier (',' Identifier)*
+    ;
+
+methodDecl
+	: (type | 'void') Identifier '(' formalParamList? ')' '{' varDecl* stmt* '}'
+	;
+
+formalParamList
+	: type Identifier (',' type Identifier)*
+	;
+
+// statements
+stmt
+	: assignmentStmt
+	| methodCallStmt
+	| ifStmt
+	| whileStmt
+	| returnStmt
+	| writeStmt
+	;
+
+stmtBlock
+	: '{' stmt* '}'
+	;
+
+methodCallStmt
+	: methodCallExpr ';'
+	;
+
+assignmentStmt
+	: identAccess '=' (expr | newExpr | readExpr) ';'
+	;
+
+writeStmt
+	: ( 'write' '(' expr ')' | 'writeln' '(' ')' ) ';'
+	;
+
+ifStmt
+	: 'if' '(' expr ')' stmtBlock ('else' stmtBlock)?
+	;
+
+whileStmt
+	: 'while' '(' expr ')' stmtBlock
+	;
+
+returnStmt
+	: 'return' expr? ';'
+	;
+
+// expressions
+newExpr
+	: 'new' (Identifier '(' ')' | Identifier '[' expr ']' | primitiveType '[' expr  ']')
+	;
+
+readExpr
+	: 'read' '(' ')'
+	;
+
+methodCallExpr
+	: Identifier '(' actualParamList? ')'
+	| identAccess '.' Identifier '(' actualParamList? ')'
+	;
+
+actualParamList
+	: expr (',' expr)*
+	;
+
+identAccess
+	: Identifier
+	| 'this'
+	| identAccess '[' expr ']'
+	// Antlr doesn't do indirect recursion, so the code from methodCallExpr is copied here.
+	| Identifier '(' actualParamList? ')'
+	| identAccess '.' Identifier '(' actualParamList? ')'
+	;
+
+expr
+	: Literal
+	| identAccess
+	| '(' expr ')'
+	// Operators in order of precedence.
+	| ('+' | '-' | '!') expr
+	| '(' referenceType ')' expr
+	| expr ('*' | '/' | '%') expr
+	| expr ('+' | '-') expr
+	| expr ('<' | '<=' | '>' | '>=') expr
+	| expr ('==' | '!=') expr
+	| expr '&&' expr
+	| expr '||' expr
+	;
 
 
 // LEXER RULES
@@ -27,6 +152,46 @@ grammar Javali; // parser grammar, parses streams of tokens
 // Java(li) identifiers:
 Identifier 
 	:	Letter (Letter|JavaIDDigit)*
+	;
+
+Literal
+	: Integer
+	| Boolean
+	| 'null'
+	;
+
+fragment
+Integer
+	: Decimal
+	| Hex
+	;
+
+fragment
+Decimal
+	: '0'
+	| '1'..'9' Digit*
+	;
+
+fragment
+Digit
+	: '0'..'9'
+	;
+
+fragment
+Hex
+	: ('0x' | '0X') HexDigit HexDigit*
+	;
+
+fragment
+HexDigit
+	: Letter
+	| JavaIDDigit
+	;
+
+fragment
+Boolean
+	: 'true'
+	| 'false'
 	;
 
 fragment
