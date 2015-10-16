@@ -7,15 +7,12 @@ grammar Javali; // parser grammar, parses streams of tokens
 
 
 // Start node
-
 start
 	: unit EOF
 	;
 
 
 // PARSER RULES
-
-// TODO: declare appropriate parser rules
 
 // types
 primitiveType
@@ -145,9 +142,6 @@ expr
 
 
 // LEXER RULES
-// TODO: provide appropriate lexer rules for numbers and boolean literals
-
-
 
 // Java(li) identifiers:
 Identifier 
