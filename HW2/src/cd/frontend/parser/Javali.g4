@@ -49,7 +49,7 @@ memberList
 	;
 
 varDecl
-	: type Identifier (',' Identifier)*
+	: type Identifier (',' Identifier)* ';'
     ;
 
 methodDecl
@@ -120,6 +120,7 @@ identAccess
 	: Identifier
 	| 'this'
 	| identAccess '[' expr ']'
+	| identAccess '.' Identifier
 	// Antlr doesn't do indirect recursion, so the code from methodCallExpr is copied here.
 	| Identifier '(' actualParamList? ')'
 	| identAccess '.' Identifier '(' actualParamList? ')'
@@ -154,7 +155,6 @@ Literal
 	| 'null'
 	;
 
-fragment
 Integer
 	: Decimal
 	| Hex
