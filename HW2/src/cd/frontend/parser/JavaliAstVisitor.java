@@ -11,12 +11,12 @@ import cd.frontend.parser.JavaliParser.ClassDeclContext;
 public final class JavaliAstVisitor extends JavaliBaseVisitor<Void> {
 	
 	public List<ClassDecl> classDecls = new ArrayList<>();
+
 	@Override
 	public Void visitClassDecl(ClassDeclContext ctx) {
 		{
 			// classDecls = ...;
 			throw new ToDoException();
 		}
-		return null;
 	}
 }
