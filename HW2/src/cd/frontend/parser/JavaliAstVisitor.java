@@ -5,6 +5,9 @@ import cd.ir.Ast.ClassDecl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import cd.frontend.parser.JavaliParser.ClassDeclContext;
 import cd.util.Pair;
@@ -15,12 +18,19 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 	
 	public List<ClassDecl> classDecls = new ArrayList<>();
 
-    private static final String CLS_OBJECT = "Object";
+    private static final String TYPE_OBJECT = "Object";
+
+    private enum PrimitiveType {
+        INT,
+        BOOL
+    };
+
+    private static final String WRITE_LN = "writeln";
 
 	@Override
-	public Ast visitClassDecl(ClassDeclContext ctx) {
+	public ClassDecl visitClassDecl(ClassDeclContext ctx) {
         String className = ctx.getChild(1).getText();
-        String superName = CLS_OBJECT;
+        String superName = TYPE_OBJECT;
         if (ctx.getChildCount() > 5) {
             superName = ctx.getChild(3).getText();
         }
@@ -37,31 +47,67 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     }
 
     @Override
-    public Ast visitMethodDecl(JavaliParser.MethodDeclContext ctx) {
+    public Ast.MethodDecl visitMethodDecl(JavaliParser.MethodDeclContext ctx) {
         String type = ctx.getChild(0).getText();
-        String methodName = ctx.getChild(1).getText();
+        String methodName = ctx.Identifier().getText();
 
+        // Handle parameter list.
         List<String> paramNames = new ArrayList<String>();
         List<String> typeNames = new ArrayList<String>();
 
         if (ctx.formalParamList() != null) {
-            for (TerminalNode tNode : ctx.formalParamList().Identifier()) {
-                paramNames.add(tNode.getText());
-            }
+            paramNames = ctx.formalParamList().Identifier().stream()
+                    .map(TerminalNode::getText)
+                    .collect(Collectors.toList());
 
-            for (JavaliParser.TypeContext tCtx : ctx.formalParamList().type()) {
-                typeNames.add(tCtx.getText());
-            }
+            typeNames = ctx.formalParamList().type().stream()
+                    .map(JavaliParser.TypeContext::getText)
+                    .collect(Collectors.toList());
         }
 
-        return new Ast.MethodDecl(type, methodName, typeNames, paramNames, null, null);
+        // Handle body declarations.
+        List<Ast> declNodes = new ArrayList<Ast>();
+        if (ctx.varDecl() != null) {
+            ctx.varDecl().stream().map(varCtx -> visit(varCtx)).collect(Collectors.toList());
+        }
+
+        // Handle body statements.
+        List<Ast> stmtNodes = new ArrayList<Ast>();
+        if (ctx.stmt() != null) {
+            ctx.stmt().stream().map(stmtCtx -> visit(stmtCtx)).collect(Collectors.toList());
+        }
+
+        Ast.Seq decls = new Ast.Seq(declNodes);
+        Ast.Seq stmts = new Ast.Seq(stmtNodes);
+
+        return new Ast.MethodDecl(type, methodName, typeNames, paramNames, decls, stmts);
     }
 
     @Override
-    public Ast visitVarDecl(JavaliParser.VarDeclContext ctx) {
+    public Ast.VarDecl visitVarDecl(JavaliParser.VarDeclContext ctx) {
         String type = ctx.getChild(0).getText();
         String name = ctx.getChild(1).getText();
 
         return new Ast.VarDecl(type, name);
     }
+
+    @Override
+    public Ast visitWriteStmt(JavaliParser.WriteStmtContext ctx) {
+        if (ctx.getChild(0).getText().equals(WRITE_LN)) {
+            return new Ast.BuiltInWriteln();
+        } else {
+            return new Ast.BuiltInWrite((Ast.Expr) visitExpr(ctx.expr()));
+        }
+    }
+
+    @Override
+    public Ast.BuiltInRead visitReadExpr(JavaliParser.ReadExprContext ctx) {
+        return new Ast.BuiltInRead();
+    }
+
+    @Override
+    public Ast.Assign visitAssignmentStmt(JavaliParser.AssignmentStmtContext ctx) {
+        return new Ast.Assign((Ast.Expr) visitExpr(ctx.expr()), (Ast.Expr) visitExpr(ctx.newExpr().expr()));
+    }
+
 }
