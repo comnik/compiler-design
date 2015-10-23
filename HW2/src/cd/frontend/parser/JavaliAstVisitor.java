@@ -57,9 +57,14 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         // Handle body declarations.
         List<Ast> declNodes = new ArrayList<Ast>();
         if (ctx.varDecl() != null) {
-            declNodes = ctx.varDecl().stream()
-                    .map(varCtx -> visit(varCtx))
-                    .collect(Collectors.toList());
+            ctx.varDecl().stream().forEach(varCtx -> {
+                Ast varDecl = visit(varCtx);
+                if (varDecl instanceof Ast.Seq) {
+                    declNodes.addAll(((Ast.Seq) varDecl).rwChildren());
+                } else {
+                    declNodes.add(varDecl);
+                }
+            });
         }
 
         // Handle body statements.
@@ -77,11 +82,17 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     }
 
     @Override
-    public Ast.VarDecl visitVarDecl(JavaliParser.VarDeclContext ctx) {
-        String type = ctx.getChild(0).getText();
-        String name = ctx.getChild(1).getText();
+    public Ast visitVarDecl(JavaliParser.VarDeclContext ctx) {
+        String type = ctx.type().getText();
+        List<Ast> varDecls = ctx.Identifier().stream()
+                .map(tNode -> new Ast.VarDecl(type, tNode.getText()))
+                .collect(Collectors.toList());
 
-        return new Ast.VarDecl(type, name);
+        if (varDecls.size() == 1) {
+            return varDecls.get(0);
+        } else {
+            return new Ast.Seq(varDecls);
+        }
     }
 
     /**
