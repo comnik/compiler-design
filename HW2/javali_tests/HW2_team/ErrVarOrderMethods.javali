@@ -1,0 +1,17 @@
+// Check for the correct order of variable declarations in methods.
+
+class Main {
+
+   void main() {
+	  int a;
+	  a = 1;
+	  write(a);
+      writeln();
+
+      // This should fail.
+      int b;
+      b = 1;
+      write(b);
+      writeln();
+   }
+}
