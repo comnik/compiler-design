@@ -1,5 +1,4 @@
-// Check if the order of operations as defined in the grammar 
-// is adhered to.
+// Test basic array functionality.
 
 class Main {
 	void main() {
