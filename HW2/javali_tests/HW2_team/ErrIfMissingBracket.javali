@@ -1,0 +1,12 @@
+// Test for brackets in if condition.
+
+class Main {
+   void main() {
+      int i;
+    
+      // This should fail, since if conditions need to be in brackets.
+      if true {
+          i = 1;
+      }
+  }
+}
