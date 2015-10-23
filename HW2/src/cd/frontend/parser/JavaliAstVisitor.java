@@ -312,6 +312,12 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     }
 
     @Override
+    public Ast.Seq visitStmtBlock(JavaliParser.StmtBlockContext ctx) {
+        List<Ast> stmts = ctx.children.stream().map(pTree -> visit(pTree)).collect(Collectors.toList());
+        return new Ast.Seq(stmts);
+    }
+
+    @Override
     public Ast visitWriteStmt(JavaliParser.WriteStmtContext ctx) {
         if (ctx.getChild(0).getText().equals(WRITE_LN)) {
             return new Ast.BuiltInWriteln();
@@ -324,14 +330,22 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     @Override
     public Ast.IfElse visitIfStmt(JavaliParser.IfStmtContext ctx) {
         Ast.Expr cond = (Ast.Expr) visit(ctx.expr());
-        Ast.Stmt thenBlock = (Ast.Stmt) visitStmtBlock(ctx.stmtBlock(0));
-        Ast.Stmt elseBlock = null;
+        Ast.Seq thenBlock = visitStmtBlock(ctx.stmtBlock(0));
+        Ast.Seq elseBlock = null;
 
         if (ctx.stmtBlock(1) != null) {
-            elseBlock = (Ast.Stmt) visitStmtBlock(ctx.stmtBlock(1));
+            elseBlock = visitStmtBlock(ctx.stmtBlock(1));
         }
 
         return new Ast.IfElse(cond, thenBlock, elseBlock);
+    }
+
+    @Override
+    public Ast.WhileLoop visitWhileStmt(JavaliParser.WhileStmtContext ctx) {
+        Ast.Expr cond = (Ast.Expr) visit(ctx.expr());
+        Ast.Seq stmtBlock = visitStmtBlock(ctx.stmtBlock());
+
+        return new Ast.WhileLoop(cond, stmtBlock);
     }
 
     @Override

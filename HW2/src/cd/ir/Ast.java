@@ -556,7 +556,8 @@ public abstract class Ast {
 		
 		public WhileLoop(Expr condition, Ast body) {
 			super(2);
-			assert condition != null && body != null;
+			assert condition != null;
+            assert body != null;
 			setCondition(condition);
 			setBody(body);
 		}
