@@ -14,12 +14,6 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 	public List<ClassDecl> classDecls = new ArrayList<ClassDecl>();
 
     private static final String TYPE_OBJECT = "Object";
-
-    private enum PrimitiveType {
-        INT,
-        BOOL
-    };
-
     private static final String WRITE_LN = "writeln";
 
 	@Override
@@ -64,14 +58,16 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         List<Ast> declNodes = new ArrayList<Ast>();
         if (ctx.varDecl() != null) {
             declNodes = ctx.varDecl().stream()
-                    .map(varCtx -> visit(varCtx)).collect(Collectors.toList());
+                    .map(varCtx -> visit(varCtx))
+                    .collect(Collectors.toList());
         }
 
         // Handle body statements.
         List<Ast> stmtNodes = new ArrayList<Ast>();
         if (ctx.stmt() != null) {
             stmtNodes = ctx.stmt().stream()
-                    .map(stmtCtx -> visit(stmtCtx)).collect(Collectors.toList());
+                    .map(stmtCtx -> visit(stmtCtx))
+                    .collect(Collectors.toList());
         }
 
         Ast.Seq decls = new Ast.Seq(declNodes);
@@ -103,6 +99,36 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     }
 
     @Override
+    public Ast.NullConst visitNull(JavaliParser.NullContext ctx) {
+        return new Ast.NullConst();
+    }
+
+    @Override
+    public Ast.UnaryOp visitUnaryOp(JavaliParser.UnaryOpContext ctx) {
+        Ast.Expr operand = (Ast.Expr) visit(ctx.expr());
+        Ast.UnaryOp.UOp op = uOpFromString(ctx.getChild(0).getText());
+
+        return new Ast.UnaryOp(op, operand);
+    }
+
+    @Override
+    public Ast.Cast visitCast(JavaliParser.CastContext ctx) {
+        String typeName = ctx.referenceType().getText();
+        Ast.Expr expr = (Ast.Expr) visit(ctx.expr());
+
+        return new Ast.Cast(expr, typeName);
+    }
+
+    @Override
+    public Ast.BinaryOp visitBinaryOp(JavaliParser.BinaryOpContext ctx) {
+        Ast.Expr leftOperand = (Ast.Expr) visit(ctx.expr(0));
+        Ast.Expr rightOperand = (Ast.Expr) visit(ctx.expr(1));
+        Ast.BinaryOp.BOp op = opFromString(ctx.getChild(1).getText());
+
+        return new Ast.BinaryOp(leftOperand, op, rightOperand);
+    }
+
+    @Override
     public Ast.BuiltInRead visitReadExpr(JavaliParser.ReadExprContext ctx) {
         return new Ast.BuiltInRead();
     }
@@ -113,6 +139,24 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         String methodName = ctx.Identifier().getText();
 
         return new Ast.MethodCallExpr(recvr, methodName, null);
+    }
+
+    @Override
+    public Ast.Field visitFieldAccess(JavaliParser.FieldAccessContext ctx) {
+        String fieldName = ctx.Identifier().getText();
+        Ast.Expr expr = (Ast.Expr) visit(ctx.identAccess());
+
+        return new Ast.Field(expr, fieldName);
+    }
+
+    @Override
+    public Ast.Var visitIdentifier(JavaliParser.IdentifierContext ctx) {
+        return new Ast.Var(ctx.getText());
+    }
+
+    @Override
+    public Ast.ThisRef visitThis(JavaliParser.ThisContext ctx) {
+        return new Ast.ThisRef();
     }
 
     /**
@@ -150,6 +194,25 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         return new Ast.IfElse(cond, thenBlock, elseBlock);
     }
 
+    /**
+     * Helper Methods
+     */
+    private Ast.BinaryOp.BOp opFromString(String opStr) {
+        for (Ast.BinaryOp.BOp op : Ast.BinaryOp.BOp.values()) {
+            if (opStr.equals(op.repr))
+                return op;
+        }
 
+        return null;
+    }
+
+    private Ast.UnaryOp.UOp uOpFromString(String opStr) {
+        for (Ast.UnaryOp.UOp op : Ast.UnaryOp.UOp.values()) {
+            if (opStr.equals(op.repr))
+                return op;
+        }
+
+        return null;
+    }
 
 }

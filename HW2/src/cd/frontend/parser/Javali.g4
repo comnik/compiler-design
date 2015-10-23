@@ -117,13 +117,13 @@ actualParamList
 	;
 
 identAccess
-	: Identifier
-	| 'this'
-	| identAccess '[' expr ']'
-	| identAccess '.' Identifier
+	: Identifier # Identifier
+	| 'this' # This
+	| identAccess '[' expr ']' # ArrayAccess
+	| identAccess '.' Identifier # FieldAccess
 	// Antlr doesn't do indirect recursion, so the code from methodCallExpr is copied here.
-	| Identifier '(' actualParamList? ')'
-	| identAccess '.' Identifier '(' actualParamList? ')'
+	| Identifier '(' actualParamList? ')' # FunctionCall
+	| identAccess '.' Identifier '(' actualParamList? ')' # MethodCall
 	;
 
 expr
@@ -135,12 +135,8 @@ expr
 	// Operators in order of precedence.
 	| ('+' | '-' | '!') expr # UnaryOp
 	| '(' referenceType ')' expr # Cast
-	| expr ('*' | '/' | '%') expr # BinaryMul
-	| expr ('+' | '-') expr # BinaryAdd
-	| expr ('==' | '!=' | '<' | '<=' | '>' | '>=') expr # Compare
-	| expr ('&&' | '||') expr # BinaryLogic
+	| expr ('+' | '-' | '*' | '/' | '%' | '==' | '!=' | '<' | '<=' | '>' | '>=' | '&&' | '||') expr # BinaryOp
 	;
-
 
 // LEXER RULES
 
