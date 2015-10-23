@@ -16,6 +16,9 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     private static final String TYPE_OBJECT = "Object";
     private static final String WRITE_LN = "writeln";
 
+    private static final int MAX_INT = 2147483647;
+    private static final int MIN_INT = -MAX_INT;
+
 	@Override
 	public ClassDecl visitClassDecl(ClassDeclContext ctx) {
         String className = ctx.getChild(1).getText();
@@ -101,7 +104,16 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 
     @Override
     public Ast.IntConst visitInteger(JavaliParser.IntegerContext ctx) {
-        return new Ast.IntConst(Integer.parseInt(ctx.Integer().getText()));
+        try {
+            int parsedInt = Integer.parseInt(ctx.Integer().getText());
+            if (parsedInt > MAX_INT || parsedInt < MIN_INT) {
+                throw new NumberFormatException();
+            }
+
+            return new Ast.IntConst(parsedInt);
+        } catch (NumberFormatException ex) {
+            throw new ParseFailure(ctx.getSourceInterval().a, "Integer " + ctx.Integer().getText() + " exceeds int bounds.");
+        }
     }
 
     @Override
