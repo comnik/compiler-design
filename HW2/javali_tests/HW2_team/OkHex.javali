@@ -1,0 +1,13 @@
+// Test hex parsing.
+
+class Main {
+	void main() {
+
+		hex a, b, c;
+		a = 0xFACEFEED;
+		b = 0xCAFEBABE;
+		c = a + b;
+		write(c);
+		writeln();
+	}
+}
