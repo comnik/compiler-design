@@ -63,13 +63,15 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         // Handle body declarations.
         List<Ast> declNodes = new ArrayList<Ast>();
         if (ctx.varDecl() != null) {
-            ctx.varDecl().stream().map(varCtx -> visit(varCtx)).collect(Collectors.toList());
+            declNodes = ctx.varDecl().stream()
+                    .map(varCtx -> visit(varCtx)).collect(Collectors.toList());
         }
 
         // Handle body statements.
         List<Ast> stmtNodes = new ArrayList<Ast>();
         if (ctx.stmt() != null) {
-            ctx.stmt().stream().map(stmtCtx -> visit(stmtCtx)).collect(Collectors.toList());
+            stmtNodes = ctx.stmt().stream()
+                    .map(stmtCtx -> visit(stmtCtx)).collect(Collectors.toList());
         }
 
         Ast.Seq decls = new Ast.Seq(declNodes);
@@ -119,7 +121,10 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 
     @Override
     public Ast.Assign visitAssignmentStmt(JavaliParser.AssignmentStmtContext ctx) {
-        return new Ast.Assign((Ast.Expr) visit(ctx.expr()), (Ast.Expr) visit(ctx.newExpr().expr()));
+        Ast.Expr rightHandSide = (Ast.Expr) visit(ctx.getChild(1));
+        Ast.Expr leftHandSide = (Ast.Expr) visit(ctx.identAccess());
+
+        return new Ast.Assign(leftHandSide, rightHandSide);
     }
 
     @Override
@@ -127,7 +132,8 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         if (ctx.getChild(0).getText().equals(WRITE_LN)) {
             return new Ast.BuiltInWriteln();
         } else {
-            return new Ast.BuiltInWrite((Ast.Expr) visit(ctx.expr()));
+            Ast.Expr expr = (Ast.Expr) visit(ctx.expr());
+            return new Ast.BuiltInWrite(expr);
         }
     }
 
