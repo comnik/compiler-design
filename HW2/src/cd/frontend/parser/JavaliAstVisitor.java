@@ -117,7 +117,7 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         if (ctx.expr() != null) {
             // New Array.
             capacity = (Ast.Expr) visit(ctx.expr());
-            return new Ast.NewArray(typeName, capacity);
+            return new Ast.NewArray(typeName + "[]", capacity);
         } else {
             return new Ast.NewObject(typeName);
         }
@@ -209,6 +209,14 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         Ast.Expr expr = (Ast.Expr) visit(ctx.identAccess());
 
         return new Ast.Field(expr, fieldName);
+    }
+
+    @Override
+    public Ast.Index visitArrayAccess(JavaliParser.ArrayAccessContext ctx) {
+        Ast.Expr array = (Ast.Expr) visit(ctx.identAccess());
+        Ast.Expr index = (Ast.Expr) visit(ctx.expr());
+
+        return new Ast.Index(array, index);
     }
 
     @Override
