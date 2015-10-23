@@ -1,0 +1,20 @@
+// Test casting
+
+class A {
+}
+
+class B {
+}
+
+class Main {
+
+   A a;
+   B b;
+  
+   void main() {
+      a = new A();
+      b = new B();
+      
+      a = (A) b;
+   }
+}
