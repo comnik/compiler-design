@@ -1,3 +1,5 @@
+// Test multiple fields in a class.
+
 class Main {
 
    int a, b, c;
