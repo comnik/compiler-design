@@ -143,9 +143,14 @@ expr
 
 literal
     : Integer # Integer
-    | Boolean # Bool
+    | bool # Boolean
     | 'null' # Null
     ;
+
+bool
+	: 'true'
+	| 'false'
+	;
 
 // LEXER RULES
 
@@ -179,11 +184,6 @@ fragment
 HexDigit
 	: Letter
 	| JavaIDDigit
-	;
-
-Boolean
-	: 'true'
-	| 'false'
 	;
 
 fragment

@@ -135,7 +135,7 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     @Override
     public Ast.IntConst visitInteger(JavaliParser.IntegerContext ctx) {
         try {
-            int parsedInt = Integer.parseInt(ctx.Integer().getText());
+            int parsedInt = Integer.decode(ctx.Integer().getText());
             if (parsedInt > MAX_INT || parsedInt < MIN_INT) {
                 throw new NumberFormatException();
             }
@@ -147,7 +147,7 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     }
 
     @Override
-    public Ast.BooleanConst visitBool(JavaliParser.BoolContext ctx) {
+    public Ast.BooleanConst visitBoolean(JavaliParser.BooleanContext ctx) {
         return new Ast.BooleanConst(Boolean.parseBoolean(ctx.getText()));
     }
 
