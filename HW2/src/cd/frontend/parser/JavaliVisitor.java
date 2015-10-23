@@ -66,13 +66,6 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitType(@NotNull JavaliParser.TypeContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code MethodCall}
-	 * labeled alternative in {@link JavaliParser#identAccess}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMethodCall(@NotNull JavaliParser.MethodCallContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link JavaliParser#methodCallExpr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -106,19 +99,19 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBrackets(@NotNull JavaliParser.BracketsContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code Unqualified}
+	 * labeled alternative in {@link JavaliParser#identAccess}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitUnqualified(@NotNull JavaliParser.UnqualifiedContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code This}
 	 * labeled alternative in {@link JavaliParser#identAccess}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitThis(@NotNull JavaliParser.ThisContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code FunctionCall}
-	 * labeled alternative in {@link JavaliParser#identAccess}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFunctionCall(@NotNull JavaliParser.FunctionCallContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Boolean}
 	 * labeled alternative in {@link JavaliParser#expr}.
@@ -206,6 +199,13 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitMethodCallStmt(@NotNull JavaliParser.MethodCallStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Qualified}
+	 * labeled alternative in {@link JavaliParser#identAccess}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitQualified(@NotNull JavaliParser.QualifiedContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Integer}
 	 * labeled alternative in {@link JavaliParser#expr}.
