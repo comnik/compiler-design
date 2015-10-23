@@ -1,0 +1,11 @@
+// Test while parsing.
+
+class Main {
+   void main() {
+      int i;
+    
+      while(true){
+          i = 1;
+      }
+  }
+}
