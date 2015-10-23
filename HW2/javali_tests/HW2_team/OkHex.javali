@@ -2,11 +2,11 @@
 
 class Main {
 	void main() {
-
-		hex a, b, c;
-		a = 0xFACEFEED;
-		b = 0xCAFEBABE;
+	    int a, b, c;
+		a = 0xFACEFE;
+		b = 0xcafeba;
 		c = a + b;
+
 		write(c);
 		writeln();
 	}
