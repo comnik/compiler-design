@@ -135,10 +135,23 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 
     @Override
     public Ast.MethodCallExpr visitMethodCallExpr(JavaliParser.MethodCallExprContext ctx) {
-        Ast.Expr recvr = (Ast.Expr) visit(ctx.identAccess());
         String methodName = ctx.Identifier().getText();
 
-        return new Ast.MethodCallExpr(recvr, methodName, null);
+        Ast.Expr qualifier = new Ast.ThisRef();
+        if (ctx.identAccess() != null) {
+            // Qualified access.
+            qualifier = (Ast.Expr) visit(ctx.identAccess());
+        }
+
+        // Arguments.
+        List<Ast.Expr> args = new ArrayList<Ast.Expr>();
+        if (ctx.actualParamList() != null) {
+            args = ctx.actualParamList().expr().stream()
+                    .map(exprCtx -> (Ast.Expr) visit(exprCtx))
+                    .collect(Collectors.toList());
+        }
+
+        return new Ast.MethodCallExpr(qualifier, methodName, args);
     }
 
     @Override
@@ -162,6 +175,12 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     /**
      * Statements
      */
+
+    @Override
+    public Ast.MethodCall visitMethodCallStmt(JavaliParser.MethodCallStmtContext ctx) {
+        Ast.MethodCallExpr methodCallExpr = visitMethodCallExpr(ctx.methodCallExpr());
+        return new Ast.MethodCall(methodCallExpr);
+    }
 
     @Override
     public Ast.Assign visitAssignmentStmt(JavaliParser.AssignmentStmtContext ctx) {
