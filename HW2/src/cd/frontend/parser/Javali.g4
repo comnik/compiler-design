@@ -127,18 +127,18 @@ identAccess
 	;
 
 expr
-	: Literal
-	| identAccess
-	| '(' expr ')'
+    : Integer # Integer
+    | Boolean # Boolean
+    | 'null' # Null
+	| identAccess # Var
+	| '(' expr ')' # Brackets
 	// Operators in order of precedence.
-	| ('+' | '-' | '!') expr
-	| '(' referenceType ')' expr
-	| expr ('*' | '/' | '%') expr
-	| expr ('+' | '-') expr
-	| expr ('<' | '<=' | '>' | '>=') expr
-	| expr ('==' | '!=') expr
-	| expr '&&' expr
-	| expr '||' expr
+	| ('+' | '-' | '!') expr # UnaryOp
+	| '(' referenceType ')' expr # Cast
+	| expr ('*' | '/' | '%') expr # BinaryMul
+	| expr ('+' | '-') expr # BinaryAdd
+	| expr ('==' | '!=' | '<' | '<=' | '>' | '>=') expr # Compare
+	| expr ('&&' | '||') expr # BinaryLogic
 	;
 
 
@@ -147,12 +147,6 @@ expr
 // Java(li) identifiers:
 Identifier 
 	:	Letter (Letter|JavaIDDigit)*
-	;
-
-Literal
-	: Integer
-	| Boolean
-	| 'null'
 	;
 
 Integer
@@ -182,7 +176,6 @@ HexDigit
 	| JavaIDDigit
 	;
 
-fragment
 Boolean
 	: 'true'
 	| 'false'

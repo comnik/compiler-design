@@ -1,22 +1,17 @@
 package cd.frontend.parser;
 
+import cd.frontend.parser.JavaliParser.ClassDeclContext;
 import cd.ir.Ast;
 import cd.ir.Ast.ClassDecl;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import cd.frontend.parser.JavaliParser.ClassDeclContext;
-import cd.util.Pair;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 	
-	public List<ClassDecl> classDecls = new ArrayList<>();
+	public List<ClassDecl> classDecls = new ArrayList<ClassDecl>();
 
     private static final String TYPE_OBJECT = "Object";
 
@@ -91,13 +86,18 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         return new Ast.VarDecl(type, name);
     }
 
+    /**
+     * Expressions
+     */
+
     @Override
-    public Ast visitWriteStmt(JavaliParser.WriteStmtContext ctx) {
-        if (ctx.getChild(0).getText().equals(WRITE_LN)) {
-            return new Ast.BuiltInWriteln();
-        } else {
-            return new Ast.BuiltInWrite((Ast.Expr) visitExpr(ctx.expr()));
-        }
+    public Ast.IntConst visitInteger(JavaliParser.IntegerContext ctx) {
+        return new Ast.IntConst(Integer.parseInt(ctx.Integer().getText()));
+    }
+
+    @Override
+    public Ast.BooleanConst visitBoolean(JavaliParser.BooleanContext ctx) {
+        return new Ast.BooleanConst(Boolean.parseBoolean(ctx.Boolean().getText()));
     }
 
     @Override
@@ -106,8 +106,44 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     }
 
     @Override
-    public Ast.Assign visitAssignmentStmt(JavaliParser.AssignmentStmtContext ctx) {
-        return new Ast.Assign((Ast.Expr) visitExpr(ctx.expr()), (Ast.Expr) visitExpr(ctx.newExpr().expr()));
+    public Ast.MethodCallExpr visitMethodCallExpr(JavaliParser.MethodCallExprContext ctx) {
+        Ast.Expr recvr = (Ast.Expr) visit(ctx.identAccess());
+        String methodName = ctx.Identifier().getText();
+
+        return new Ast.MethodCallExpr(recvr, methodName, null);
     }
+
+    /**
+     * Statements
+     */
+
+    @Override
+    public Ast.Assign visitAssignmentStmt(JavaliParser.AssignmentStmtContext ctx) {
+        return new Ast.Assign((Ast.Expr) visit(ctx.expr()), (Ast.Expr) visit(ctx.newExpr().expr()));
+    }
+
+    @Override
+    public Ast visitWriteStmt(JavaliParser.WriteStmtContext ctx) {
+        if (ctx.getChild(0).getText().equals(WRITE_LN)) {
+            return new Ast.BuiltInWriteln();
+        } else {
+            return new Ast.BuiltInWrite((Ast.Expr) visit(ctx.expr()));
+        }
+    }
+
+    @Override
+    public Ast.IfElse visitIfStmt(JavaliParser.IfStmtContext ctx) {
+        Ast.Expr cond = (Ast.Expr) visit(ctx.expr());
+        Ast.Stmt thenBlock = (Ast.Stmt) visitStmtBlock(ctx.stmtBlock(0));
+        Ast.Stmt elseBlock = null;
+
+        if (ctx.stmtBlock(1) != null) {
+            elseBlock = (Ast.Stmt) visitStmtBlock(ctx.stmtBlock(1));
+        }
+
+        return new Ast.IfElse(cond, thenBlock, elseBlock);
+    }
+
+
 
 }

@@ -22,6 +22,42 @@ public interface JavaliListener extends ParseTreeListener {
 	 */
 	void exitNewExpr(@NotNull JavaliParser.NewExprContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code Cast}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterCast(@NotNull JavaliParser.CastContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code Cast}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitCast(@NotNull JavaliParser.CastContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code Null}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterNull(@NotNull JavaliParser.NullContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code Null}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitNull(@NotNull JavaliParser.NullContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code Var}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterVar(@NotNull JavaliParser.VarContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code Var}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitVar(@NotNull JavaliParser.VarContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link JavaliParser#formalParamList}.
 	 * @param ctx the parse tree
 	 */
@@ -62,6 +98,18 @@ public interface JavaliListener extends ParseTreeListener {
 	 */
 	void exitType(@NotNull JavaliParser.TypeContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code BinaryLogic}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterBinaryLogic(@NotNull JavaliParser.BinaryLogicContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code BinaryLogic}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitBinaryLogic(@NotNull JavaliParser.BinaryLogicContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link JavaliParser#methodCallExpr}.
 	 * @param ctx the parse tree
 	 */
@@ -71,6 +119,18 @@ public interface JavaliListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitMethodCallExpr(@NotNull JavaliParser.MethodCallExprContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code BinaryMul}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterBinaryMul(@NotNull JavaliParser.BinaryMulContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code BinaryMul}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitBinaryMul(@NotNull JavaliParser.BinaryMulContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link JavaliParser#memberList}.
 	 * @param ctx the parse tree
@@ -82,15 +142,41 @@ public interface JavaliListener extends ParseTreeListener {
 	 */
 	void exitMemberList(@NotNull JavaliParser.MemberListContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link JavaliParser#expr}.
+	 * Enter a parse tree produced by the {@code Brackets}
+	 * labeled alternative in {@link JavaliParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterExpr(@NotNull JavaliParser.ExprContext ctx);
+	void enterBrackets(@NotNull JavaliParser.BracketsContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link JavaliParser#expr}.
+	 * Exit a parse tree produced by the {@code Brackets}
+	 * labeled alternative in {@link JavaliParser#expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitExpr(@NotNull JavaliParser.ExprContext ctx);
+	void exitBrackets(@NotNull JavaliParser.BracketsContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code Compare}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterCompare(@NotNull JavaliParser.CompareContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code Compare}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitCompare(@NotNull JavaliParser.CompareContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code Boolean}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterBoolean(@NotNull JavaliParser.BooleanContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code Boolean}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitBoolean(@NotNull JavaliParser.BooleanContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link JavaliParser#primitiveType}.
 	 * @param ctx the parse tree
@@ -141,6 +227,18 @@ public interface JavaliListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitWhileStmt(@NotNull JavaliParser.WhileStmtContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code UnaryOp}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterUnaryOp(@NotNull JavaliParser.UnaryOpContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code UnaryOp}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitUnaryOp(@NotNull JavaliParser.UnaryOpContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link JavaliParser#classDecl}.
 	 * @param ctx the parse tree
@@ -212,6 +310,18 @@ public interface JavaliListener extends ParseTreeListener {
 	 */
 	void exitMethodCallStmt(@NotNull JavaliParser.MethodCallStmtContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code Integer}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterInteger(@NotNull JavaliParser.IntegerContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code Integer}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitInteger(@NotNull JavaliParser.IntegerContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link JavaliParser#stmtBlock}.
 	 * @param ctx the parse tree
 	 */
@@ -231,6 +341,18 @@ public interface JavaliListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitUnit(@NotNull JavaliParser.UnitContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code BinaryAdd}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterBinaryAdd(@NotNull JavaliParser.BinaryAddContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code BinaryAdd}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitBinaryAdd(@NotNull JavaliParser.BinaryAddContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link JavaliParser#ifStmt}.
 	 * @param ctx the parse tree

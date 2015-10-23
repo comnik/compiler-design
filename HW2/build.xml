@@ -15,7 +15,7 @@
 	<property name="antlr.jar" value="${basedir}/lib/antlr-4.4-complete.jar"/>
 	<property name="antlr.profile" value="false"/>
 	<property name="antlr.report" value="false"/>
-	<property name="jacocoant.jar" value="${basedir}/lib/jacocoant.jar"/>
+    <property name="jacocoant.jar" value="${basedir}/lib/jacocoant.jar"/>
 	<property name="coverage.file" location="${build.dir}/jacoco.exec"/>
 	<property name="min.coverage" value="0.5"/>
 	<property name="coverage.check" value="cd.frontend.*:cd.backend.*"/>
