@@ -1,0 +1,10 @@
+// Test comments.
+
+class Main {
+	void main() { // DO COMMENTS GET IGNORED????????
+	
+      wri/*THIS IS A POTENTIALLY DISRUPTIVE COMMENT*/te(i_array[0]);
+      writeln(/*THIS IS A COMMENT*/);
+	
+      }
+}

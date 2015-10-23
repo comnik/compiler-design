@@ -1,0 +1,15 @@
+class Main {
+
+   int a, b, c;
+   boolean x, y;
+  
+   void main() {
+      a = 1;
+      write(a);
+      writeln()
+      x = true;
+      y = false;
+      write(x == y);
+      writeln();
+   }
+}
