@@ -122,8 +122,8 @@ identAccess
 	| identAccess '[' expr ']' # ArrayAccess
 	| identAccess '.' Identifier # FieldAccess
 	// Antlr doesn't do indirect recursion, so the code from methodCallExpr is copied here.
-	| Identifier '(' actualParamList? ')' # FunctionCall
-	| identAccess '.' Identifier '(' actualParamList? ')' # MethodCall
+	| Identifier '(' actualParamList? ')' # Unqualified
+	| identAccess '.' Identifier '(' actualParamList? ')' # Qualified
 	;
 
 expr

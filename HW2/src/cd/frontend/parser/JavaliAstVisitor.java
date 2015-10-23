@@ -3,6 +3,7 @@ package cd.frontend.parser;
 import cd.frontend.parser.JavaliParser.ClassDeclContext;
 import cd.ir.Ast;
 import cd.ir.Ast.ClassDecl;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
@@ -29,7 +30,14 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 
         List<Ast> members = new ArrayList<Ast>();
         for (int i = 0; i < ctx.memberList().getChildCount(); i++) {
-            members.add(visit(ctx.memberList().getChild(i)));
+            Ast member = visit(ctx.memberList().getChild(i));
+
+            // Handle Seq special case.
+            if (member instanceof Ast.Seq) {
+                members.addAll(((Ast.Seq) member).rwChildren());
+            } else {
+                members.add(member);
+            }
         }
 
         ClassDecl cls = new ClassDecl(className, superName, members);
@@ -182,25 +190,47 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         return new Ast.BuiltInRead();
     }
 
-    @Override
-    public Ast.MethodCallExpr visitMethodCallExpr(JavaliParser.MethodCallExprContext ctx) {
-        String methodName = ctx.Identifier().getText();
+    /**
+     * Abstracts the MethodCallExpr handling, so it can be re-used
+     * in identAccess without changes to the RuleContext hierarchy.
+     *
+     * @param identifier Identifies the method.
+     * @param qualifier Optional object on which the method should be called.
+     */
+    private Ast.MethodCallExpr genericMethodCallExpr(
+            TerminalNode identifier, JavaliParser.IdentAccessContext qualifier, JavaliParser.ActualParamListContext params) {
+        String methodName = identifier.getText();
 
-        Ast.Expr qualifier = new Ast.ThisRef();
-        if (ctx.identAccess() != null) {
+        Ast.Expr qualifierExpr = new Ast.ThisRef();
+        if (qualifier != null) {
             // Qualified access.
-            qualifier = (Ast.Expr) visit(ctx.identAccess());
+            qualifierExpr = (Ast.Expr) visit(qualifier);
         }
 
         // Arguments.
         List<Ast.Expr> args = new ArrayList<Ast.Expr>();
-        if (ctx.actualParamList() != null) {
-            args = ctx.actualParamList().expr().stream()
+        if (params != null) {
+            args = params.expr().stream()
                     .map(exprCtx -> (Ast.Expr) visit(exprCtx))
                     .collect(Collectors.toList());
         }
 
-        return new Ast.MethodCallExpr(qualifier, methodName, args);
+        return new Ast.MethodCallExpr(qualifierExpr, methodName, args);
+    }
+
+    @Override
+    public Ast.MethodCallExpr visitMethodCallExpr(JavaliParser.MethodCallExprContext ctx) {
+        return genericMethodCallExpr(ctx.Identifier(), ctx.identAccess(), ctx.actualParamList());
+    }
+
+    @Override
+    public Ast.MethodCallExpr visitQualified(JavaliParser.QualifiedContext ctx) {
+        return genericMethodCallExpr(ctx.Identifier(), ctx.identAccess(), ctx.actualParamList());
+    }
+
+    @Override
+    public Ast.MethodCallExpr visitUnqualified(JavaliParser.UnqualifiedContext ctx) {
+        return genericMethodCallExpr(ctx.Identifier(), null, ctx.actualParamList());
     }
 
     @Override
@@ -244,6 +274,9 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         Ast.Expr rightHandSide = (Ast.Expr) visit(ctx.getChild(2));
         Ast.Expr leftHandSide = (Ast.Expr) visit(ctx.identAccess());
 
+        System.out.println("Right-Hand: " + ctx.getChild(2).getText());
+        System.out.println("Left-Hand: " + ctx.identAccess().getText());
+
         return new Ast.Assign(leftHandSide, rightHandSide);
     }
 
@@ -268,6 +301,12 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         }
 
         return new Ast.IfElse(cond, thenBlock, elseBlock);
+    }
+
+    @Override
+    public Ast.ReturnStmt visitReturnStmt(JavaliParser.ReturnStmtContext ctx) {
+        Ast.Expr arg = (Ast.Expr) visit(ctx.expr());
+        return new Ast.ReturnStmt(arg);
     }
 
     /**

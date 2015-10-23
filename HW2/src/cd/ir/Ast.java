@@ -441,7 +441,8 @@ public abstract class Ast {
 		
 		public Assign(Expr left, Expr right) {
 			super(2);
-			assert left != null && right != null;
+			assert left != null;
+            assert right != null;
 			setLeft(left);
 			setRight(right);
 		}

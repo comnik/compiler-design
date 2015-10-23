@@ -1594,6 +1594,26 @@ public class JavaliParser extends Parser {
 			else return visitor.visitChildren(this);
 		}
 	}
+	public static class UnqualifiedContext extends IdentAccessContext {
+		public TerminalNode Identifier() { return getToken(JavaliParser.Identifier, 0); }
+		public ActualParamListContext actualParamList() {
+			return getRuleContext(ActualParamListContext.class,0);
+		}
+		public UnqualifiedContext(IdentAccessContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof JavaliListener ) ((JavaliListener)listener).enterUnqualified(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof JavaliListener ) ((JavaliListener)listener).exitUnqualified(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof JavaliVisitor ) return ((JavaliVisitor<? extends T>)visitor).visitUnqualified(this);
+			else return visitor.visitChildren(this);
+		}
+	}
 	public static class ThisContext extends IdentAccessContext {
 		public ThisContext(IdentAccessContext ctx) { copyFrom(ctx); }
 		@Override
@@ -1607,26 +1627,6 @@ public class JavaliParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof JavaliVisitor ) return ((JavaliVisitor<? extends T>)visitor).visitThis(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class FunctionCallContext extends IdentAccessContext {
-		public TerminalNode Identifier() { return getToken(JavaliParser.Identifier, 0); }
-		public ActualParamListContext actualParamList() {
-			return getRuleContext(ActualParamListContext.class,0);
-		}
-		public FunctionCallContext(IdentAccessContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof JavaliListener ) ((JavaliListener)listener).enterFunctionCall(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof JavaliListener ) ((JavaliListener)listener).exitFunctionCall(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof JavaliVisitor ) return ((JavaliVisitor<? extends T>)visitor).visitFunctionCall(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1650,7 +1650,7 @@ public class JavaliParser extends Parser {
 			else return visitor.visitChildren(this);
 		}
 	}
-	public static class MethodCallContext extends IdentAccessContext {
+	public static class QualifiedContext extends IdentAccessContext {
 		public TerminalNode Identifier() { return getToken(JavaliParser.Identifier, 0); }
 		public ActualParamListContext actualParamList() {
 			return getRuleContext(ActualParamListContext.class,0);
@@ -1658,18 +1658,18 @@ public class JavaliParser extends Parser {
 		public IdentAccessContext identAccess() {
 			return getRuleContext(IdentAccessContext.class,0);
 		}
-		public MethodCallContext(IdentAccessContext ctx) { copyFrom(ctx); }
+		public QualifiedContext(IdentAccessContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof JavaliListener ) ((JavaliListener)listener).enterMethodCall(this);
+			if ( listener instanceof JavaliListener ) ((JavaliListener)listener).enterQualified(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof JavaliListener ) ((JavaliListener)listener).exitMethodCall(this);
+			if ( listener instanceof JavaliListener ) ((JavaliListener)listener).exitQualified(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof JavaliVisitor ) return ((JavaliVisitor<? extends T>)visitor).visitMethodCall(this);
+			if ( visitor instanceof JavaliVisitor ) return ((JavaliVisitor<? extends T>)visitor).visitQualified(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1711,7 +1711,7 @@ public class JavaliParser extends Parser {
 				break;
 			case 3:
 				{
-				_localctx = new FunctionCallContext(_localctx);
+				_localctx = new UnqualifiedContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
 				setState(251); match(Identifier);
@@ -1762,7 +1762,7 @@ public class JavaliParser extends Parser {
 						break;
 					case 3:
 						{
-						_localctx = new MethodCallContext(new IdentAccessContext(_parentctx, _parentState));
+						_localctx = new QualifiedContext(new IdentAccessContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_identAccess);
 						setState(267);
 						if (!(precpred(_ctx, 1))) throw new FailedPredicateException(this, "precpred(_ctx, 1)");

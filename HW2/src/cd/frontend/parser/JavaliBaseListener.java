@@ -116,18 +116,6 @@ public class JavaliBaseListener implements JavaliListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterMethodCall(@NotNull JavaliParser.MethodCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitMethodCall(@NotNull JavaliParser.MethodCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterMethodCallExpr(@NotNull JavaliParser.MethodCallExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -188,6 +176,18 @@ public class JavaliBaseListener implements JavaliListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterUnqualified(@NotNull JavaliParser.UnqualifiedContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitUnqualified(@NotNull JavaliParser.UnqualifiedContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterThis(@NotNull JavaliParser.ThisContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -195,18 +195,6 @@ public class JavaliBaseListener implements JavaliListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitThis(@NotNull JavaliParser.ThisContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterFunctionCall(@NotNull JavaliParser.FunctionCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitFunctionCall(@NotNull JavaliParser.FunctionCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -375,6 +363,18 @@ public class JavaliBaseListener implements JavaliListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitMethodCallStmt(@NotNull JavaliParser.MethodCallStmtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterQualified(@NotNull JavaliParser.QualifiedContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitQualified(@NotNull JavaliParser.QualifiedContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
