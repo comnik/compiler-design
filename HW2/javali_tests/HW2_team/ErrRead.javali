@@ -1,0 +1,9 @@
+// Test for correct read parsing.
+
+class Main {
+   void main() {
+     
+      // This should fail, since read needs an expr in the brackets.
+      read();
+  }
+}
