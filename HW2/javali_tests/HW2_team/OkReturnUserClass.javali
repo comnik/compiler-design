@@ -1,0 +1,12 @@
+// Test if returning user-defined classes parses.
+
+class Foo {
+}
+
+class Main {
+   void main() {
+   }
+
+   Foo bar() {
+   }
+}
