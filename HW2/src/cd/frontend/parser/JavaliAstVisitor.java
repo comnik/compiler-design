@@ -140,6 +140,11 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     }
 
     @Override
+    public Ast.Expr visitBrackets(JavaliParser.BracketsContext ctx) {
+        return (Ast.Expr) visit(ctx.expr());
+    }
+
+    @Override
     public Ast.BuiltInRead visitReadExpr(JavaliParser.ReadExprContext ctx) {
         return new Ast.BuiltInRead();
     }
