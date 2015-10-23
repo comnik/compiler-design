@@ -1,0 +1,14 @@
+// Test if-else parsing.
+
+class Main {
+   void main() {
+      int i;
+    
+      if (true) {
+          i = 1;
+      }
+      else {
+          i = 2;
+      }
+  }
+}
