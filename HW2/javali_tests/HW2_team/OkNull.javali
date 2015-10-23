@@ -1,0 +1,12 @@
+// Test boolean parsing.
+
+class A {
+}
+
+class Main {
+
+    void main() {
+        A a;
+        a = null;
+    }
+}
