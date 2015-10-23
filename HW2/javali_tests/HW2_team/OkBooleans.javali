@@ -1,0 +1,13 @@
+// Test boolean parsing.
+
+class Main {
+
+   boolean a, b;
+  
+   void main() {
+      boolean c;
+      c = a && b;
+      b = a || c;
+      b = !b;
+   }
+}
