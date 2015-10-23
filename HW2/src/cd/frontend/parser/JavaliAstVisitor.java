@@ -165,7 +165,7 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 
     @Override
     public Ast.Assign visitAssignmentStmt(JavaliParser.AssignmentStmtContext ctx) {
-        Ast.Expr rightHandSide = (Ast.Expr) visit(ctx.getChild(1));
+        Ast.Expr rightHandSide = (Ast.Expr) visit(ctx.getChild(2));
         Ast.Expr leftHandSide = (Ast.Expr) visit(ctx.identAccess());
 
         return new Ast.Assign(leftHandSide, rightHandSide);
