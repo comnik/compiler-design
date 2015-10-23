@@ -190,6 +190,18 @@ public interface JavaliListener extends ParseTreeListener {
 	 */
 	void exitBrackets(@NotNull JavaliParser.BracketsContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code Bool}
+	 * labeled alternative in {@link JavaliParser#literal}.
+	 * @param ctx the parse tree
+	 */
+	void enterBool(@NotNull JavaliParser.BoolContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code Bool}
+	 * labeled alternative in {@link JavaliParser#literal}.
+	 * @param ctx the parse tree
+	 */
+	void exitBool(@NotNull JavaliParser.BoolContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code LogicalAnd}
 	 * labeled alternative in {@link JavaliParser#expr}.
 	 * @param ctx the parse tree
@@ -249,18 +261,6 @@ public interface JavaliListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitEquality(@NotNull JavaliParser.EqualityContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code Boolean}
-	 * labeled alternative in {@link JavaliParser#literal}.
-	 * @param ctx the parse tree
-	 */
-	void enterBoolean(@NotNull JavaliParser.BooleanContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code Boolean}
-	 * labeled alternative in {@link JavaliParser#literal}.
-	 * @param ctx the parse tree
-	 */
-	void exitBoolean(@NotNull JavaliParser.BooleanContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link JavaliParser#primitiveType}.
 	 * @param ctx the parse tree

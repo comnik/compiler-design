@@ -2268,20 +2268,20 @@ public class JavaliParser extends Parser {
 			else return visitor.visitChildren(this);
 		}
 	}
-	public static class BooleanContext extends LiteralContext {
+	public static class BoolContext extends LiteralContext {
 		public TerminalNode Boolean() { return getToken(JavaliParser.Boolean, 0); }
-		public BooleanContext(LiteralContext ctx) { copyFrom(ctx); }
+		public BoolContext(LiteralContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof JavaliListener ) ((JavaliListener)listener).enterBoolean(this);
+			if ( listener instanceof JavaliListener ) ((JavaliListener)listener).enterBool(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof JavaliListener ) ((JavaliListener)listener).exitBoolean(this);
+			if ( listener instanceof JavaliListener ) ((JavaliListener)listener).exitBool(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof JavaliVisitor ) return ((JavaliVisitor<? extends T>)visitor).visitBoolean(this);
+			if ( visitor instanceof JavaliVisitor ) return ((JavaliVisitor<? extends T>)visitor).visitBool(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -2300,7 +2300,7 @@ public class JavaliParser extends Parser {
 				}
 				break;
 			case Boolean:
-				_localctx = new BooleanContext(_localctx);
+				_localctx = new BoolContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(322); match(Boolean);

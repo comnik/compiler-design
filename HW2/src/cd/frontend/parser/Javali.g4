@@ -143,7 +143,7 @@ expr
 
 literal
     : Integer # Integer
-    | Boolean # Boolean
+    | Boolean # Bool
     | 'null' # Null
     ;
 

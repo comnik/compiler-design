@@ -3,11 +3,11 @@
 
 class Main {
 	void main() {
-	
       boolean b_res;
+      int i_res;
 
       // should output 'true'
-      b_res = (! false || false);
+      /*b_res = (!false || false);
       write(b_res);
       writeln();
 
@@ -21,9 +21,6 @@ class Main {
       write(b_res);
       writeln();
 
-
-	int i_res;
-      
       // should output -5
       i_res = (1 - 2 * 3);
       write(i_res);
@@ -32,7 +29,7 @@ class Main {
       // should output -3
       i_res = (-1 + - 2)
       write(i_res);
-      writeln();
+      writeln();*/
 	   
       // should output 2
       i_res = (1 + 5 % 2);

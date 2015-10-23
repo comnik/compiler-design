@@ -120,6 +120,13 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBrackets(@NotNull JavaliParser.BracketsContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code Bool}
+	 * labeled alternative in {@link JavaliParser#literal}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBool(@NotNull JavaliParser.BoolContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code LogicalAnd}
 	 * labeled alternative in {@link JavaliParser#expr}.
 	 * @param ctx the parse tree
@@ -154,13 +161,6 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitEquality(@NotNull JavaliParser.EqualityContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code Boolean}
-	 * labeled alternative in {@link JavaliParser#literal}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitBoolean(@NotNull JavaliParser.BooleanContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaliParser#primitiveType}.
 	 * @param ctx the parse tree

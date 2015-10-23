@@ -6,12 +6,12 @@ class Main {
 	   int a;
 	   a = 1;
 	   write(a);
-      writeln();
+	   writeln();
 
-      // This should fail.
-      int b;
-      b = 1;
-      write(b);
-      writeln();
+	   // This should fail.
+	   int b;
+	   b = 1;
+	   write(b);
+	   writeln();
    }
 }
