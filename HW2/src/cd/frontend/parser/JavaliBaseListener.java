@@ -56,6 +56,18 @@ public class JavaliBaseListener implements JavaliListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterBool(@NotNull JavaliParser.BoolContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBool(@NotNull JavaliParser.BoolContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterLitExpr(@NotNull JavaliParser.LitExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -212,18 +224,6 @@ public class JavaliBaseListener implements JavaliListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBool(@NotNull JavaliParser.BoolContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitBool(@NotNull JavaliParser.BoolContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterLogicalAnd(@NotNull JavaliParser.LogicalAndContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -279,6 +279,18 @@ public class JavaliBaseListener implements JavaliListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitEquality(@NotNull JavaliParser.EqualityContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBoolean(@NotNull JavaliParser.BooleanContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBoolean(@NotNull JavaliParser.BooleanContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

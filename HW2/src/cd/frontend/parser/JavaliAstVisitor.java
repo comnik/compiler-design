@@ -147,7 +147,7 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     }
 
     @Override
-    public Ast.BooleanConst visitBool(JavaliParser.BoolContext ctx) {
+    public Ast.BooleanConst visitBoolean(JavaliParser.BooleanContext ctx) {
         return new Ast.BooleanConst(Boolean.parseBoolean(ctx.getText()));
     }
 
