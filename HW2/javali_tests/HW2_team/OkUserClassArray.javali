@@ -1,0 +1,11 @@
+// Test user-defined class array
+
+class A {
+}
+
+class Main {
+	void main() {
+        A [] as;
+        as = new A [10];
+    }
+}
