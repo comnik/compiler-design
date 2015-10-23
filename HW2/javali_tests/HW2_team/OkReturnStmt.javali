@@ -1,0 +1,15 @@
+// Test for return.
+
+class Main {
+
+   int foo() {
+      int a;
+      a = 1;
+      return a;
+   }
+
+   void main() {
+      write(foo());
+      writeln();
+   }
+}
