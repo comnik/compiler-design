@@ -2,12 +2,12 @@
 
 class Main {
 	void main() {
-	
-      int [] i_array;
-      i_array = new int [10];
-      i_array[0] = 37;
-      write(i_array[0]);
-      writeln()
-	
-      }
+        int [] i_array;
+
+        i_array = new int [10];
+        i_array[0] = 37;
+
+        write(i_array[0]);
+        writeln();
+    }
 }

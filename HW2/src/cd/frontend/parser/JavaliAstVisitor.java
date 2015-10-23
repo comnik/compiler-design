@@ -103,6 +103,27 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
      */
 
     @Override
+    public Ast visitNewExpr(JavaliParser.NewExprContext ctx) {
+        String typeName;
+        Ast.Expr capacity;
+
+        if (ctx.Identifier() != null) {
+            typeName = ctx.Identifier().getText();
+        } else {
+            // Primitive array.
+            typeName = ctx.primitiveType().getText();
+        }
+
+        if (ctx.expr() != null) {
+            // New Array.
+            capacity = (Ast.Expr) visit(ctx.expr());
+            return new Ast.NewArray(typeName, capacity);
+        } else {
+            return new Ast.NewObject(typeName);
+        }
+    }
+
+    @Override
     public Ast.IntConst visitInteger(JavaliParser.IntegerContext ctx) {
         try {
             int parsedInt = Integer.parseInt(ctx.Integer().getText());
