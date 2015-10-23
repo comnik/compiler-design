@@ -34,8 +34,8 @@ class Main {
       write(i_res);
       writeln();
 	   
-      // should output -3
-      i_res = ()
+      // should output 2
+      i_res = (1 + 5 % 2);
       write(i_res);
       writeln();
       
