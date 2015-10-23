@@ -127,22 +127,31 @@ identAccess
 	;
 
 expr
-    : Integer # Integer
-    | Boolean # Boolean
-    | 'null' # Null
-	| identAccess # Var
+    : literal # LitExpr
+    | identAccess # Var
 	| '(' expr ')' # Brackets
 	// Operators in order of precedence.
 	| ('+' | '-' | '!') expr # UnaryOp
 	| '(' referenceType ')' expr # Cast
-	| expr ('+' | '-' | '*' | '/' | '%' | '==' | '!=' | '<' | '<=' | '>' | '>=' | '&&' | '||') expr # BinaryOp
+    | expr ('*' | '/' | '%') expr # BinaryMul
+	| expr ('+' | '-') expr # BinaryAdd
+	| expr ('<' | '<=' | '>' | '>=') expr # Compare
+	| expr ('==' | '!=') expr # Equality
+	| expr '&&' expr # LogicalAnd
+	| expr '||' expr # LogicalOr
 	;
+
+literal
+    : Integer # Integer
+    | Boolean # Boolean
+    | 'null' # Null
+    ;
 
 // LEXER RULES
 
 // Java(li) identifiers:
-Identifier 
-	:	Letter (Letter|JavaIDDigit)*
+Identifier
+	: Letter (Letter|JavaIDDigit)*
 	;
 
 Integer

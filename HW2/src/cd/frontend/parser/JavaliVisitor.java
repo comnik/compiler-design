@@ -29,11 +29,18 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	T visitCast(@NotNull JavaliParser.CastContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Null}
-	 * labeled alternative in {@link JavaliParser#expr}.
+	 * labeled alternative in {@link JavaliParser#literal}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitNull(@NotNull JavaliParser.NullContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code LitExpr}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLitExpr(@NotNull JavaliParser.LitExprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Var}
 	 * labeled alternative in {@link JavaliParser#expr}.
@@ -66,11 +73,25 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitType(@NotNull JavaliParser.TypeContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code LogicalOr}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLogicalOr(@NotNull JavaliParser.LogicalOrContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link JavaliParser#methodCallExpr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitMethodCallExpr(@NotNull JavaliParser.MethodCallExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BinaryMul}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBinaryMul(@NotNull JavaliParser.BinaryMulContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ArrayAccess}
 	 * labeled alternative in {@link JavaliParser#identAccess}.
@@ -99,6 +120,13 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBrackets(@NotNull JavaliParser.BracketsContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code LogicalAnd}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLogicalAnd(@NotNull JavaliParser.LogicalAndContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code Unqualified}
 	 * labeled alternative in {@link JavaliParser#identAccess}.
 	 * @param ctx the parse tree
@@ -113,8 +141,22 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitThis(@NotNull JavaliParser.ThisContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code Boolean}
+	 * Visit a parse tree produced by the {@code Compare}
 	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCompare(@NotNull JavaliParser.CompareContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Equality}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitEquality(@NotNull JavaliParser.EqualityContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Boolean}
+	 * labeled alternative in {@link JavaliParser#literal}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -137,13 +179,6 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitActualParamList(@NotNull JavaliParser.ActualParamListContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code BinaryOp}
-	 * labeled alternative in {@link JavaliParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitBinaryOp(@NotNull JavaliParser.BinaryOpContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaliParser#arrayType}.
 	 * @param ctx the parse tree
@@ -208,7 +243,7 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	T visitQualified(@NotNull JavaliParser.QualifiedContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Integer}
-	 * labeled alternative in {@link JavaliParser#expr}.
+	 * labeled alternative in {@link JavaliParser#literal}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -225,6 +260,13 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitUnit(@NotNull JavaliParser.UnitContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BinaryAdd}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBinaryAdd(@NotNull JavaliParser.BinaryAddContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaliParser#ifStmt}.
 	 * @param ctx the parse tree

@@ -16,6 +16,7 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 
     private static final String TYPE_OBJECT = "Object";
     private static final String WRITE_LN = "writeln";
+    private static final String NULL = "null";
 
     private static final int MAX_INT = 2147483647;
     private static final int MIN_INT = -MAX_INT;
@@ -147,7 +148,7 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
 
     @Override
     public Ast.BooleanConst visitBoolean(JavaliParser.BooleanContext ctx) {
-        return new Ast.BooleanConst(Boolean.parseBoolean(ctx.Boolean().getText()));
+        return new Ast.BooleanConst(Boolean.parseBoolean(ctx.getText()));
     }
 
     @Override
@@ -171,13 +172,46 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
         return new Ast.Cast(expr, typeName);
     }
 
-    @Override
-    public Ast.BinaryOp visitBinaryOp(JavaliParser.BinaryOpContext ctx) {
-        Ast.Expr leftOperand = (Ast.Expr) visit(ctx.expr(0));
-        Ast.Expr rightOperand = (Ast.Expr) visit(ctx.expr(1));
-        Ast.BinaryOp.BOp op = opFromString(ctx.getChild(1).getText());
+    /**
+     * Generic binary op handling.
+     */
+    private Ast.BinaryOp genericBinaryOp(
+            JavaliParser.ExprContext leftExprCtx, JavaliParser.ExprContext rightExprCtx, String opRepr) {
+        Ast.Expr leftOperand = (Ast.Expr) visit(leftExprCtx);
+        Ast.Expr rightOperand = (Ast.Expr) visit(rightExprCtx);
+        Ast.BinaryOp.BOp op = opFromString(opRepr);
 
         return new Ast.BinaryOp(leftOperand, op, rightOperand);
+    }
+
+    @Override
+    public Ast.BinaryOp visitBinaryAdd(JavaliParser.BinaryAddContext ctx) {
+        return genericBinaryOp(ctx.expr(0), ctx.expr(1), ctx.getChild(1).getText());
+    }
+
+    @Override
+    public Ast.BinaryOp visitBinaryMul(JavaliParser.BinaryMulContext ctx) {
+        return genericBinaryOp(ctx.expr(0), ctx.expr(1), ctx.getChild(1).getText());
+    }
+
+    @Override
+    public Ast.BinaryOp visitCompare(JavaliParser.CompareContext ctx) {
+        return genericBinaryOp(ctx.expr(0), ctx.expr(1), ctx.getChild(1).getText());
+    }
+
+    @Override
+    public Ast.BinaryOp visitEquality(JavaliParser.EqualityContext ctx) {
+        return genericBinaryOp(ctx.expr(0), ctx.expr(1), ctx.getChild(1).getText());
+    }
+
+    @Override
+    public Ast.BinaryOp visitLogicalAnd(JavaliParser.LogicalAndContext ctx) {
+        return genericBinaryOp(ctx.expr(0), ctx.expr(1), ctx.getChild(1).getText());
+    }
+
+    @Override
+    public Ast.BinaryOp visitLogicalOr(JavaliParser.LogicalOrContext ctx) {
+        return genericBinaryOp(ctx.expr(0), ctx.expr(1), ctx.getChild(1).getText());
     }
 
     @Override
@@ -273,9 +307,6 @@ public final class JavaliAstVisitor extends JavaliBaseVisitor<Ast> {
     public Ast.Assign visitAssignmentStmt(JavaliParser.AssignmentStmtContext ctx) {
         Ast.Expr rightHandSide = (Ast.Expr) visit(ctx.getChild(2));
         Ast.Expr leftHandSide = (Ast.Expr) visit(ctx.identAccess());
-
-        System.out.println("Right-Hand: " + ctx.getChild(2).getText());
-        System.out.println("Left-Hand: " + ctx.identAccess().getText());
 
         return new Ast.Assign(leftHandSide, rightHandSide);
     }

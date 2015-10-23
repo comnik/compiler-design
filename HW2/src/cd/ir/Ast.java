@@ -92,8 +92,7 @@ public abstract class Ast {
 		
 		public LeftRightExpr(Expr left, Expr right) {
 			super(2);
-			assert left != null;
-			assert right != null;
+			assert left != null && right != null;
 			setLeft(left); 
 			setRight(right);
 		}
