@@ -1,0 +1,14 @@
+// Test fields in between methods in a class.
+
+class Main {
+
+   int a, b, c;
+   boolean x, y;
+  
+   void main() {
+      a = 1;
+      d = 1;
+   }
+
+   int d;
+}

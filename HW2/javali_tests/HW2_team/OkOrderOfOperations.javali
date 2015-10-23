@@ -1,0 +1,43 @@
+// Check if the order of operations as defined in the grammar 
+// is adhered to.
+
+class Main {
+	void main() {
+	
+      boolean b_res;
+
+      // should output 'true'
+      b_res = (! false || false);
+      write(b_res);
+      writeln();
+
+      // should output false
+      b_res = (true && false || true && false);
+      write(b_res);
+      writeln();
+
+      // should output true
+      b_res = (false == false || true)
+      write(b_res);
+      writeln();
+
+
+	int i_res;
+      
+      // should output -5
+      i_res = (1 - 2 * 3);
+      write(i_res);
+      writeln();
+      
+      // should output -3
+      i_res = (-1 + - 2)
+      write(i_res);
+      writeln();
+	   
+      // should output -3
+      i_res = ()
+      write(i_res);
+      writeln();
+      
+	}
+}
