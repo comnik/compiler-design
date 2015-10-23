@@ -66,12 +66,12 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitType(@NotNull JavaliParser.TypeContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code BinaryLogic}
-	 * labeled alternative in {@link JavaliParser#expr}.
+	 * Visit a parse tree produced by the {@code MethodCall}
+	 * labeled alternative in {@link JavaliParser#identAccess}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitBinaryLogic(@NotNull JavaliParser.BinaryLogicContext ctx);
+	T visitMethodCall(@NotNull JavaliParser.MethodCallContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaliParser#methodCallExpr}.
 	 * @param ctx the parse tree
@@ -79,18 +79,25 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitMethodCallExpr(@NotNull JavaliParser.MethodCallExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code BinaryMul}
-	 * labeled alternative in {@link JavaliParser#expr}.
+	 * Visit a parse tree produced by the {@code ArrayAccess}
+	 * labeled alternative in {@link JavaliParser#identAccess}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitBinaryMul(@NotNull JavaliParser.BinaryMulContext ctx);
+	T visitArrayAccess(@NotNull JavaliParser.ArrayAccessContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaliParser#memberList}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitMemberList(@NotNull JavaliParser.MemberListContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Identifier}
+	 * labeled alternative in {@link JavaliParser#identAccess}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIdentifier(@NotNull JavaliParser.IdentifierContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Brackets}
 	 * labeled alternative in {@link JavaliParser#expr}.
@@ -99,12 +106,19 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBrackets(@NotNull JavaliParser.BracketsContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code Compare}
-	 * labeled alternative in {@link JavaliParser#expr}.
+	 * Visit a parse tree produced by the {@code This}
+	 * labeled alternative in {@link JavaliParser#identAccess}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCompare(@NotNull JavaliParser.CompareContext ctx);
+	T visitThis(@NotNull JavaliParser.ThisContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FunctionCall}
+	 * labeled alternative in {@link JavaliParser#identAccess}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionCall(@NotNull JavaliParser.FunctionCallContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Boolean}
 	 * labeled alternative in {@link JavaliParser#expr}.
@@ -130,6 +144,13 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitActualParamList(@NotNull JavaliParser.ActualParamListContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BinaryOp}
+	 * labeled alternative in {@link JavaliParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBinaryOp(@NotNull JavaliParser.BinaryOpContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaliParser#arrayType}.
 	 * @param ctx the parse tree
@@ -168,12 +189,6 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitReadExpr(@NotNull JavaliParser.ReadExprContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link JavaliParser#identAccess}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitIdentAccess(@NotNull JavaliParser.IdentAccessContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link JavaliParser#writeStmt}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -211,18 +226,18 @@ public interface JavaliVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitUnit(@NotNull JavaliParser.UnitContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code BinaryAdd}
-	 * labeled alternative in {@link JavaliParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitBinaryAdd(@NotNull JavaliParser.BinaryAddContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link JavaliParser#ifStmt}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitIfStmt(@NotNull JavaliParser.IfStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FieldAccess}
+	 * labeled alternative in {@link JavaliParser#identAccess}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFieldAccess(@NotNull JavaliParser.FieldAccessContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaliParser#varDecl}.
 	 * @param ctx the parse tree

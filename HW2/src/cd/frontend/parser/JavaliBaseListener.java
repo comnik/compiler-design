@@ -116,13 +116,13 @@ public class JavaliBaseListener implements JavaliListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBinaryLogic(@NotNull JavaliParser.BinaryLogicContext ctx) { }
+	@Override public void enterMethodCall(@NotNull JavaliParser.MethodCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitBinaryLogic(@NotNull JavaliParser.BinaryLogicContext ctx) { }
+	@Override public void exitMethodCall(@NotNull JavaliParser.MethodCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -140,13 +140,13 @@ public class JavaliBaseListener implements JavaliListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBinaryMul(@NotNull JavaliParser.BinaryMulContext ctx) { }
+	@Override public void enterArrayAccess(@NotNull JavaliParser.ArrayAccessContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitBinaryMul(@NotNull JavaliParser.BinaryMulContext ctx) { }
+	@Override public void exitArrayAccess(@NotNull JavaliParser.ArrayAccessContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -164,6 +164,18 @@ public class JavaliBaseListener implements JavaliListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterIdentifier(@NotNull JavaliParser.IdentifierContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitIdentifier(@NotNull JavaliParser.IdentifierContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterBrackets(@NotNull JavaliParser.BracketsContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -176,13 +188,25 @@ public class JavaliBaseListener implements JavaliListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCompare(@NotNull JavaliParser.CompareContext ctx) { }
+	@Override public void enterThis(@NotNull JavaliParser.ThisContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCompare(@NotNull JavaliParser.CompareContext ctx) { }
+	@Override public void exitThis(@NotNull JavaliParser.ThisContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFunctionCall(@NotNull JavaliParser.FunctionCallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFunctionCall(@NotNull JavaliParser.FunctionCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -231,6 +255,18 @@ public class JavaliBaseListener implements JavaliListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitActualParamList(@NotNull JavaliParser.ActualParamListContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBinaryOp(@NotNull JavaliParser.BinaryOpContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBinaryOp(@NotNull JavaliParser.BinaryOpContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -308,18 +344,6 @@ public class JavaliBaseListener implements JavaliListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterIdentAccess(@NotNull JavaliParser.IdentAccessContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitIdentAccess(@NotNull JavaliParser.IdentAccessContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterWriteStmt(@NotNull JavaliParser.WriteStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -392,18 +416,6 @@ public class JavaliBaseListener implements JavaliListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBinaryAdd(@NotNull JavaliParser.BinaryAddContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitBinaryAdd(@NotNull JavaliParser.BinaryAddContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterIfStmt(@NotNull JavaliParser.IfStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -411,6 +423,18 @@ public class JavaliBaseListener implements JavaliListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitIfStmt(@NotNull JavaliParser.IfStmtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFieldAccess(@NotNull JavaliParser.FieldAccessContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFieldAccess(@NotNull JavaliParser.FieldAccessContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
