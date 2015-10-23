@@ -2,13 +2,12 @@
 
 class Main {
 
-   int a, b, c;
-   boolean x, y;
+   int a, b;
   
    void main() {
       a = 1;
-      d = 1;
+      b = 1;
    }
 
-   int d;
+   int b;
 }
