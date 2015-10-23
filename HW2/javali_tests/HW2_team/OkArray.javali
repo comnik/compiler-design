@@ -1,0 +1,14 @@
+// Check if the order of operations as defined in the grammar 
+// is adhered to.
+
+class Main {
+	void main() {
+	
+      int [] i_array;
+      i_array = new int [10];
+      i_array[0] = 37;
+      write(i_array[0]);
+      writeln()
+	
+      }
+}
