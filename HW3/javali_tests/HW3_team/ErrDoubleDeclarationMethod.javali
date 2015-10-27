@@ -1,0 +1,15 @@
+/* Test that two methods declared with the same name in the same
+class are detected. */
+
+class Foo {
+    int foofoo() {
+    }
+
+    void foofoo() {
+    }
+}
+
+class Main {
+    void main() {
+    }
+}

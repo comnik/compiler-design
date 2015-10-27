@@ -1,0 +1,12 @@
+/* Test that an invalid start point is detected. */
+
+class Foo {
+}
+
+class Bar extends Boo {
+}
+
+class Main {
+   void main() {
+   }
+}

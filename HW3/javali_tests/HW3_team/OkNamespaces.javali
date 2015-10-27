@@ -1,0 +1,14 @@
+/* Javali has separate namespaces for types and variables,
+   as well as for fields and methods. The following program is legal,
+   as defined in hw3.pdf. */
+
+class Foo {
+}
+
+class Main {
+    int main ;
+    void main () {
+        Foo Foo;
+        Foo = new Foo();
+    }
+}

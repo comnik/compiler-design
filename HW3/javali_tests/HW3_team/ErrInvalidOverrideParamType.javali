@@ -1,0 +1,18 @@
+/* Test if the overriding method having a different parameter type is detected. */
+
+class Foo {
+    void foo(boolean b) {
+        return null;
+    }
+}
+
+class Bar extends Foo {
+    void foo(int i) {
+        return null;
+    }
+}
+
+class Main {
+    void main() {
+    }
+}

@@ -1,0 +1,22 @@
+/* Test if an overridden method having a different number of
+of parameters is detected. */
+
+class A {
+}
+
+class Foo {
+   int foo(boolean b, int i, A a) {
+        return i;
+    }
+}
+
+class Bar extends Foo {
+    int foo(boolean b, int i, A a, A b) {
+        return i;
+    }
+}
+
+class Main {
+    void main() {
+    }
+}

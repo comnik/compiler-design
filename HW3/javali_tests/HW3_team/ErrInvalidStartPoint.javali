@@ -1,0 +1,9 @@
+/* Test that an invalid start point is detected. */
+
+class Test {
+    int main ;
+    void main () {
+        Foo Foo;
+        Foo = new Foo();
+    }
+}

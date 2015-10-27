@@ -1,0 +1,12 @@
+/* Test that two fields declared with the same name in the same
+class are detected. */
+
+class Foo {
+    int i;
+    boolean i;
+}
+
+class Main {
+    void main() {
+    }
+}

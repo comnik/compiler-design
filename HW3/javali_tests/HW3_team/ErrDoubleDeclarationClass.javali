@@ -1,0 +1,19 @@
+/* Test that two classes declared with the same name are detected. */
+
+class Foo {
+    int i;
+}
+
+class Bar {
+    void barbar(){
+    }
+}
+
+class Foo {
+    boolean b;
+}
+
+class Main {
+    void main() {
+    }
+}
