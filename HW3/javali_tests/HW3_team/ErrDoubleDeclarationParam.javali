@@ -1,0 +1,13 @@
+/* Test that a method with two parameters with the same name
+   is detected. */
+
+class Foo {
+    int foo(int i, int i, boolean b) {
+        return i;
+    }
+}
+
+class Main {
+    void main() {
+    }
+}

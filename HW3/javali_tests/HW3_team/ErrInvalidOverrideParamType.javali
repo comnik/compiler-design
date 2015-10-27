@@ -2,13 +2,13 @@
 
 class Foo {
     void foo(boolean b) {
-        return null;
+        return void;
     }
 }
 
 class Bar extends Foo {
     void foo(int i) {
-        return null;
+        return void;
     }
 }
 

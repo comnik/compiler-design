@@ -1,0 +1,25 @@
+/* Tests if overriding works. */
+
+class A {
+}
+
+class Foo {
+    int foo(boolean b, int i, A a) {
+        return i;
+    }
+}
+
+class Bar extends Foo {
+    int foo(boolean bbb, int iii, A aaa) {
+
+        /* different parameter names should be legal, as long as
+        the number of and return type are the same*/
+
+        return iii;
+    }
+}
+
+class Main {
+    void main() {
+    }
+}

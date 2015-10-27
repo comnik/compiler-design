@@ -1,0 +1,9 @@
+/* Test that a class declared with the name Object is detected. */
+
+class Object {
+}
+
+class Main {
+    void main() {
+    }
+}
