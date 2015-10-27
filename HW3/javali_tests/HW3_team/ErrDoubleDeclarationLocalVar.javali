@@ -1,0 +1,10 @@
+/* Test that two local variables declared with the same name in the
+   same method are detected. */
+
+class Main {
+    void main() {
+        int i;
+        boolean b;
+        boolean i;
+    }
+}
