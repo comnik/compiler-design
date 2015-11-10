@@ -16,7 +16,9 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
         // Add member symbols.
         ast.fields().stream().forEach(fieldNode -> {
             if (clsSymbol.fields.containsKey(fieldNode.name)) {
-                // TODO Throw double declaration error.
+                String errorFmt = "Class %s contains two fields named %s.";
+                throw new SemanticFailure(
+                        SemanticFailure.Cause.DOUBLE_DECLARATION,errorFmt, clsSymbol.name, fieldNode.name);
             } else {
                 Symbol.VariableSymbol memberSymbol = (Symbol.VariableSymbol) visit(fieldNode, null);
                 clsSymbol.fields.put(fieldNode.name, memberSymbol);
@@ -26,7 +28,9 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
         // Add method symbols.
         ast.methods().stream().forEach(methodNode -> {
             if (clsSymbol.methods.containsKey(methodNode.name)) {
-                // TODO Throw double declaration error.
+                String errorFmt = "Class %s contains two methods named %s.";
+                throw new SemanticFailure(
+                        SemanticFailure.Cause.DOUBLE_DECLARATION,errorFmt, clsSymbol.name, methodNode.name);
             } else {
                 Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) visit(methodNode, null);
                 clsSymbol.methods.put(methodNode.name, methodSymbol);
@@ -57,7 +61,8 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
     private Symbol.TypeSymbol typeFromStr(String typeStr) {
         // Check for array type.
         if (typeStr.contains("[]")) {
-            return typeFromStr(typeStr.replace("[]", ""));
+            // int[] -> new ArrayType("int"), etc..
+            return new Symbol.ArrayTypeSymbol(typeFromStr(typeStr.replace("[]", "")));
         } else {
             Symbol.PrimitiveTypeSymbol primitiveTypeSym = primitiveTypeFromStr(typeStr);
 
