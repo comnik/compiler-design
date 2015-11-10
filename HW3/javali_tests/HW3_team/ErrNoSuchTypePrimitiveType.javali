@@ -1,0 +1,9 @@
+/* Test that a extending a primitive type is detected. */
+
+class Foo extends int {
+}
+
+class Main {
+    void main() {
+    }
+}
