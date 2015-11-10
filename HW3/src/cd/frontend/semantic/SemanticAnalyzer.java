@@ -38,6 +38,7 @@ public class SemanticAnalyzer {
         // Run global semantic checks.
         classDecls.stream().forEach(classDecl -> {
             astSemanticChecker.visit(null, globalSymbols);
+
         });
 	}
 
