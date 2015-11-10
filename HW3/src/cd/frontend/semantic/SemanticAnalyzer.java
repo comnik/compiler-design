@@ -20,6 +20,8 @@ public class SemanticAnalyzer {
 	public void check(List<ClassDecl> classDecls) throws SemanticFailure {
         Map<String,Symbol.ClassSymbol> globalSymbols = new HashMap<String,Symbol.ClassSymbol>();
         AstEnricher astEnricher = new AstEnricher();
+        AstSemanticChecker astSemanticChecker = new AstSemanticChecker();
+
 
         // Run AstEnricher over all top-level classes.
         classDecls.stream().forEach(classDecl -> {
@@ -34,7 +36,9 @@ public class SemanticAnalyzer {
         });
 
         // Run global semantic checks.
-        // TODO
+        classDecls.stream().forEach(classDecl -> {
+            astSemanticChecker.visit(null, globalSymbols);
+        });
 	}
 
 }
