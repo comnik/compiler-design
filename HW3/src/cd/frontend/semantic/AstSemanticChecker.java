@@ -21,7 +21,7 @@ public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.Class
             String errorFmt = "Class %s extends primitive type.";
             throw new SemanticFailure(
                     SemanticFailure.Cause.NO_SUCH_TYPE, errorFmt, ast.name);
-        } else if (!(globalSymbolTable.containsValue(ast.superClass))) {
+        } else if (!(globalSymbolTable.containsKey(ast.superClass))) {
             // Extended types have to exist.
             String errorFmt = "Class %s extends non-existent type.";
             throw new SemanticFailure(
