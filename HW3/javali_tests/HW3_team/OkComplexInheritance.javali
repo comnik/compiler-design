@@ -1,0 +1,35 @@
+/* Test for inheritance across three classes with overridden methods. */
+
+class A {
+    int foo;
+
+    int test(int i) {
+        return i;
+    }
+}
+
+class B extends A {
+    int bar;
+}
+
+class C extends B{
+
+    int test(int i) {
+        return (i+1);
+    }
+}
+
+class Main {
+    void main() {
+	    C c;
+        c = new C();
+
+        c.foo = 5;
+        c.bar = 10;
+
+        write(test(a.foo);
+        writeln();
+        write(test(c.bar);
+        writeln();
+	}
+}
