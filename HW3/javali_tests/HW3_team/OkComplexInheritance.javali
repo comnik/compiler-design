@@ -12,7 +12,7 @@ class B extends A {
     int bar;
 }
 
-class C extends B{
+class C extends B {
 
     int test(int i) {
         return (i+1);
@@ -22,14 +22,15 @@ class C extends B{
 class Main {
     void main() {
 	    C c;
+
         c = new C();
 
         c.foo = 5;
         c.bar = 10;
 
-        write(test(a.foo);
+        write(c.test(c.foo));
         writeln();
-        write(test(c.bar);
+        write(c.test(c.bar));
         writeln();
 	}
 }
