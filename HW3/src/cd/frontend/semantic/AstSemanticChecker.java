@@ -9,10 +9,10 @@ import java.util.Map;
 /**
  *
  */
-public class AstSemanticChecker extends AstVisitor<Symbol, Map<String,Symbol.ClassSymbol>> {
+public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.ClassSymbol>> {
 
     @Override
-    public Symbol.ClassSymbol classDecl(Ast.ClassDecl ast, Map<String,Symbol.ClassSymbol> globalSymbolTable) {
+    public Void classDecl(Ast.ClassDecl ast, Map<String,Symbol.ClassSymbol> globalSymbolTable) {
         // only class types can be extended from
         if (!(globalSymbolTable.containsValue(ast.superClass))) {
             String errorFmt = "Class %s extends non-existent type.";
@@ -24,6 +24,13 @@ public class AstSemanticChecker extends AstVisitor<Symbol, Map<String,Symbol.Cla
         return null;
     }
 
+    @Override
+    public Void ifElse(Ast.IfElse ast, Map<String,Symbol.ClassSymbol> globalSymbolTable) {
+        if (ast.condition().type.toString() != "boolean" ){
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+        }
 
+        return null;
+    }
 
 }
