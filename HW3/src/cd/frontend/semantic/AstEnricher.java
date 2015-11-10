@@ -37,6 +37,7 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
             }
         });
 
+        ast.sym = clsSymbol;
         return clsSymbol;
     }
 
@@ -49,7 +50,8 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
     @Override
     public Symbol.VariableSymbol varDecl(Ast.VarDecl ast, Void arg) {
         Symbol.TypeSymbol typeSymbol = typeFromStr(ast.type);
-        return new Symbol.VariableSymbol(ast.name, typeSymbol);
+        ast.sym = new Symbol.VariableSymbol(ast.name, typeSymbol);
+        return ast.sym;
     }
 
         /*
