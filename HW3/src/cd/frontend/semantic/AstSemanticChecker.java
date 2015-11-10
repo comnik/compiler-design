@@ -44,6 +44,8 @@ public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.Class
         if (!ast.sym.returnType.name.equals(Symbol.PrimitiveTypeSymbol.voidType.name)) {
             // This method should return something.
         }
+
+        return null;
     }
 
     @Override
