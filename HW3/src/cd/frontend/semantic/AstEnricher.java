@@ -52,6 +52,12 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
         return new Symbol.VariableSymbol(ast.name, typeSymbol);
     }
 
+        /*
+        if (ast.condition().type.toString() != "boolean" ){
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+        }*/
+
+
     // Utility methods.
 
     /**
