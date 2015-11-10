@@ -5,8 +5,6 @@ import cd.ir.AstVisitor;
 import cd.ir.Symbol;
 import cd.util.Pair;
 
-import java.util.stream.Collectors;
-
 /**
  *
  */
@@ -50,9 +48,26 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
 
         // Create symbols for every argument.
         Pair.zip(ast.argumentNames, ast.argumentTypes).stream().forEach(argPair -> {
-            Symbol.VariableSymbol varSym = varSymFromString (argPair.a, argPair.b);
-            // TODO Maybe have to check for double declarations here as well?
-            ast.sym.parameters.add(varSym);
+            if (ast.sym.locals.containsKey(argPair.a)) {
+                String errorFmt = "Name clash '%s' in method %s.";
+                throw new SemanticFailure(SemanticFailure.Cause.DOUBLE_DECLARATION, errorFmt, argPair.a, ast.name);
+            } else {
+                Symbol.VariableSymbol varSym = varSymFromString(argPair.a, argPair.b);
+                ast.sym.locals.put(argPair.a, varSym);
+                ast.sym.parameters.add(varSym);
+            }
+        });
+
+        // Create symbols for local variables.
+        ast.body().rwChildren().stream().forEach(childNode -> {
+            String name = childNode.toString();
+
+            if (ast.sym.locals.containsKey(name)) {
+                String errorFmt = "Method %s contains two locals named %s.";
+                throw new SemanticFailure(SemanticFailure.Cause.DOUBLE_DECLARATION, errorFmt, ast.name, name);
+            } else {
+                ast.sym.locals.put(name, (Symbol.VariableSymbol) visit(childNode, null));
+            }
         });
 
         // Parse the return type.
@@ -66,11 +81,6 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
         ast.sym = varSymFromString(ast.name, ast.type);
         return ast.sym;
     }
-
-        /*
-        if (ast.condition().type.toString() != "boolean" ){
-            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
-        }*/
 
 
     // Utility methods.
