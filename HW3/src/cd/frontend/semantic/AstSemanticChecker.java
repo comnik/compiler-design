@@ -39,10 +39,20 @@ public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.Class
     }
 
     @Override
-    public Void ifElse(Ast.IfElse ast, Map<String,Symbol.ClassSymbol> globalSymbolTable) {
-        if (ast.condition().type.toString() != "boolean" ){
-            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+    public Void methodDecl(Ast.MethodDecl ast, Map<String,Symbol.ClassSymbol> globalSymbolTable) {
+        // MISSING_RETURN
+        if (!ast.sym.returnType.name.equals(Symbol.PrimitiveTypeSymbol.voidType.name)) {
+            // This method should return something.
         }
+    }
+
+    @Override
+    public Void ifElse(Ast.IfElse ast, Map<String,Symbol.ClassSymbol> globalSymbolTable) {
+        // TYPE_ERROR
+        //ast.condition().
+        //if (!ast.condition().type.toString().equals(Symbol.PrimitiveTypeSymbol.booleanType.name)) {
+        //    throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+        //}
 
         return null;
     }
