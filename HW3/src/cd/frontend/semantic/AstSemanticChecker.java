@@ -3,6 +3,7 @@ package cd.frontend.semantic;
 import cd.ir.Ast;
 import cd.ir.AstVisitor;
 import cd.ir.Symbol;
+import cd.ir.Symbol.PrimitiveTypeSymbol;
 
 import java.util.Map;
 
@@ -15,14 +16,13 @@ public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.Class
     public Void classDecl(Ast.ClassDecl ast, Map<String,Symbol.ClassSymbol> globalSymbolTable) {
 
         // NO_SUCH_TYPE
-        //
-        // only class types can be extended from
-        if (ast.superClass == "int" || ast.superClass == "boolean") {
+        if (!ast.sym.superClass.isReferenceType()) {
+            // Only reference types can be extended from.
             String errorFmt = "Class %s extends primitive type.";
             throw new SemanticFailure(
                     SemanticFailure.Cause.NO_SUCH_TYPE, errorFmt, ast.name);
-        // extended types have to exist
         } else if (!(globalSymbolTable.containsValue(ast.superClass))) {
+            // Extended types have to exist.
             String errorFmt = "Class %s extends non-existent type.";
             throw new SemanticFailure(
                     SemanticFailure.Cause.NO_SUCH_TYPE, errorFmt, ast.name);
@@ -55,7 +55,6 @@ public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.Class
         //if (!ast.condition().type.toString().equals(Symbol.PrimitiveTypeSymbol.booleanType.name)) {
         //    throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         //}
-
         return null;
     }
 
@@ -67,9 +66,9 @@ public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.Class
      *  occurs somewhere, thus detecting circular inheritance.
      */
     private Boolean circularInheritanceChecker(Ast.ClassDecl ast, String className) {
-        if (ast.superClass == "Object"){
+        if (ast.superClass.equals("Object")){
             return false;
-        } else if (ast.superClass == className) {
+        } else if (ast.superClass.equals(className)) {
             return true;
         } else {
             return circularInheritanceChecker(ast.sym.superClass.ast, className);
