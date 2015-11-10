@@ -3,6 +3,9 @@ package cd.frontend.semantic;
 import cd.ir.Ast;
 import cd.ir.AstVisitor;
 import cd.ir.Symbol;
+import cd.util.Pair;
+
+import java.util.stream.Collectors;
 
 /**
  *
@@ -43,14 +46,24 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
 
     @Override
     public Symbol.MethodSymbol methodDecl(Ast.MethodDecl ast, Void arg) {
-        Symbol.MethodSymbol methodSymbol = new Symbol.MethodSymbol(ast);
-        return methodSymbol;
+        ast.sym = new Symbol.MethodSymbol(ast);
+
+        // Create symbols for every argument.
+        Pair.zip(ast.argumentNames, ast.argumentTypes).stream().forEach(argPair -> {
+            Symbol.VariableSymbol varSym = varSymFromString (argPair.a, argPair.b);
+            // TODO Maybe have to check for double declarations here as well?
+            ast.sym.parameters.add(varSym);
+        });
+
+        // Parse the return type.
+        ast.sym.returnType = typeFromStr(ast.returnType);
+
+        return ast.sym;
     }
 
     @Override
     public Symbol.VariableSymbol varDecl(Ast.VarDecl ast, Void arg) {
-        Symbol.TypeSymbol typeSymbol = typeFromStr(ast.type);
-        ast.sym = new Symbol.VariableSymbol(ast.name, typeSymbol);
+        ast.sym = varSymFromString(ast.name, ast.type);
         return ast.sym;
     }
 
@@ -61,6 +74,14 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
 
 
     // Utility methods.
+
+    /**
+     * Abstracts the creation of a new VariableSymbol from a name and a type string.
+     */
+    private Symbol.VariableSymbol varSymFromString(String name, String type) {
+        Symbol.TypeSymbol typeSymbol = typeFromStr(type);
+        return new Symbol.VariableSymbol(name, typeSymbol);
+    }
 
     /**
      * Translates an AST string representing a type,
