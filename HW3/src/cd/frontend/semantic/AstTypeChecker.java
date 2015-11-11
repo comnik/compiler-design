@@ -54,19 +54,29 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
         System.out.println(ast.sym.returnType.name);
 
         // Visit body.
-        ast.body().rwChildren().stream().forEach(node -> visit(node, ast.sym.returnType));
+        visit(ast.body(), ast.sym.returnType);
 
         return ast.sym.returnType;
+    }
+
+    @Override
+    public Symbol.TypeSymbol seq(Ast.Seq ast, Symbol.TypeSymbol enclosingType) {
+        ast.rwChildren().stream().forEach(node -> visit(node, enclosingType));
+        return null;
     }
 
     @Override
     public Symbol.TypeSymbol ifElse(Ast.IfElse ast, Symbol.TypeSymbol enclosingType) {
         Symbol.TypeSymbol conditionType = visit(ast.condition(), enclosingType);
 
-        // TYPE_ERROR - if(cond) requires cond to be of type boolean.
+        // TYPE_ERROR
         if (conditionType != PrimitiveTypeSymbol.booleanType) {
-            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
+                    "if(cond) requires cond to be of type boolean");
         }
+
+        visit(ast.then(), enclosingType);
+        visit(ast.otherwise(), enclosingType);
 
         return null;
     }
@@ -75,10 +85,13 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     public Symbol.TypeSymbol whileLoop(Ast.WhileLoop ast, Symbol.TypeSymbol enclosingType) {
         Symbol.TypeSymbol conditionType = visit(ast.condition(), enclosingType);
 
-        // TYPE_ERROR - while(cond) requires cond to be of type boolean.
+        // TYPE_ERROR
         if (conditionType != PrimitiveTypeSymbol.booleanType) {
-            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
+                    "while(cond) requires cond to be of type boolean");
         }
+
+        visit(ast.body(), enclosingType);
 
         return null;
     }
@@ -89,12 +102,36 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
         Symbol.TypeSymbol rightType = visit(ast.right(), enclosingType);
 
         if (!rightType.isSubtype(leftType)) {
-            // TYPE_ERROR - The type of the right-hand side in an assignment
-            // must be a subtype of the type of the left-hand side.
-            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
+                    "Assignment operands must be of compatible types.");
         }
 
         return leftType;
+    }
+
+    @Override
+    public Symbol.TypeSymbol unaryOp(Ast.UnaryOp ast, Symbol.TypeSymbol enclosingType) {
+        Symbol.TypeSymbol argType = visit(ast.arg(), enclosingType);
+
+        switch (ast.operator) {
+            case U_PLUS:
+            case U_MINUS:
+                if (!argType.equals(PrimitiveTypeSymbol.intType)) {
+                    throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
+                            "Unary arithmetic operators require an operand of type int.");
+                }
+                return PrimitiveTypeSymbol.intType;
+
+            case U_BOOL_NOT:
+                if (!argType.equals(PrimitiveTypeSymbol.booleanType)) {
+                    throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
+                            "Unary boolean operators require an operand of type boolean.");
+                }
+                return PrimitiveTypeSymbol.booleanType;
+
+            default:
+                throw new RuntimeException("Unknown operator " + ast.operator.repr);
+        }
     }
 
     @Override
@@ -142,9 +179,10 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
                     throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
                 }
                 return PrimitiveTypeSymbol.booleanType;
-        }
 
-        return null;
+            default:
+                throw new RuntimeException("Unsupported operand " + ast.operator.repr);
+        }
     }
 
     @Override

@@ -24,7 +24,11 @@ public abstract class Symbol {
         public boolean isSubtype(TypeSymbol parent) {
             return this.name.equals(parent.name);
         }
-		
+
+        public boolean equals(TypeSymbol other) {
+            return this.name.equals(other.name);
+        }
+
 		public String toString() {
 			return name;
 		}
