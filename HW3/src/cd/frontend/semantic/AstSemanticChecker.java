@@ -126,7 +126,7 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
     // Utility methods.
 
     private boolean hasReturn(Ast ast){
-        // Get the names of the children ast nodes.
+        // Build a list of ast children names.
         List<String> listOfChildren = ast.children().stream()
                 .map(ast1 -> ast1.getClass().getName())
                 .collect(Collectors.toList());
@@ -134,20 +134,19 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
         if (listOfChildren.contains("ReturnStmt")) {
             return true;
         } else if (listOfChildren.contains("IfElse")) {
-            // Build a list of then and else parts of IfElse
-            List<Ast> toBeRenamed = new ArrayList();
+            // Build a list of then and otherwise parts of IfElse
+            List<Ast> thenOtherwiseList = new ArrayList();
             ast.children().stream()
-                    .filter(ast1 -> ast.getClass().getName() == "IfElse")
-                    .forEach(
-                            ast3 -> {
-                                toBeRenamed.add(((Ast.IfElse) ast3).then());
-                                toBeRenamed.add(((Ast.IfElse) ast3).otherwise());
+                    .filter(ast2 -> ast2.getClass().getName() == "IfElse")
+                    .forEach( ifElseAst -> {
+                                thenOtherwiseList.add(((Ast.IfElse) ifElseAst).then());
+                                thenOtherwiseList.add(((Ast.IfElse) ifElseAst).otherwise());
                             }
                     );
 
             // Go through all the then and otherwise nodes and check if they have a return statement.
-            return toBeRenamed.stream()
-                    .map(ast4 -> hasReturn(ast4))
+            return thenOtherwiseList.stream()
+                    .map(ast3 -> hasReturn(ast3))
                     .reduce(true, (a, b) -> a && b);
 
             // Go through all children that are IfElse nodes and check if they all have a return statement.
