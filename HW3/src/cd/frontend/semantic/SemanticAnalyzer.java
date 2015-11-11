@@ -23,7 +23,7 @@ public class SemanticAnalyzer {
         // Add global built-in symbols.
         globalSymbols.put(Symbol.ClassSymbol.objectType.name, Symbol.ClassSymbol.objectType);
 
-        // Run AstEnricher over all top-level classes.
+        // Create symbol table for all top-level classes.
         AstEnricher astEnricher = new AstEnricher();
         classDecls.stream().forEach(classDecl -> {
             Symbol.ClassSymbol clsSymbol = (Symbol.ClassSymbol) astEnricher.visit(classDecl, null);

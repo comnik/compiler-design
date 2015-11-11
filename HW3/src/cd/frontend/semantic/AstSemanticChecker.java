@@ -58,7 +58,7 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
         if (superMethod != null) {
             if (!sameSignature(ast.sym, superMethod)) {
                 String errorFmt = "Method %s overrides super method, but signatures don't match.";
-                throw new SemanticFailure(SemanticFailure.Cause.INVALID_OVERRIDE, errorFmt);
+                throw new SemanticFailure(SemanticFailure.Cause.INVALID_OVERRIDE, errorFmt, ast.sym.name);
             }
         }
 
@@ -81,6 +81,11 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
     public Void methodCall(Ast.MethodCall ast, Symbol parent) {
         Ast.MethodCallExpr callExpr = ast.getMethodCallExpr();
         Symbol.MethodSymbol methodSymbol = ((Symbol.ClassSymbol) parent).getMethod(callExpr.methodName);
+
+        // NO_SUCH_METHOD
+        if (methodSymbol == null) {
+            throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_METHOD);
+        }
 
         // WRONG_NUMBER_OF_ARGUMENTS
         if (callExpr.argumentsWithoutReceiver().size() != methodSymbol.parameters.size()) {
@@ -120,7 +125,7 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
     private Function<Symbol.ClassSymbol,Boolean> checkClass;
 
     /**
-     *  Goes through the inheritance tree and checks if the className
+     *  Goes through the inheritance tree and checks wether the className
      *  occurs somewhere, thus detecting circular inheritance.
      */
     private Boolean hasCircularInheritance(String className, Map<String,Symbol.ClassSymbol> symTab) {
