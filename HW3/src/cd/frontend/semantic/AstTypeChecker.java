@@ -308,7 +308,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
 
     @Override
     public Symbol.TypeSymbol var(Ast.Var ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.TypeSymbol varType = ast.type;
+        Symbol.TypeSymbol varType = ast.sym.type;
         Symbol.ClassSymbol cls = (Symbol.ClassSymbol) ast.type;
 
         if (cls != null) {
@@ -320,7 +320,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
             throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_TYPE);
         }
 
-        ast.setSymbol(new Symbol.VariableSymbol(ast.name, cls));
+        ast.setSymbol(new Symbol.VariableSymbol(ast.name, varType));
         return ast.sym.type;
     }
 

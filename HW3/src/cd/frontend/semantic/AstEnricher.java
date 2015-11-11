@@ -6,14 +6,17 @@ import cd.ir.Symbol;
 import cd.util.Pair;
 import cd.util.TypeUtils;
 
+import java.lang.reflect.Method;
+import java.util.Map;
+
 /**
  * Fills the symbol table hierarchy with
  * everything that can be inferred without a global symbol information.
  */
-public class AstEnricher extends AstVisitor<Symbol,Void> {
+public class AstEnricher extends AstVisitor<Symbol,Map<String,Symbol.VariableSymbol>> {
 
     @Override
-    public Symbol.ClassSymbol classDecl(Ast.ClassDecl ast, Void arg) {
+    public Symbol.ClassSymbol classDecl(Ast.ClassDecl ast, Map<String,Symbol.VariableSymbol> scope) {
         Symbol.ClassSymbol clsSymbol = new Symbol.ClassSymbol(ast);
 
         // Add member symbols.
@@ -23,7 +26,7 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
                 throw new SemanticFailure(
                         SemanticFailure.Cause.DOUBLE_DECLARATION,errorFmt, clsSymbol.name, fieldNode.name);
             } else {
-                Symbol.VariableSymbol memberSymbol = (Symbol.VariableSymbol) visit(fieldNode, null);
+                Symbol.VariableSymbol memberSymbol = (Symbol.VariableSymbol) visit(fieldNode, clsSymbol.fields);
                 clsSymbol.fields.put(fieldNode.name, memberSymbol);
             }
         });
@@ -35,7 +38,7 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
                 throw new SemanticFailure(
                         SemanticFailure.Cause.DOUBLE_DECLARATION,errorFmt, clsSymbol.name, methodNode.name);
             } else {
-                Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) visit(methodNode, null);
+                Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) visit(methodNode, clsSymbol.fields);
                 clsSymbol.methods.put(methodNode.name, methodSymbol);
             }
         });
@@ -45,7 +48,7 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
     }
 
     @Override
-    public Symbol.MethodSymbol methodDecl(Ast.MethodDecl ast, Void arg) {
+    public Symbol.MethodSymbol methodDecl(Ast.MethodDecl ast, Map<String,Symbol.VariableSymbol> scope) {
         ast.sym = new Symbol.MethodSymbol(ast);
 
         // Create symbols for every argument.
@@ -61,24 +64,39 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
         });
 
         // Create symbols for local variables.
-        ast.decls().rwChildren().stream().forEach(childNode -> {
-            String name = ((Ast.VarDecl) childNode).name;
+        visit(ast.decls(), ast.sym.locals);
 
-            if (ast.sym.locals.containsKey(name)) {
-                String errorFmt = "Method %s contains two locals named %s.";
-                throw new SemanticFailure(SemanticFailure.Cause.DOUBLE_DECLARATION, errorFmt, ast.name, name);
-            } else {
-                ast.sym.locals.put(name, (Symbol.VariableSymbol) visit(childNode, null));
-            }
-        });
+        // Add type information to symbol occurrences.
+        visit(ast.body(), ast.sym.locals);
 
         return ast.sym;
     }
 
     @Override
-    public Symbol.VariableSymbol varDecl(Ast.VarDecl ast, Void arg) {
+    public Symbol seq(Ast.Seq ast, Map<String,Symbol.VariableSymbol> scope) {
+        ast.rwChildren().stream().forEach(node -> visit(node, scope));
+        return null;
+    }
+
+    @Override
+    public Symbol.VariableSymbol varDecl(Ast.VarDecl ast, Map<String,Symbol.VariableSymbol> scope) {
         ast.sym = varSymFromString(ast.name, ast.type);
+
+        if (scope.containsKey(ast.name)) {
+            String errorFmt = "Two local variables named %s.";
+            throw new SemanticFailure(SemanticFailure.Cause.DOUBLE_DECLARATION, errorFmt, ast.name);
+        } else {
+            scope.put(ast.name, ast.sym);
+        }
+
         return ast.sym;
+    }
+
+    @Override
+    public Symbol.VariableSymbol var(Ast.Var ast, Map<String,Symbol.VariableSymbol> scope) {
+        Symbol.VariableSymbol varSym = scope.get(ast.name);
+        ast.setSymbol(varSym);
+        return varSym;
     }
 
 
