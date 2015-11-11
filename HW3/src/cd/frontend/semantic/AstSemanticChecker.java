@@ -126,7 +126,7 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
     private Function<Symbol.ClassSymbol,Boolean> checkClass;
 
     /**
-     *  Goes through the inheritance tree and checks wether the className
+     *  Goes through the inheritance tree and checks whether the className
      *  occurs somewhere, thus detecting circular inheritance.
      */
     private Boolean hasCircularInheritance(String className, Map<String,Symbol.ClassSymbol> symTab) {
