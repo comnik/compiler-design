@@ -92,19 +92,6 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
     }
 
     @Override
-    public Void field(Ast.Field ast, Symbol parent) {
-        Symbol.ClassSymbol classSymbol = (Symbol.ClassSymbol) parent;
-        Symbol.VariableSymbol varSymbol = classSymbol.getField(ast.fieldName);
-
-        // NO_SUCH_FIELD
-        if (varSymbol == null) {
-            throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_FIELD);
-        }
-
-        return null;
-    }
-
-    @Override
     public Void assign(Ast.Assign ast, Symbol parent){
         // NOT_ASSIGNABLE
         if (ast.left().getClass().getName().equals("ThisRef")){

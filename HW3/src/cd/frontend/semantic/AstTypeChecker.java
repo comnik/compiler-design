@@ -81,7 +81,6 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     public Symbol.TypeSymbol ifElse(Ast.IfElse ast, Symbol.TypeSymbol enclosingType) {
         Symbol.TypeSymbol conditionType = visit(ast.condition(), enclosingType);
 
-        // TYPE_ERROR
         if (!conditionType.equals(PrimitiveTypeSymbol.booleanType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
                     "if(cond) requires cond to be of type boolean");
@@ -97,7 +96,6 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     public Symbol.TypeSymbol whileLoop(Ast.WhileLoop ast, Symbol.TypeSymbol enclosingType) {
         Symbol.TypeSymbol conditionType = visit(ast.condition(), enclosingType);
 
-        // TYPE_ERROR
         if (!conditionType.equals(PrimitiveTypeSymbol.booleanType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
                     "while(cond) requires cond to be of type boolean");
@@ -275,7 +273,8 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
                 .allMatch(typePair -> typePair.a.isSubtype(typePair.b));
 
         if (!argTypesCorrect) {
-            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
+                    "Provided argument types do not match formal parameter types.");
         }
 
         return methodCallExpr.sym.returnType;
@@ -288,6 +287,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
+        targetType = globalSymbolTable.get(targetType.name);
         ast.sym = targetType.getField(ast.fieldName);
         if (ast.sym == null) {
             throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_FIELD);
@@ -301,9 +301,8 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
         Symbol.TypeSymbol returnType = visit(ast.arg(), enclosingType);
 
         if (!returnType.isSubtype(enclosingType)) {
-            // TYPE_ERROR - In a method return statment, the expression type must be a subtype
-            // of the corresponding formal return type.
-            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
+                    "Returned value does not match expected type.");
         }
 
         return returnType;
@@ -313,9 +312,9 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     public Symbol.TypeSymbol builtInWrite(Ast.BuiltInWrite ast, Symbol.TypeSymbol enclosingType) {
         Symbol.TypeSymbol exprType = visit(ast.arg(), enclosingType);
 
-        // TYPE_ERROR - write(expr) requires expr to be of type int
         if (!exprType.equals(Symbol.PrimitiveTypeSymbol.intType)) {
-            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
+                    "write() requires expr to be of type int");
         }
 
         return null;
@@ -325,13 +324,27 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     // Base Cases
 
     @Override
+    public Symbol.TypeSymbol varDecl(Ast.VarDecl ast, Symbol.TypeSymbol enclosingType) {
+        Symbol.TypeSymbol varType = ast.sym.type;
+        if (varType instanceof Symbol.ClassSymbol) {
+            // Fix-up with global symbol table.
+            varType = globalSymbolTable.get(varType.name);
+        }
+
+        if (varType == null) {
+            throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_TYPE);
+        }
+
+        ast.sym = new Symbol.VariableSymbol(ast.name, varType);
+        return ast.sym.type;
+    }
+
+    @Override
     public Symbol.TypeSymbol var(Ast.Var ast, Symbol.TypeSymbol enclosingType) {
         Symbol.TypeSymbol varType = ast.sym.type;
-        Symbol.ClassSymbol cls = (Symbol.ClassSymbol) ast.type;
-
-        if (cls != null) {
+        if (varType instanceof Symbol.ClassSymbol) {
             // Fix-up with global symbol table.
-            varType = globalSymbolTable.get(cls.name);
+            varType = globalSymbolTable.get(varType.name);
         }
 
         if (varType == null) {
