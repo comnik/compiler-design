@@ -249,6 +249,19 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     @Override
     public Symbol.TypeSymbol methodCall(Ast.MethodCall ast, Symbol.TypeSymbol enclosingType) {
         Ast.MethodCallExpr methodCallExpr = ast.getMethodCallExpr();
+        Symbol.ClassSymbol recvType;
+
+        // Get the recieving class.
+        try {
+            recvType = (Symbol.ClassSymbol) visit(methodCallExpr.receiver(), enclosingType);
+        } catch (ClassCastException ex) {
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+        }
+
+        methodCallExpr.sym = recvType.getMethod(methodCallExpr.methodName);
+        if (methodCallExpr.sym == null) {
+            throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_METHOD);
+        }
 
         List<Symbol.TypeSymbol> actualArgTypes = methodCallExpr.argumentsWithoutReceiver().stream()
                 .map(expr -> visit(expr, enclosingType))
@@ -273,6 +286,11 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
         Symbol.ClassSymbol targetType = (Symbol.ClassSymbol) visit(ast.arg(), enclosingType);
         if (targetType == null) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+        }
+
+        ast.sym = targetType.getField(ast.fieldName);
+        if (ast.sym == null) {
+            throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_FIELD);
         }
 
         return ast.sym.type;
@@ -391,14 +409,12 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
         checkClass = (classSym) -> {
             if (seen.contains(classSym.name)) {
                 return true;
+            } else if (classSym.name.equals(Symbol.ClassSymbol.objectType.name)) {
+                // We have reached "Object".
+                return false;
             } else {
-                // Check if we have reached "Object".
-                if (classSym.superClass.name.equals(Symbol.ClassSymbol.objectType.name)) {
-                    return false;
-                } else {
-                    seen.add(classSym.name);
-                    return checkClass.apply(classSym.superClass);
-                }
+                seen.add(classSym.name);
+                return checkClass.apply(classSym.superClass);
             }
         };
 
