@@ -33,9 +33,23 @@ public class SemanticAnalyzer {
             }
         });
 
+
         // Run type checks.
         AstTypeChecker astTypeChecker = new AstTypeChecker(globalSymbols);
         classDecls.stream().forEach(classDecl -> astTypeChecker.visit(classDecl, null));
+
+        // INVALID_START_POINT
+        if (!globalSymbols.containsKey("Main")) {
+            String errorFmt = "No Main Class found.";
+            throw new SemanticFailure(SemanticFailure.Cause.INVALID_START_POINT, errorFmt);
+        } else if (!globalSymbols.get("Main").methods.containsKey("main")) {
+            String errorFmt = "No main method found.";
+            throw new SemanticFailure(SemanticFailure.Cause.INVALID_START_POINT, errorFmt);
+        } else if (!globalSymbols.get("Main").methods.get("main").returnType.toString()
+                .equals(Symbol.PrimitiveTypeSymbol.voidType.name)) {
+            String errorFmt = "main method should have signature 'void'.";
+            throw new SemanticFailure(SemanticFailure.Cause.INVALID_START_POINT, errorFmt);
+        }
 
         // Run all other global semantic checks.
         AstSemanticChecker astSemanticChecker = new AstSemanticChecker(globalSymbols);
