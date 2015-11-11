@@ -67,6 +67,7 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
             // This method should return something.
         }
 
+        // Check method body.
         return visit(ast.body(), parent);
     }
 
