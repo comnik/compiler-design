@@ -72,9 +72,6 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
             }
         });
 
-        // Parse the return type.
-        ast.sym.returnType = TypeUtils.typeFromStr(ast.returnType);
-
         return ast.sym;
     }
 

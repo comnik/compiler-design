@@ -20,9 +20,6 @@ public class SemanticAnalyzer {
 	public void check(List<ClassDecl> classDecls) throws SemanticFailure {
         Map<String,Symbol.ClassSymbol> globalSymbols = new HashMap<String,Symbol.ClassSymbol>();
 
-        // Add global built-in symbols.
-        globalSymbols.put(Symbol.ClassSymbol.objectType.name, Symbol.ClassSymbol.objectType);
-
         // Populate symbol table for all top-level classes.
         AstEnricher astEnricher = new AstEnricher();
         classDecls.stream().forEach(classDecl -> {
