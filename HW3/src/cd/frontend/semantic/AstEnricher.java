@@ -68,14 +68,14 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
         });
 
         // Create symbols for local variables.
-        ast.body().rwChildren().stream().forEach(childNode -> {
+        ast.decls().rwChildren().stream().forEach(childNode -> {
             String name = childNode.toString();
 
             if (ast.sym.locals.containsKey(name)) {
                 String errorFmt = "Method %s contains two locals named %s.";
                 throw new SemanticFailure(SemanticFailure.Cause.DOUBLE_DECLARATION, errorFmt, ast.name, name);
             } else {
-                ast.sym.locals.put(name, (Symbol.VariableSymbol) visit(childNode, null));
+                ast.sym.locals.put(name, (Symbol.VariableSymbol) visit(childNode, cls));
             }
         });
 
