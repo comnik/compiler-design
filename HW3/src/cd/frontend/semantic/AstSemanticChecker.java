@@ -130,7 +130,7 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
             // Build a list of then and otherwise parts of IfElse
             List<Ast> thenOtherwiseList = new ArrayList();
             ast.children().stream()
-                    .filter(ast2 -> ast2.getClass().getName() == "IfElse")
+                    .filter(ast2 -> ast2.getClass().getSimpleName().equals("IfElse"))
                     .forEach( ifElseAst -> {
                                 thenOtherwiseList.add(((Ast.IfElse) ifElseAst).then());
                                 thenOtherwiseList.add(((Ast.IfElse) ifElseAst).otherwise());
