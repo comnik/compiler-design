@@ -121,7 +121,7 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
     private boolean hasReturn(Ast ast){
         // Build a list of ast children names.
         List<String> listOfChildren = ast.children().stream()
-                .map(ast1 -> ast1.getClass().getName())
+                .map(ast1 -> ast1.getClass().getSimpleName())
                 .collect(Collectors.toList());
 
         if (listOfChildren.contains("ReturnStmt")) {
