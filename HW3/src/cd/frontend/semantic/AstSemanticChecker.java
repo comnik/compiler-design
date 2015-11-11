@@ -3,6 +3,7 @@ package cd.frontend.semantic;
 import cd.ir.Ast;
 import cd.ir.AstVisitor;
 import cd.ir.Symbol;
+import cd.util.Pair;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -12,10 +13,16 @@ import java.util.function.Function;
 /**
  *
  */
-public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.ClassSymbol>> {
+public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
+
+    Map<String, Symbol.ClassSymbol> globalSymbolTable;
+
+    public AstSemanticChecker(Map<String, Symbol.ClassSymbol> globalSymTable) {
+        this.globalSymbolTable = globalSymTable;
+    }
 
     @Override
-    public Void classDecl(Ast.ClassDecl ast, Map<String,Symbol.ClassSymbol> globalSymbolTable) {
+    public Void classDecl(Ast.ClassDecl ast, Symbol parent) {
         // NO_SUCH_TYPE
         if (!ast.sym.superClass.isReferenceType()) {
             // Only reference types can be extended from.
@@ -36,21 +43,68 @@ public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.Class
                     SemanticFailure.Cause.CIRCULAR_INHERITANCE, errorFmt, ast.name, ast.superClass);
         }
 
+        // Check members.
+        ast.members().stream().forEach(node -> visit(node, globalSymbolTable.get(ast.name)));
+
         return null;
     }
 
     @Override
-    public Void methodDecl(Ast.MethodDecl ast, Map<String,Symbol.ClassSymbol> globalSymbolTable) {
+    public Void methodDecl(Ast.MethodDecl ast, Symbol parent) {
+        Symbol.ClassSymbol classSymbol = (Symbol.ClassSymbol) parent;
+
+        // INVALID_OVERRIDE
+        Symbol.MethodSymbol superMethod = classSymbol.superClass.getMethod(ast.sym.name);
+        if (superMethod != null) {
+            if (!sameSignature(ast.sym, superMethod)) {
+                String errorFmt = "Method %s overrides super method, but signatures don't match.";
+                throw new SemanticFailure(SemanticFailure.Cause.INVALID_OVERRIDE, errorFmt);
+            }
+        }
+
         // MISSING_RETURN
         if (!ast.sym.returnType.name.equals(Symbol.PrimitiveTypeSymbol.voidType.name)) {
             // This method should return something.
+        }
+
+        return visit(ast.body(), parent);
+    }
+
+    @Override
+    public Void seq(Ast.Seq ast, Symbol parent) {
+        ast.rwChildren().stream().forEach(node -> visit(node, parent));
+        return null;
+    }
+
+    @Override
+    public Void methodCall(Ast.MethodCall ast, Symbol parent) {
+        Ast.MethodCallExpr callExpr = ast.getMethodCallExpr();
+        Symbol.MethodSymbol methodSymbol = ((Symbol.ClassSymbol) parent).getMethod(callExpr.methodName);
+
+        // WRONG_NUMBER_OF_ARGUMENTS
+        if (callExpr.argumentsWithoutReceiver().size() != methodSymbol.parameters.size()) {
+            String errorFmt = "Method %s called with %d parameters, but expects %d.";
+            throw new SemanticFailure(SemanticFailure.Cause.WRONG_NUMBER_OF_ARGUMENTS, errorFmt, callExpr.methodName);
         }
 
         return null;
     }
 
     @Override
-    public Void ifElse(Ast.IfElse ast, Map<String,Symbol.ClassSymbol> globalSymbolTable) {
+    public Void var(Ast.Var ast, Symbol parent) {
+        Symbol.ClassSymbol classSymbol = (Symbol.ClassSymbol) parent;
+        Symbol.VariableSymbol varSymbol = classSymbol.getField(ast.name);
+
+        // NO_SUCH_FIELD
+        if (varSymbol == null) {
+            throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_FIELD);
+        }
+
+        return null;
+    }
+
+    @Override
+    public Void ifElse(Ast.IfElse ast, Symbol parent) {
         // TYPE_ERROR
         //ast.condition().
         //if (!ast.condition().type.toString().equals(Symbol.PrimitiveTypeSymbol.booleanType.name)) {
@@ -89,7 +143,18 @@ public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.Class
             }
         };
 
-        return checkClass.apply(symTab.get(className));
+        Symbol.ClassSymbol classSym = symTab.get(className);
+        return checkClass.apply(classSym);
+    }
+
+    private boolean sameSignature(Symbol.MethodSymbol m1, Symbol.MethodSymbol m2) {
+        if (!m1.returnType.name.equals(m2.returnType.name) || m1.parameters.size() != m2.parameters.size()) {
+            return false;
+        } else {
+            // Compare parameter types.
+            return Pair.zip(m1.parameters, m2.parameters).stream()
+                    .allMatch(paramPair -> paramPair.a.type.name.equals(paramPair.b.type.name));
+        }
     }
 
 }
