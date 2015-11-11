@@ -3,9 +3,11 @@ package cd.frontend.semantic;
 import cd.ir.Ast;
 import cd.ir.AstVisitor;
 import cd.ir.Symbol;
-import cd.ir.Symbol.PrimitiveTypeSymbol;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
 /**
  *
@@ -29,7 +31,7 @@ public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.Class
         }
 
         // CIRCULAR_INHERITANCE
-        if (circularInheritanceChecker(ast, ast.name)){
+        if (hasCircularInheritance(ast.name, globalSymbolTable)){
             String errorFmt = "Class %s should not extend %s.";
             throw new SemanticFailure(
                     SemanticFailure.Cause.CIRCULAR_INHERITANCE, errorFmt, ast.name, ast.superClass);
@@ -61,18 +63,34 @@ public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.Class
 
     // Utility methods.
 
+    private Function<Symbol.ClassSymbol,Boolean> checkClass;
+
     /**
      *  Goes through the inheritance tree and checks if the className
      *  occurs somewhere, thus detecting circular inheritance.
      */
-    private Boolean circularInheritanceChecker(Ast.ClassDecl ast, String className) {
-        if (ast.superClass.equals("Object")){
-            return false;
-        } else if (ast.superClass.equals(className)) {
-            return true;
-        } else {
-            return circularInheritanceChecker(ast.sym.superClass.ast, className);
-        }
+    private Boolean hasCircularInheritance(String className, Map<String,Symbol.ClassSymbol> symTab) {
+        Set<String> seen = new HashSet<String>();
+
+        checkClass = (classSym) -> {
+            if (seen.contains(classSym.name)) {
+                return true;
+            } else {
+                // We have to fetch the superclass from the symbol table,
+                // so that it actually contains further inheritance information.
+                Symbol.ClassSymbol superCls = symTab.get(classSym.superClass.name);
+
+                // Check if we have reached "Object".
+                if (superCls.name.equals(Symbol.ClassSymbol.objectType.name)) {
+                    return false;
+                } else {
+                    seen.add(classSym.name);
+                    return checkClass.apply(superCls);
+                }
+            }
+        };
+
+        return checkClass.apply(symTab.get(className));
     }
 
 }
