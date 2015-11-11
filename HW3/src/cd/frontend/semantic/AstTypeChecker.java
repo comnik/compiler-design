@@ -5,11 +5,14 @@ import cd.ir.Ast;
 import cd.ir.AstVisitor;
 import cd.ir.Symbol;
 import cd.ir.Symbol.PrimitiveTypeSymbol;
+import cd.util.Pair;
 import cd.util.TypeUtils;
 
 import javax.lang.model.type.PrimitiveType;
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Ensures type safety for an AST, given a global symbol table.
@@ -183,6 +186,46 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Void> {
         }
 
         return objType;
+    }
+
+    @Override
+    public Symbol.TypeSymbol methodCall(Ast.MethodCall ast, Void arg) {
+        Ast.MethodCallExpr methodCallExpr = ast.getMethodCallExpr();
+
+        List<Symbol.TypeSymbol> actualArgTypes = methodCallExpr.argumentsWithoutReceiver().stream()
+                .map(expr -> visit(expr, null))
+                .collect(Collectors.toList());
+
+        List<Symbol.TypeSymbol> formalArgTypes = methodCallExpr.sym.parameters.stream()
+                .map(varSym -> varSym.type)
+                .collect(Collectors.toList());
+
+        boolean argTypesCorrect = Pair.zip(actualArgTypes, formalArgTypes).stream()
+                .allMatch(typePair -> TypeUtils.isSubtype(typePair.a, typePair.b));
+
+        if (!argTypesCorrect) {
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+        }
+
+        return methodCallExpr.sym.returnType;
+    }
+
+    @Override
+    public Symbol.TypeSymbol field(Ast.Field ast, Void arg) {
+        Symbol.ClassSymbol targetType = (Symbol.ClassSymbol) visit(ast.arg(), null);
+        if (targetType == null) {
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+        }
+
+        return ast.sym.type;
+    }
+
+    @Override
+    public Symbol.TypeSymbol returnStmt(Ast.ReturnStmt ast, Void arg) {
+        Symbol.TypeSymbol returnType = visit(ast.arg(), null);
+
+        // TODO Check for correct return type
+        return returnType;
     }
 
     @Override
