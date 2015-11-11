@@ -45,12 +45,4 @@ public class TypeUtils {
         return null;
     }
 
-    /**
-     * Checks wether the child type inherits from the parent type,
-     * according to Javali's subtyping rules.
-     */
-    public static boolean isSubtype(Symbol.TypeSymbol child, Symbol.TypeSymbol parent) {
-        // if (child.isReferenceType())
-    }
-
 }

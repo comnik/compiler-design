@@ -8,8 +8,6 @@ import cd.ir.Symbol.PrimitiveTypeSymbol;
 import cd.util.Pair;
 import cd.util.TypeUtils;
 
-import javax.lang.model.type.PrimitiveType;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -82,7 +80,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Void> {
         Symbol.TypeSymbol leftType = visit(ast.left(), null);
         Symbol.TypeSymbol rightType = visit(ast.right(), null);
 
-        if (!TypeUtils.isSubtype(rightType, leftType)) {
+        if (!rightType.isSubtype(leftType)) {
             // TYPE_ERROR - The type of the right-hand side in an assignment
             // must be a subtype of the type of the left-hand side.
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
@@ -132,7 +130,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Void> {
             case B_EQUAL:
             case B_NOT_EQUAL:
                 // require operands of type L and R, where one is the subtype of the other
-                if (!TypeUtils.isSubtype(leftType, rightType) && !TypeUtils.isSubtype(rightType, leftType)) {
+                if (!leftType.isSubtype(rightType) && !rightType.isSubtype(leftType)) {
                     throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
                 }
                 return PrimitiveTypeSymbol.booleanType;
@@ -146,7 +144,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Void> {
         Symbol.TypeSymbol argType = visit(ast.arg(), null);
         Symbol.TypeSymbol castType = TypeUtils.typeFromStr(ast.typeName);
 
-        if (!TypeUtils.isSubtype(argType, castType) && !TypeUtils.isSubtype(castType, argType)) {
+        if (!argType.isSubtype(castType) && !castType.isSubtype(argType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
@@ -201,7 +199,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Void> {
                 .collect(Collectors.toList());
 
         boolean argTypesCorrect = Pair.zip(actualArgTypes, formalArgTypes).stream()
-                .allMatch(typePair -> TypeUtils.isSubtype(typePair.a, typePair.b));
+                .allMatch(typePair -> typePair.a.isSubtype(typePair.b));
 
         if (!argTypesCorrect) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
@@ -223,7 +221,6 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Void> {
     @Override
     public Symbol.TypeSymbol returnStmt(Ast.ReturnStmt ast, Void arg) {
         Symbol.TypeSymbol returnType = visit(ast.arg(), null);
-
         // TODO Check for correct return type
         return returnType;
     }

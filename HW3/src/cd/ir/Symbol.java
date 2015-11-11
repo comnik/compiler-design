@@ -16,6 +16,14 @@ public abstract class Symbol {
 		}
 
 		public abstract boolean isReferenceType();
+
+        /**
+         * Checks wether the child type inherits from the parent type,
+         * according to Javali's subtyping rules.
+         */
+        public boolean isSubtype(TypeSymbol parent) {
+            return this.name.equals(parent.name);
+        }
 		
 		public String toString() {
 			return name;
@@ -37,6 +45,12 @@ public abstract class Symbol {
 		public boolean isReferenceType() {
 			return false;
 		}
+
+        @Override
+        public boolean isSubtype(TypeSymbol parent) {
+            // void is never a subtype of anything
+            return !(this.name.equals(voidType.name)) || super.isSubtype(parent);
+        }
 	}
 	
 	public static class ArrayTypeSymbol extends TypeSymbol {
@@ -50,6 +64,13 @@ public abstract class Symbol {
 		public boolean isReferenceType() {
 			return true;
 		}
+
+        @Override
+        public boolean isSubtype(TypeSymbol parent) {
+            return super.isSubtype(parent) ||
+                    // All arrays are subtypes of Object.
+                    (parent.name.equals(ClassSymbol.objectType.name));
+        }
 		
 	}
 	
@@ -82,6 +103,14 @@ public abstract class Symbol {
 		public boolean isReferenceType() {
 			return true;
 		}
+
+        @Override
+        public boolean isSubtype(TypeSymbol parent) {
+            return super.isSubtype(parent) ||
+                    // the hidden null type is a subtype of all reference types
+                    (parent.isReferenceType() && this == nullType) ||
+                    this.superClass.isSubtype(parent);
+        }
 		
 		public VariableSymbol getField(String name) {
 			VariableSymbol fsym = fields.get(name);
