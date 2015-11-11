@@ -62,7 +62,7 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
 
         // Create symbols for local variables.
         ast.decls().rwChildren().stream().forEach(childNode -> {
-            String name = childNode.toString();
+            String name = ((Ast.VarDecl) childNode).name;
 
             if (ast.sym.locals.containsKey(name)) {
                 String errorFmt = "Method %s contains two locals named %s.";
