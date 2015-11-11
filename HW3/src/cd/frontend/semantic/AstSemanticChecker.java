@@ -97,9 +97,9 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
     }
 
     @Override
-    public Void var(Ast.Var ast, Symbol parent) {
+    public Void field(Ast.Field ast, Symbol parent) {
         Symbol.ClassSymbol classSymbol = (Symbol.ClassSymbol) parent;
-        Symbol.VariableSymbol varSymbol = classSymbol.getField(ast.name);
+        Symbol.VariableSymbol varSymbol = classSymbol.getField(ast.fieldName);
 
         // NO_SUCH_FIELD
         if (varSymbol == null) {
@@ -108,17 +108,6 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
 
         return null;
     }
-
-    @Override
-    public Void ifElse(Ast.IfElse ast, Symbol parent) {
-        // TYPE_ERROR
-        //ast.condition().
-        //if (!ast.condition().type.toString().equals(Symbol.PrimitiveTypeSymbol.booleanType.name)) {
-        //    throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
-        //}
-        return null;
-    }
-
 
     // Utility methods.
 
@@ -137,14 +126,14 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
             } else {
                 // We have to fetch the superclass from the symbol table,
                 // so that it actually contains further inheritance information.
-                Symbol.ClassSymbol superCls = symTab.get(classSym.superClass.name);
+                classSym.superClass = symTab.get(classSym.superClass.name);
 
                 // Check if we have reached "Object".
-                if (superCls.name.equals(Symbol.ClassSymbol.objectType.name)) {
+                if (classSym.superClass.name.equals(Symbol.ClassSymbol.objectType.name)) {
                     return false;
                 } else {
                     seen.add(classSym.name);
-                    return checkClass.apply(superCls);
+                    return checkClass.apply(classSym.superClass);
                 }
             }
         };

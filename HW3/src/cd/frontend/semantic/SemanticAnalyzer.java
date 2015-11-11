@@ -23,7 +23,7 @@ public class SemanticAnalyzer {
         // Add global built-in symbols.
         globalSymbols.put(Symbol.ClassSymbol.objectType.name, Symbol.ClassSymbol.objectType);
 
-        // Create symbol table for all top-level classes.
+        // Populate symbol table for all top-level classes.
         AstEnricher astEnricher = new AstEnricher();
         classDecls.stream().forEach(classDecl -> {
             Symbol.ClassSymbol clsSymbol = (Symbol.ClassSymbol) astEnricher.visit(classDecl, null);
@@ -36,7 +36,11 @@ public class SemanticAnalyzer {
             }
         });
 
-        // Run global semantic checks.
+        // Run type checks.
+        AstTypeChecker astTypeChecker = new AstTypeChecker(globalSymbols);
+        classDecls.stream().forEach(classDecl -> astTypeChecker.visit(classDecl, null));
+
+        // Run all other global semantic checks.
         AstSemanticChecker astSemanticChecker = new AstSemanticChecker(globalSymbols);
         classDecls.stream().forEach(classDecl -> astSemanticChecker.visit(classDecl, null));
 	}
