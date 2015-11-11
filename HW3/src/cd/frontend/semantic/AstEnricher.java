@@ -66,7 +66,7 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
                 String errorFmt = "Method %s contains two locals named %s.";
                 throw new SemanticFailure(SemanticFailure.Cause.DOUBLE_DECLARATION, errorFmt, ast.name, name);
             } else {
-                ast.sym.locals.put(name, (Symbol.VariableSymbol) visit(childNode, cls));
+                ast.sym.locals.put(name, (Symbol.VariableSymbol) visit(childNode, null));
             }
         });
 
