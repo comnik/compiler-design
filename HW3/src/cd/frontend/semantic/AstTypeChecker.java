@@ -279,21 +279,6 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol var(Ast.Var ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.ClassSymbol cls = (Symbol.ClassSymbol) ast.type;
-        if (cls != null) {
-            // Fix-up with global symbol table.
-            cls = globalSymbolTable.get(cls.name);
-            if (cls == null) {
-                throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_TYPE);
-            }
-        }
-
-        ast.setSymbol(new Symbol.VariableSymbol(ast.name, cls));
-        return ast.sym.type;
-    }
-
-    @Override
     public Symbol.TypeSymbol returnStmt(Ast.ReturnStmt ast, Symbol.TypeSymbol enclosingType) {
         Symbol.TypeSymbol returnType = visit(ast.arg(), enclosingType);
 
@@ -320,6 +305,24 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
 
 
     // Base Cases
+
+    @Override
+    public Symbol.TypeSymbol var(Ast.Var ast, Symbol.TypeSymbol enclosingType) {
+        Symbol.TypeSymbol varType = ast.type;
+        Symbol.ClassSymbol cls = (Symbol.ClassSymbol) ast.type;
+
+        if (cls != null) {
+            // Fix-up with global symbol table.
+            varType = globalSymbolTable.get(cls.name);
+        }
+
+        if (varType == null) {
+            throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_TYPE);
+        }
+
+        ast.setSymbol(new Symbol.VariableSymbol(ast.name, cls));
+        return ast.sym.type;
+    }
 
     @Override
     public Symbol.TypeSymbol builtInRead(Ast.BuiltInRead ast, Symbol.TypeSymbol enclosingType) {
