@@ -14,7 +14,13 @@ public class AstEnricher extends AstVisitor<Symbol,Void> {
     public Symbol.ClassSymbol classDecl(Ast.ClassDecl ast, Void arg) {
         Symbol.ClassSymbol clsSymbol = new Symbol.ClassSymbol(ast);
 
-        // create superclass symbol
+        // Check wether we are re-defining the builtin Object type.
+        if (clsSymbol.name.equals(Symbol.ClassSymbol.objectType.name)) {
+            String errorFmt = "Name clash with builtin type 'Object'.";
+            throw new SemanticFailure(SemanticFailure.Cause.OBJECT_CLASS_DEFINED, errorFmt);
+        }
+
+        // Create superclass symbol.
         clsSymbol.superClass = new Symbol.ClassSymbol(ast.superClass);
 
         // Add member symbols.

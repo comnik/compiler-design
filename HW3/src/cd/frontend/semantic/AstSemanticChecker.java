@@ -16,7 +16,6 @@ public class AstSemanticChecker extends AstVisitor<Void, Map<String,Symbol.Class
 
     @Override
     public Void classDecl(Ast.ClassDecl ast, Map<String,Symbol.ClassSymbol> globalSymbolTable) {
-
         // NO_SUCH_TYPE
         if (!ast.sym.superClass.isReferenceType()) {
             // Only reference types can be extended from.
