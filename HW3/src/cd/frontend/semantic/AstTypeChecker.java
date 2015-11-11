@@ -8,8 +8,11 @@ import cd.ir.Symbol.PrimitiveTypeSymbol;
 import cd.util.Pair;
 import cd.util.TypeUtils;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -31,14 +34,24 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     public Symbol.TypeSymbol classDecl(Ast.ClassDecl ast, Symbol.TypeSymbol enclosingType) {
         // Check wether we are re-defining the builtin Object type.
         if (ast.sym.name.equals(Symbol.ClassSymbol.objectType.name)) {
-            String errorFmt = "Name clash with builtin type 'Object'.";
-            throw new SemanticFailure(SemanticFailure.Cause.OBJECT_CLASS_DEFINED, errorFmt);
+            throw new SemanticFailure(SemanticFailure.Cause.OBJECT_CLASS_DEFINED,
+                    "Name clash with builtin type 'Object'.");
         }
 
-        // Link with superclass symbol.
+        // Fix-up with global symbol table.
+        ast.sym = globalSymbolTable.get(ast.sym.name);
         ast.sym.superClass = globalSymbolTable.get(ast.superClass);
+
+        // Ensure superclass exists.
         if (ast.sym.superClass == null) {
             throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_TYPE);
+        }
+
+        // CIRCULAR_INHERITANCE
+        if (hasCircularInheritance(ast.sym)){
+            String errorFmt = "Class %s should not extend %s.";
+            throw new SemanticFailure(
+                    SemanticFailure.Cause.CIRCULAR_INHERITANCE, errorFmt, ast.name, ast.superClass);
         }
 
         // Visit members.
@@ -50,8 +63,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     @Override
     public Symbol.TypeSymbol methodDecl(Ast.MethodDecl ast, Symbol.TypeSymbol enclosingType) {
         // Parse the return type.
-        ast.sym.returnType = TypeUtils.typeFromStr(ast.returnType);
-        System.out.println(ast.sym.returnType.name);
+        ast.sym.returnType = typeFromStr(ast.returnType);
 
         // Visit body.
         visit(ast.body(), ast.sym.returnType);
@@ -190,7 +202,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     @Override
     public Symbol.TypeSymbol cast(Ast.Cast ast, Symbol.TypeSymbol enclosingType) {
         Symbol.TypeSymbol argType = visit(ast.arg(), enclosingType);
-        Symbol.TypeSymbol castType = TypeUtils.typeFromStr(ast.typeName);
+        Symbol.TypeSymbol castType = typeFromStr(ast.typeName);
 
         if (!argType.isSubtype(castType) && !castType.isSubtype(argType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
@@ -214,7 +226,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     @Override
     public Symbol.TypeSymbol newArray(Ast.NewArray ast, Symbol.TypeSymbol enclosingType) {
         Symbol.TypeSymbol capacityType = visit(ast.arg(), enclosingType);
-        Symbol.TypeSymbol elementSymbol = TypeUtils.typeFromStr(ast.typeName);
+        Symbol.TypeSymbol elementSymbol = typeFromStr(ast.typeName);
 
         if (!capacityType.equals(PrimitiveTypeSymbol.intType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
@@ -267,10 +279,23 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
+    public Symbol.TypeSymbol var(Ast.Var ast, Symbol.TypeSymbol enclosingType) {
+        Symbol.ClassSymbol cls = (Symbol.ClassSymbol) ast.type;
+        if (cls != null) {
+            // Fix-up with global symbol table.
+            cls = globalSymbolTable.get(cls.name);
+            if (cls == null) {
+                throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_TYPE);
+            }
+        }
+
+        ast.setSymbol(new Symbol.VariableSymbol(ast.name, cls));
+        return ast.sym.type;
+    }
+
+    @Override
     public Symbol.TypeSymbol returnStmt(Ast.ReturnStmt ast, Symbol.TypeSymbol enclosingType) {
         Symbol.TypeSymbol returnType = visit(ast.arg(), enclosingType);
-
-        System.out.println("Return type: " + ast.arg().toString());
 
         if (!returnType.isSubtype(enclosingType)) {
             // TYPE_ERROR - In a method return statment, the expression type must be a subtype
@@ -319,6 +344,62 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     @Override
     public Symbol.TypeSymbol nullConst(Ast.NullConst ast, Symbol.TypeSymbol enclosingType) {
         return Symbol.ClassSymbol.nullType;
+    }
+
+
+    // Utility Methods
+
+    /**
+     * Translates an AST string representing a type,
+     * into the corresponding type symbol.
+     */
+    private Symbol.TypeSymbol typeFromStr(String typeStr) {
+        // Check for array type.
+        if (typeStr.contains("[]")) {
+            // int[] -> new ArrayType("int"), etc..
+            return new Symbol.ArrayTypeSymbol(typeFromStr(typeStr.replace("[]", "")));
+        } else {
+            Symbol.PrimitiveTypeSymbol primitiveTypeSym = TypeUtils.primitiveTypeFromStr(typeStr);
+
+            if (primitiveTypeSym != null) {
+                // This is a primitive type.
+                return primitiveTypeSym;
+            } else {
+                // This is a reference type.
+                Symbol.ClassSymbol type = globalSymbolTable.get(typeStr);
+                if (type == null) {
+                    throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_TYPE);
+                }
+
+                return type;
+            }
+        }
+    }
+
+    private Function<Symbol.ClassSymbol,Boolean> checkClass;
+
+    /**
+     *  Goes through the inheritance tree and checks whether the className
+     *  occurs somewhere, thus detecting circular inheritance.
+     */
+    private Boolean hasCircularInheritance(Symbol.ClassSymbol cls) {
+        Set<String> seen = new HashSet<String>();
+
+        checkClass = (classSym) -> {
+            if (seen.contains(classSym.name)) {
+                return true;
+            } else {
+                // Check if we have reached "Object".
+                if (classSym.superClass.name.equals(Symbol.ClassSymbol.objectType.name)) {
+                    return false;
+                } else {
+                    seen.add(classSym.name);
+                    return checkClass.apply(classSym.superClass);
+                }
+            }
+        };
+
+        return checkClass.apply(cls);
     }
 
 }

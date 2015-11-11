@@ -35,13 +35,6 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
                     SemanticFailure.Cause.NO_SUCH_TYPE, errorFmt, ast.name);
         }
 
-        // CIRCULAR_INHERITANCE
-        if (hasCircularInheritance(ast.name, globalSymbolTable)){
-            String errorFmt = "Class %s should not extend %s.";
-            throw new SemanticFailure(
-                    SemanticFailure.Cause.CIRCULAR_INHERITANCE, errorFmt, ast.name, ast.superClass);
-        }
-
         // Check members.
         ast.members().stream().forEach(node -> visit(node, globalSymbolTable.get(ast.name)));
 
@@ -150,37 +143,6 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
                     .reduce(true, (a, b) -> a && b);
         }
         return false;
-    }
-
-    private Function<Symbol.ClassSymbol,Boolean> checkClass;
-
-    /**
-     *  Goes through the inheritance tree and checks whether the className
-     *  occurs somewhere, thus detecting circular inheritance.
-     */
-    private Boolean hasCircularInheritance(String className, Map<String,Symbol.ClassSymbol> symTab) {
-        Set<String> seen = new HashSet<String>();
-
-        checkClass = (classSym) -> {
-            if (seen.contains(classSym.name)) {
-                return true;
-            } else {
-                // We have to fetch the superclass from the symbol table,
-                // so that it actually contains further inheritance information.
-                classSym.superClass = symTab.get(classSym.superClass.name);
-
-                // Check if we have reached "Object".
-                if (classSym.superClass.name.equals(Symbol.ClassSymbol.objectType.name)) {
-                    return false;
-                } else {
-                    seen.add(classSym.name);
-                    return checkClass.apply(classSym.superClass);
-                }
-            }
-        };
-
-        Symbol.ClassSymbol classSym = symTab.get(className);
-        return checkClass.apply(classSym);
     }
 
     private boolean sameSignature(Symbol.MethodSymbol m1, Symbol.MethodSymbol m2) {
