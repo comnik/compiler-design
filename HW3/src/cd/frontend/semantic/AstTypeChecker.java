@@ -4,6 +4,8 @@ import cd.ToDoException;
 import cd.ir.Ast;
 import cd.ir.AstVisitor;
 import cd.ir.Symbol;
+import cd.ir.Symbol.PrimitiveTypeSymbol;
+import cd.util.TypeUtils;
 
 import javax.lang.model.type.PrimitiveType;
 import java.lang.reflect.Type;
@@ -53,7 +55,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Void> {
         Symbol.TypeSymbol conditionType = visit(ast.condition(), null);
 
         // TYPE_ERROR - if(cond) requires cond to be of type boolean.
-        if (conditionType != Symbol.PrimitiveTypeSymbol.booleanType) {
+        if (conditionType != PrimitiveTypeSymbol.booleanType) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
@@ -65,7 +67,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Void> {
         Symbol.TypeSymbol conditionType = visit(ast.condition(), null);
 
         // TYPE_ERROR - while(cond) requires cond to be of type boolean.
-        if (conditionType != Symbol.PrimitiveTypeSymbol.booleanType) {
+        if (conditionType != PrimitiveTypeSymbol.booleanType) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
@@ -77,8 +79,13 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Void> {
         Symbol.TypeSymbol leftType = visit(ast.left(), null);
         Symbol.TypeSymbol rightType = visit(ast.right(), null);
 
-        // TYPE_ERROR - The type of the right-hand side in an assignment
-        // must be a subtype of the type of the left-hand side.
+        if (!TypeUtils.isSubtype(rightType, leftType)) {
+            // TYPE_ERROR - The type of the right-hand side in an assignment
+            // must be a subtype of the type of the left-hand side.
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+        }
+
+        return leftType;
     }
 
     @Override
@@ -86,7 +93,96 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Void> {
         Symbol.TypeSymbol leftType = visit(ast.left(), null);
         Symbol.TypeSymbol rightType = visit(ast.right(), null);
 
-        // if (leftType.name.equals(rightType.name))
+        switch (ast.operator) {
+            case B_TIMES:
+            case B_DIV:
+            case B_MOD:
+            case B_PLUS:
+            case B_MINUS:
+                // require operands of type int...
+                if (leftType != PrimitiveTypeSymbol.intType || rightType != PrimitiveTypeSymbol.intType) {
+                    throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+                }
+                // ...and produce result of type int
+                return PrimitiveTypeSymbol.intType;
+
+            case B_AND:
+            case B_OR:
+                // require operands of type boolean...
+                if (leftType != PrimitiveTypeSymbol.booleanType || rightType != PrimitiveTypeSymbol.booleanType) {
+                    throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+                }
+                // ...and produce a result of type boolean
+                return PrimitiveTypeSymbol.booleanType;
+
+            case B_GREATER_OR_EQUAL:
+            case B_GREATER_THAN:
+            case B_LESS_OR_EQUAL:
+            case B_LESS_THAN:
+                // require operands of type int...
+                if (leftType != PrimitiveTypeSymbol.intType || rightType != PrimitiveTypeSymbol.intType) {
+                    throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+                }
+                // ...and produce a result of type boolean
+                return PrimitiveTypeSymbol.booleanType;
+
+            case B_EQUAL:
+            case B_NOT_EQUAL:
+                // require operands of type L and R, where one is the subtype of the other
+                if (!TypeUtils.isSubtype(leftType, rightType) && !TypeUtils.isSubtype(rightType, leftType)) {
+                    throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+                }
+                return PrimitiveTypeSymbol.booleanType;
+        }
+
+        return null;
+    }
+
+    @Override
+    public Symbol.TypeSymbol cast(Ast.Cast ast, Void arg) {
+        Symbol.TypeSymbol argType = visit(ast.arg(), null);
+        Symbol.TypeSymbol castType = TypeUtils.typeFromStr(ast.typeName);
+
+        if (!TypeUtils.isSubtype(argType, castType) && !TypeUtils.isSubtype(castType, argType)) {
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+        }
+
+        return castType;
+    }
+
+    @Override
+    public Symbol.TypeSymbol index(Ast.Index ast, Void arg) {
+        Symbol.TypeSymbol indexType = visit(ast.right(), null);
+        Symbol.ArrayTypeSymbol arrayType = (Symbol.ArrayTypeSymbol) visit(ast.left(), null);
+
+        if (arrayType == null || indexType != PrimitiveTypeSymbol.intType) {
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+        }
+
+        return arrayType.elementType;
+    }
+
+    @Override
+    public Symbol.TypeSymbol newArray(Ast.NewArray ast, Void arg) {
+        Symbol.TypeSymbol capacityType = visit(ast.arg(), null);
+        Symbol.TypeSymbol elementSymbol = TypeUtils.typeFromStr(ast.typeName);
+
+        if (capacityType != PrimitiveTypeSymbol.intType) {
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+        }
+
+        return new Symbol.ArrayTypeSymbol(elementSymbol);
+    }
+
+    @Override
+    public Symbol.TypeSymbol newObject(Ast.NewObject ast, Void arg) {
+        Symbol.ClassSymbol objType = globalSymbolTable.get(ast.typeName);
+
+        if (objType == null) {
+            throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_TYPE);
+        }
+
+        return objType;
     }
 
     @Override
