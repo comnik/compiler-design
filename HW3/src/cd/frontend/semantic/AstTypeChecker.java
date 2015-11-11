@@ -70,7 +70,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
         Symbol.TypeSymbol conditionType = visit(ast.condition(), enclosingType);
 
         // TYPE_ERROR
-        if (conditionType != PrimitiveTypeSymbol.booleanType) {
+        if (!conditionType.equals(PrimitiveTypeSymbol.booleanType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
                     "if(cond) requires cond to be of type boolean");
         }
@@ -86,7 +86,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
         Symbol.TypeSymbol conditionType = visit(ast.condition(), enclosingType);
 
         // TYPE_ERROR
-        if (conditionType != PrimitiveTypeSymbol.booleanType) {
+        if (!conditionType.equals(PrimitiveTypeSymbol.booleanType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
                     "while(cond) requires cond to be of type boolean");
         }
@@ -167,7 +167,8 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
             case B_LESS_OR_EQUAL:
             case B_LESS_THAN:
                 // require operands of type int...
-                if (!leftType.equals(PrimitiveTypeSymbol.intType) || !rightType.equals(PrimitiveTypeSymbol.intType)) {
+                if (!leftType.equals(PrimitiveTypeSymbol.intType) ||
+                        !rightType.equals(PrimitiveTypeSymbol.intType)) {
                     throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
                 }
                 // ...and produce a result of type boolean
