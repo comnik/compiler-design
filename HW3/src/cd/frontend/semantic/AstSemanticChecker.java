@@ -148,16 +148,6 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
             return thenOtherwiseList.stream()
                     .map(ast3 -> hasReturn(ast3))
                     .reduce(true, (a, b) -> a && b);
-
-            // Go through all children that are IfElse nodes and check if they all have a return statement.
-            /*
-            return ast.children().stream()
-                    .filter(ast1 -> ast.getClass().getName() == "IfElse")
-                    .collect(Collectors.toList())
-                    .stream()
-                    .map(ast2 -> hasReturn(ast2))
-                    .reduce(true, (a, b) -> a && b);
-            */
         }
         return false;
     }
