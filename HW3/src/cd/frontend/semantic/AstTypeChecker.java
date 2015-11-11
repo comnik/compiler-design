@@ -146,7 +146,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
             case B_PLUS:
             case B_MINUS:
                 // require operands of type int...
-                if (leftType != PrimitiveTypeSymbol.intType || rightType != PrimitiveTypeSymbol.intType) {
+                if (!leftType.equals(PrimitiveTypeSymbol.intType) || !rightType.equals(PrimitiveTypeSymbol.intType)) {
                     throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
                 }
                 // ...and produce result of type int
@@ -155,7 +155,8 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
             case B_AND:
             case B_OR:
                 // require operands of type boolean...
-                if (leftType != PrimitiveTypeSymbol.booleanType || rightType != PrimitiveTypeSymbol.booleanType) {
+                if (!leftType.equals(PrimitiveTypeSymbol.booleanType) ||
+                        !rightType.equals(PrimitiveTypeSymbol.booleanType)) {
                     throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
                 }
                 // ...and produce a result of type boolean
@@ -166,7 +167,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
             case B_LESS_OR_EQUAL:
             case B_LESS_THAN:
                 // require operands of type int...
-                if (leftType != PrimitiveTypeSymbol.intType || rightType != PrimitiveTypeSymbol.intType) {
+                if (!leftType.equals(PrimitiveTypeSymbol.intType) || !rightType.equals(PrimitiveTypeSymbol.intType)) {
                     throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
                 }
                 // ...and produce a result of type boolean
@@ -202,7 +203,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
         Symbol.TypeSymbol indexType = visit(ast.right(), enclosingType);
         Symbol.ArrayTypeSymbol arrayType = (Symbol.ArrayTypeSymbol) visit(ast.left(), enclosingType);
 
-        if (arrayType == null || indexType != PrimitiveTypeSymbol.intType) {
+        if (arrayType == null || !indexType.equals(PrimitiveTypeSymbol.intType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
@@ -214,7 +215,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
         Symbol.TypeSymbol capacityType = visit(ast.arg(), enclosingType);
         Symbol.TypeSymbol elementSymbol = TypeUtils.typeFromStr(ast.typeName);
 
-        if (capacityType != PrimitiveTypeSymbol.intType) {
+        if (!capacityType.equals(PrimitiveTypeSymbol.intType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
@@ -268,6 +269,8 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     public Symbol.TypeSymbol returnStmt(Ast.ReturnStmt ast, Symbol.TypeSymbol enclosingType) {
         Symbol.TypeSymbol returnType = visit(ast.arg(), enclosingType);
 
+        System.out.println("Return type: " + ast.arg().toString());
+
         if (!returnType.isSubtype(enclosingType)) {
             // TYPE_ERROR - In a method return statment, the expression type must be a subtype
             // of the corresponding formal return type.
@@ -282,7 +285,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
         Symbol.TypeSymbol exprType = visit(ast.arg(), enclosingType);
 
         // TYPE_ERROR - write(expr) requires expr to be of type int
-        if (exprType != Symbol.PrimitiveTypeSymbol.intType) {
+        if (!exprType.equals(Symbol.PrimitiveTypeSymbol.intType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
