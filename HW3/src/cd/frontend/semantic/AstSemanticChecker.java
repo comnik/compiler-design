@@ -5,10 +5,9 @@ import cd.ir.AstVisitor;
 import cd.ir.Symbol;
 import cd.util.Pair;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -65,6 +64,9 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
         // MISSING_RETURN
         if (!ast.sym.returnType.name.equals(Symbol.PrimitiveTypeSymbol.voidType.name)) {
             // This method should return something.
+            if (!(hasReturn(ast.body()))) {
+                throw new SemanticFailure(SemanticFailure.Cause.MISSING_RETURN);
+            }
         }
 
         // Check method body.
@@ -122,6 +124,44 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
 
 
     // Utility methods.
+
+    private boolean hasReturn(Ast ast){
+        // Get the names of the children ast nodes.
+        List<String> listOfChildren = ast.children().stream()
+                .map(ast1 -> ast1.getClass().getName())
+                .collect(Collectors.toList());
+
+        if (listOfChildren.contains("ReturnStmt")) {
+            return true;
+        } else if (listOfChildren.contains("IfElse")) {
+            // Build a list of then and else parts of IfElse
+            List<Ast> toBeRenamed = new ArrayList();
+            ast.children().stream()
+                    .filter(ast1 -> ast.getClass().getName() == "IfElse")
+                    .forEach(
+                            ast3 -> {
+                                toBeRenamed.add(((Ast.IfElse) ast3).then());
+                                toBeRenamed.add(((Ast.IfElse) ast3).otherwise());
+                            }
+                    );
+
+            // Go through all the then and otherwise nodes and check if they have a return statement.
+            return toBeRenamed.stream()
+                    .map(ast4 -> hasReturn(ast4))
+                    .reduce(true, (a, b) -> a && b);
+
+            // Go through all children that are IfElse nodes and check if they all have a return statement.
+            /*
+            return ast.children().stream()
+                    .filter(ast1 -> ast.getClass().getName() == "IfElse")
+                    .collect(Collectors.toList())
+                    .stream()
+                    .map(ast2 -> hasReturn(ast2))
+                    .reduce(true, (a, b) -> a && b);
+            */
+        }
+        return false;
+    }
 
     private Function<Symbol.ClassSymbol,Boolean> checkClass;
 
