@@ -1,0 +1,11 @@
+/* Checks whether casting rules are enforced. */
+
+class Main {
+    void main() {
+        int i;
+        boolean b;
+
+        i = 10;
+        b = (boolean) i;
+    }
+}
