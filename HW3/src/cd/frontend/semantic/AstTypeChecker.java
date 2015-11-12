@@ -251,7 +251,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
         try {
             // Get the recieving class.
             Symbol.ClassSymbol recvType = (Symbol.ClassSymbol) visit(ast.receiver(), parent);
-
+            recvType = globalSymbolTable.get(recvType.name);
             ast.sym = recvType.getMethod(ast.methodName);
         } catch (ClassCastException ex) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
