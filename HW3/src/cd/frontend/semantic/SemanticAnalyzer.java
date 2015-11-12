@@ -49,6 +49,9 @@ public class SemanticAnalyzer {
                 .equals(Symbol.PrimitiveTypeSymbol.voidType.name)) {
             String errorFmt = "main method should have signature 'void'.";
             throw new SemanticFailure(SemanticFailure.Cause.INVALID_START_POINT, errorFmt);
+        } else if (!(globalSymbols.get("Main").methods.get("main").parameters.size() == 0)) {
+            String errorFmt = "main method should have no parameters.";
+            throw new SemanticFailure(SemanticFailure.Cause.INVALID_START_POINT, errorFmt);
         }
 
         // Run all other global semantic checks.
