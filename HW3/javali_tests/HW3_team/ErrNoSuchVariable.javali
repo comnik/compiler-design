@@ -1,0 +1,7 @@
+/* Test that a non-existing variable is detected. */
+
+class Main {
+    void main() {
+        x = 1;
+    }
+}
