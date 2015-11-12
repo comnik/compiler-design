@@ -98,7 +98,12 @@ public class AstEnricher extends AstVisitor<Symbol,Map<String,Symbol.VariableSym
     @Override
     public Symbol.VariableSymbol var(Ast.Var ast, Map<String,Symbol.VariableSymbol> scope) {
         Symbol.VariableSymbol varSym = scope.get(ast.name);
-        ast.setSymbol(varSym);
+        // NO_SUCH_VARIABLE
+        if (varSym != null) {
+            ast.setSymbol(varSym);
+        } else {
+            throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_VARIABLE);
+        }
         return varSym;
     }
 
