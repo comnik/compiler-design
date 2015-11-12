@@ -63,7 +63,9 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
         }
 
         // NO_SUCH_TYPE
-        if (!ast.argumentNames.stream().allMatch(arg -> globalSymbolTable.containsKey(arg))) {
+        if (!ast.sym.parameters.stream()
+                .filter(param -> param.type instanceof Symbol.ClassSymbol)
+                .allMatch(varSymbol -> globalSymbolTable.containsKey(varSymbol.type.name))) {
             // Some argument type doesn't exist.
             throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_TYPE);
         }
