@@ -63,7 +63,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
         ast.sym.returnType = typeFromStr(ast.returnType);
 
         // Visit body.
-        visit(ast.body(), ast.sym.returnType);
+        visit(ast.body(), ast.sym);
 
         return ast.sym.returnType;
     }
@@ -299,7 +299,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
     public Symbol.TypeSymbol returnStmt(Ast.ReturnStmt ast, Symbol parent) {
         Symbol.TypeSymbol returnType = visit(ast.arg(), parent);
 
-        if (!returnType.isSubtype((Symbol.TypeSymbol) parent)) {
+        if (!returnType.isSubtype(((Symbol.MethodSymbol) parent).returnType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
                     "Returned value does not match expected type.");
         }
@@ -371,7 +371,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
 
     @Override
     public Symbol.TypeSymbol thisRef(Ast.ThisRef ast, Symbol parent) {
-        return (Symbol.TypeSymbol) parent;
+        return globalSymbolTable.get(ast.type.name);
     }
 
     @Override

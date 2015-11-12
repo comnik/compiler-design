@@ -113,7 +113,7 @@ public abstract class Symbol {
             return super.isSubtype(parent) ||
                     // the hidden null type is a subtype of all reference types
                     (parent.isReferenceType() && this == nullType) ||
-                    this.superClass.isSubtype(parent);
+                    (this.superClass != null && this.superClass.isSubtype(parent));
         }
 		
 		public VariableSymbol getField(String name) {

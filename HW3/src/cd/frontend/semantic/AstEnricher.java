@@ -6,7 +6,6 @@ import cd.ir.Symbol;
 import cd.util.Pair;
 import cd.util.TypeUtils;
 
-import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
@@ -15,9 +14,12 @@ import java.util.Map;
  */
 public class AstEnricher extends AstVisitor<Symbol,Map<String,Symbol.VariableSymbol>> {
 
+    private Symbol.ClassSymbol thisPtr;
+
     @Override
     public Symbol.ClassSymbol classDecl(Ast.ClassDecl ast, Map<String,Symbol.VariableSymbol> scope) {
         Symbol.ClassSymbol clsSymbol = new Symbol.ClassSymbol(ast);
+        thisPtr = clsSymbol;
 
         // Create superclass symbol.
         clsSymbol.superClass = (Symbol.ClassSymbol) TypeUtils.typeFromStr(ast.superClass);
@@ -79,6 +81,63 @@ public class AstEnricher extends AstVisitor<Symbol,Map<String,Symbol.VariableSym
     public Symbol seq(Ast.Seq ast, Map<String,Symbol.VariableSymbol> scope) {
         ast.rwChildren().stream().forEach(node -> visit(node, scope));
         return null;
+    }
+
+    @Override
+    public Symbol ifElse(Ast.IfElse ast, Map<String,Symbol.VariableSymbol> scope) {
+        visit(ast.condition(), scope);
+        visit(ast.then(), scope);
+        visit(ast.otherwise(), scope);
+        return null;
+    }
+
+    @Override
+    public Symbol whileLoop(Ast.WhileLoop ast, Map<String,Symbol.VariableSymbol> scope) {
+        visit(ast.condition(), scope);
+        visit(ast.body(), scope);
+        return null;
+    }
+
+    @Override
+    public Symbol assign(Ast.Assign ast, Map<String,Symbol.VariableSymbol> scope) {
+        visit(ast.left(), scope);
+        visit(ast.right(), scope);
+        return null;
+    }
+
+    @Override
+    public Symbol unaryOp(Ast.UnaryOp ast, Map<String,Symbol.VariableSymbol> scope) {
+        visit(ast.arg(), scope);
+        return null;
+    }
+
+    @Override
+    public Symbol binaryOp(Ast.BinaryOp ast, Map<String,Symbol.VariableSymbol> scope) {
+        visit(ast.left(), scope);
+        visit(ast.right(), scope);
+        return null;
+    }
+
+    @Override
+    public Symbol cast(Ast.Cast ast, Map<String,Symbol.VariableSymbol> scope) {
+        visit(ast.arg(), scope);
+        return null;
+    }
+
+    @Override
+    public Symbol index(Ast.Index ast, Map<String,Symbol.VariableSymbol> scope) {
+        visit(ast.left(), scope);
+        visit(ast.right(), scope);
+        return null;
+    }
+
+
+    // Base Cases
+
+    @Override
+    public Symbol thisRef(Ast.ThisRef ast, Map<String,Symbol.VariableSymbol> scope) {
+        ast.type = new Symbol.ClassSymbol(thisPtr.name);
+        return ast.type;
     }
 
     @Override
