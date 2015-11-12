@@ -295,6 +295,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
     public Symbol.TypeSymbol field(Ast.Field ast, Symbol parent) {
         try {
             Symbol.ClassSymbol targetType = (Symbol.ClassSymbol) visit(ast.arg(), parent);
+            targetType = globalSymbolTable.get(targetType.name);
             ast.sym = targetType.getField(ast.fieldName);
             if (ast.sym == null) {
                 throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_FIELD);
