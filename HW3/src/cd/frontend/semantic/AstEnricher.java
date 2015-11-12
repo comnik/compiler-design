@@ -19,6 +19,9 @@ public class AstEnricher extends AstVisitor<Symbol,Map<String,Symbol.VariableSym
     public Symbol.ClassSymbol classDecl(Ast.ClassDecl ast, Map<String,Symbol.VariableSymbol> scope) {
         Symbol.ClassSymbol clsSymbol = new Symbol.ClassSymbol(ast);
 
+        // Create superclass symbol.
+        clsSymbol.superClass = (Symbol.ClassSymbol) TypeUtils.typeFromStr(ast.superClass);
+
         // Add member symbols.
         ast.fields().stream().forEach(fieldNode -> {
             if (clsSymbol.fields.containsKey(fieldNode.name)) {

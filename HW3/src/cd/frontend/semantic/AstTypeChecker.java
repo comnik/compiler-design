@@ -417,21 +417,19 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
      *  occurs somewhere, thus detecting circular inheritance.
      */
     private Boolean hasCircularInheritance(Symbol.ClassSymbol cls) {
-        Set<String> seen = new HashSet<String>();
-
         checkClass = (classSym) -> {
-            if (seen.contains(classSym.name)) {
-                return true;
-            } else if (classSym.name.equals(Symbol.ClassSymbol.objectType.name)) {
+            if (classSym.name.equals(Symbol.ClassSymbol.objectType.name)) {
                 // We have reached "Object".
                 return false;
+            } else if (classSym.name.equals(cls.name)) {
+                // Cycle detected.
+                return true;
             } else {
-                seen.add(classSym.name);
                 return checkClass.apply(classSym.superClass);
             }
         };
 
-        return checkClass.apply(cls);
+        return checkClass.apply(cls.superClass);
     }
 
 }
