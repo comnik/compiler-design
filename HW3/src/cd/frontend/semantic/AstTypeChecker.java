@@ -221,13 +221,13 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
     @Override
     public Symbol.TypeSymbol newArray(Ast.NewArray ast, Symbol parent) {
         Symbol.TypeSymbol capacityType = visit(ast.arg(), parent);
-        Symbol.TypeSymbol elementSymbol = typeFromStr(ast.typeName);
+        Symbol.TypeSymbol arrayType = typeFromStr(ast.typeName);
 
         if (!capacityType.equals(PrimitiveTypeSymbol.intType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
-        return new Symbol.ArrayTypeSymbol(elementSymbol);
+        return arrayType;
     }
 
     @Override
