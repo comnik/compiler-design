@@ -8,6 +8,7 @@ import cd.Main;
 import cd.ToDoException;
 import cd.ir.Ast.ClassDecl;
 import cd.ir.Symbol;
+import sun.jvm.hotspot.debugger.cdbg.Sym;
 
 public class SemanticAnalyzer {
 	
@@ -39,17 +40,17 @@ public class SemanticAnalyzer {
         classDecls.stream().forEach(classDecl -> astTypeChecker.visit(classDecl, null));
 
         // INVALID_START_POINT
-        if (!globalSymbols.containsKey("Main")) {
+        Symbol.ClassSymbol mainSymbol = globalSymbols.get("Main");
+        if ( mainSymbol == null) {
             String errorFmt = "No Main Class found.";
             throw new SemanticFailure(SemanticFailure.Cause.INVALID_START_POINT, errorFmt);
-        } else if (!globalSymbols.get("Main").methods.containsKey("main")) {
+        } else if (mainSymbol.getMethod("main") == null) {
             String errorFmt = "No main method found.";
             throw new SemanticFailure(SemanticFailure.Cause.INVALID_START_POINT, errorFmt);
-        } else if (!globalSymbols.get("Main").methods.get("main").returnType.toString()
-                .equals(Symbol.PrimitiveTypeSymbol.voidType.name)) {
+        } else if (!mainSymbol.getMethod("main").returnType.equals(Symbol.PrimitiveTypeSymbol.voidType)) {
             String errorFmt = "main method should have signature 'void'.";
             throw new SemanticFailure(SemanticFailure.Cause.INVALID_START_POINT, errorFmt);
-        } else if (!(globalSymbols.get("Main").methods.get("main").parameters.size() == 0)) {
+        } else if (mainSymbol.getMethod("main").parameters.size() != 0) {
             String errorFmt = "main method should have no parameters.";
             throw new SemanticFailure(SemanticFailure.Cause.INVALID_START_POINT, errorFmt);
         }
