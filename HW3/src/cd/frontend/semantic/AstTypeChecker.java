@@ -257,7 +257,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
 
         // WRONG_NUMBER_OF_ARGUMENTS
         if (ast.argumentsWithoutReceiver().size() != ast.sym.parameters.size()) {
-            String errorFmt = "Method %s called with %d parameters, but expects %d.";
+            String errorFmt = "Method %s called with the wrong number of parameters.";
             throw new SemanticFailure(SemanticFailure.Cause.WRONG_NUMBER_OF_ARGUMENTS, errorFmt, ast.methodName);
         }
 
