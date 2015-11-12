@@ -62,6 +62,12 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
             }
         }
 
+        // NO_SUCH_TYPE
+        if (!ast.argumentNames.stream().allMatch(arg -> globalSymbolTable.containsKey(arg))) {
+            // Some argument type doesn't exist.
+            throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_TYPE);
+        }
+
         // Check method body.
         return visit(ast.body(), parent);
     }
