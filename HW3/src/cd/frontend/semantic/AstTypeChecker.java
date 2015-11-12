@@ -109,8 +109,6 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
         Symbol.TypeSymbol rightType = visit(ast.right(), parent);
 
         if (!rightType.isSubtype(leftType)) {
-            System.out.println(ast.right().toString());
-            System.out.println(rightType.name + " is not a subtype of " + leftType.name);
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
                     "Assignment operands must be of compatible types.");
         }
@@ -244,19 +242,15 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
     }
 
     public Symbol.TypeSymbol methodCallExpr(Ast.MethodCallExpr ast, Symbol parent) {
-        System.out.println("This is never called...");
-
-        Symbol.ClassSymbol recvType;
-
-        // Get the recieving class.
         try {
-            recvType = (Symbol.ClassSymbol) visit(ast.receiver(), parent);
+            // Get the recieving class.
+            Symbol.ClassSymbol recvType = (Symbol.ClassSymbol) visit(ast.receiver(), parent);
+
+            ast.sym = recvType.getMethod(ast.methodName);
         } catch (ClassCastException ex) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
-        recvType = globalSymbolTable.get(recvType.name);
-        ast.sym = recvType.getMethod(ast.methodName);
         if (ast.sym == null) {
             throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_METHOD);
         }
@@ -278,7 +272,6 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
         }
 
         return ast.sym.returnType;
-
     }
 
     @Override
@@ -293,7 +286,6 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
-        targetType = globalSymbolTable.get(targetType.name);
         ast.sym = targetType.getField(ast.fieldName);
         if (ast.sym == null) {
             throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_FIELD);

@@ -56,6 +56,9 @@ public class AstEnricher extends AstVisitor<Symbol,Map<String,Symbol.VariableSym
     public Symbol.MethodSymbol methodDecl(Ast.MethodDecl ast, Map<String,Symbol.VariableSymbol> scope) {
         ast.sym = new Symbol.MethodSymbol(ast);
 
+        // Set return type.
+        ast.sym.returnType = TypeUtils.typeFromStr(ast.returnType);
+
         // Create symbols for every argument.
         Pair.zip(ast.argumentNames, ast.argumentTypes).stream().forEach(argPair -> {
             if (ast.sym.locals.containsKey(argPair.a)) {
