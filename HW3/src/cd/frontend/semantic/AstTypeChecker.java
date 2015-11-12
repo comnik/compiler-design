@@ -281,17 +281,16 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
 
     @Override
     public Symbol.TypeSymbol field(Ast.Field ast, Symbol parent) {
-        Symbol.ClassSymbol targetType = (Symbol.ClassSymbol) visit(ast.arg(), parent);
-        if (targetType == null) {
+        try {
+            Symbol.ClassSymbol targetType = (Symbol.ClassSymbol) visit(ast.arg(), parent);
+            ast.sym = targetType.getField(ast.fieldName);
+            if (ast.sym == null) {
+                throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_FIELD);
+            }
+            return ast.sym.type;
+        } catch (ClassCastException e) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
-
-        ast.sym = targetType.getField(ast.fieldName);
-        if (ast.sym == null) {
-            throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_FIELD);
-        }
-
-        return ast.sym.type;
     }
 
     @Override
