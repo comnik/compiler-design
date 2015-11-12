@@ -211,13 +211,17 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
     @Override
     public Symbol.TypeSymbol index(Ast.Index ast, Symbol parent) {
         Symbol.TypeSymbol indexType = visit(ast.right(), parent);
-        Symbol.ArrayTypeSymbol arrayType = (Symbol.ArrayTypeSymbol) visit(ast.left(), parent);
+        try {
+            Symbol.ArrayTypeSymbol arrayType = (Symbol.ArrayTypeSymbol) visit(ast.left(), parent);
+            if (!indexType.equals(PrimitiveTypeSymbol.intType)) {
+                throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
+            }
 
-        if (!indexType.equals(PrimitiveTypeSymbol.intType)) {
+            return arrayType.elementType;
+        } catch (ClassCastException e) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
-        return arrayType.elementType;
     }
 
     @Override
@@ -431,6 +435,10 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
         checkClass = (classSym) -> {
             classSym = globalSymbolTable.get(classSym.name);
 
+            if (classSym == null) {
+                // This class doesn't exist.
+                throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_TYPE);
+            }
             if (classSym.name.equals(Symbol.ClassSymbol.objectType.name)) {
                 // We have reached "Object".
                 return false;
