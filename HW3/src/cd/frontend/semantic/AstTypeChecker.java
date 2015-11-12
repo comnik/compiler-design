@@ -243,28 +243,28 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
         return objType;
     }
 
-    @Override
-    public Symbol.TypeSymbol methodCall(Ast.MethodCall ast, Symbol parent) {
-        Ast.MethodCallExpr methodCallExpr = ast.getMethodCallExpr();
+    public Symbol.TypeSymbol methodCallExpr(Ast.MethodCallExpr ast, Symbol parent) {
+        System.out.println("This is never called...");
+
         Symbol.ClassSymbol recvType;
 
         // Get the recieving class.
         try {
-            recvType = (Symbol.ClassSymbol) visit(methodCallExpr.receiver(), parent);
+            recvType = (Symbol.ClassSymbol) visit(ast.receiver(), parent);
         } catch (ClassCastException ex) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
-        methodCallExpr.sym = recvType.getMethod(methodCallExpr.methodName);
-        if (methodCallExpr.sym == null) {
+        ast.sym = recvType.getMethod(ast.methodName);
+        if (ast.sym == null) {
             throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_METHOD);
         }
 
-        List<Symbol.TypeSymbol> actualArgTypes = methodCallExpr.argumentsWithoutReceiver().stream()
+        List<Symbol.TypeSymbol> actualArgTypes = ast.argumentsWithoutReceiver().stream()
                 .map(expr -> visit(expr, parent))
                 .collect(Collectors.toList());
 
-        List<Symbol.TypeSymbol> formalArgTypes = methodCallExpr.sym.parameters.stream()
+        List<Symbol.TypeSymbol> formalArgTypes = ast.sym.parameters.stream()
                 .map(varSym -> varSym.type)
                 .collect(Collectors.toList());
 
@@ -276,7 +276,13 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
                     "Provided argument types do not match formal parameter types.");
         }
 
-        return methodCallExpr.sym.returnType;
+        return ast.sym.returnType;
+
+    }
+
+    @Override
+    public Symbol.TypeSymbol methodCall(Ast.MethodCallExpr ast, Symbol parent) {
+        return methodCallExpr(ast, parent);
     }
 
     @Override
