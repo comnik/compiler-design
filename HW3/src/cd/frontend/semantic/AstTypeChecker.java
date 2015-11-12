@@ -1,6 +1,5 @@
 package cd.frontend.semantic;
 
-import cd.ToDoException;
 import cd.ir.Ast;
 import cd.ir.AstVisitor;
 import cd.ir.Symbol;
@@ -8,10 +7,8 @@ import cd.ir.Symbol.PrimitiveTypeSymbol;
 import cd.util.Pair;
 import cd.util.TypeUtils;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,7 +16,7 @@ import java.util.stream.Collectors;
  * Ensures type safety for an AST, given a global symbol table.
  * Updates the global symbol table with type information.
  */
-public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymbol> {
+public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
 
     private Map<String,Symbol.ClassSymbol> globalSymbolTable;
 
@@ -31,7 +28,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol classDecl(Ast.ClassDecl ast, Symbol.TypeSymbol enclosingType) {
+    public Symbol.TypeSymbol classDecl(Ast.ClassDecl ast, Symbol parent) {
         // Check wether we are re-defining the builtin Object type.
         if (ast.sym.name.equals(Symbol.ClassSymbol.objectType.name)) {
             throw new SemanticFailure(SemanticFailure.Cause.OBJECT_CLASS_DEFINED,
@@ -61,7 +58,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol methodDecl(Ast.MethodDecl ast, Symbol.TypeSymbol enclosingType) {
+    public Symbol.TypeSymbol methodDecl(Ast.MethodDecl ast, Symbol parent) {
         // Parse the return type.
         ast.sym.returnType = typeFromStr(ast.returnType);
 
@@ -72,46 +69,48 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol seq(Ast.Seq ast, Symbol.TypeSymbol enclosingType) {
-        ast.rwChildren().stream().forEach(node -> visit(node, enclosingType));
+    public Symbol.TypeSymbol seq(Ast.Seq ast, Symbol parent) {
+        ast.rwChildren().stream().forEach(node -> visit(node, parent));
         return null;
     }
 
     @Override
-    public Symbol.TypeSymbol ifElse(Ast.IfElse ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.TypeSymbol conditionType = visit(ast.condition(), enclosingType);
+    public Symbol.TypeSymbol ifElse(Ast.IfElse ast, Symbol parent) {
+        Symbol.TypeSymbol conditionType = visit(ast.condition(), parent);
 
         if (!conditionType.equals(PrimitiveTypeSymbol.booleanType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
                     "if(cond) requires cond to be of type boolean");
         }
 
-        visit(ast.then(), enclosingType);
-        visit(ast.otherwise(), enclosingType);
+        visit(ast.then(), parent);
+        visit(ast.otherwise(), parent);
 
         return null;
     }
 
     @Override
-    public Symbol.TypeSymbol whileLoop(Ast.WhileLoop ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.TypeSymbol conditionType = visit(ast.condition(), enclosingType);
+    public Symbol.TypeSymbol whileLoop(Ast.WhileLoop ast, Symbol parent) {
+        Symbol.TypeSymbol conditionType = visit(ast.condition(), parent);
 
         if (!conditionType.equals(PrimitiveTypeSymbol.booleanType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
                     "while(cond) requires cond to be of type boolean");
         }
 
-        visit(ast.body(), enclosingType);
+        visit(ast.body(), parent);
 
         return null;
     }
 
     @Override
-    public Symbol.TypeSymbol assign(Ast.Assign ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.TypeSymbol leftType = visit(ast.left(), enclosingType);
-        Symbol.TypeSymbol rightType = visit(ast.right(), enclosingType);
+    public Symbol.TypeSymbol assign(Ast.Assign ast, Symbol parent) {
+        Symbol.TypeSymbol leftType = visit(ast.left(), parent);
+        Symbol.TypeSymbol rightType = visit(ast.right(), parent);
 
         if (!rightType.isSubtype(leftType)) {
+            System.out.println(ast.right().toString());
+            System.out.println(rightType.name + " is not a subtype of " + leftType.name);
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
                     "Assignment operands must be of compatible types.");
         }
@@ -120,8 +119,8 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol unaryOp(Ast.UnaryOp ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.TypeSymbol argType = visit(ast.arg(), enclosingType);
+    public Symbol.TypeSymbol unaryOp(Ast.UnaryOp ast, Symbol parent) {
+        Symbol.TypeSymbol argType = visit(ast.arg(), parent);
 
         switch (ast.operator) {
             case U_PLUS:
@@ -145,9 +144,9 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol binaryOp(Ast.BinaryOp ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.TypeSymbol leftType = visit(ast.left(), enclosingType);
-        Symbol.TypeSymbol rightType = visit(ast.right(), enclosingType);
+    public Symbol.TypeSymbol binaryOp(Ast.BinaryOp ast, Symbol parent) {
+        Symbol.TypeSymbol leftType = visit(ast.left(), parent);
+        Symbol.TypeSymbol rightType = visit(ast.right(), parent);
 
         switch (ast.operator) {
             case B_TIMES:
@@ -198,8 +197,8 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol cast(Ast.Cast ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.TypeSymbol argType = visit(ast.arg(), enclosingType);
+    public Symbol.TypeSymbol cast(Ast.Cast ast, Symbol parent) {
+        Symbol.TypeSymbol argType = visit(ast.arg(), parent);
         Symbol.TypeSymbol castType = typeFromStr(ast.typeName);
 
         if (!argType.isSubtype(castType) && !castType.isSubtype(argType)) {
@@ -210,9 +209,9 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol index(Ast.Index ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.TypeSymbol indexType = visit(ast.right(), enclosingType);
-        Symbol.ArrayTypeSymbol arrayType = (Symbol.ArrayTypeSymbol) visit(ast.left(), enclosingType);
+    public Symbol.TypeSymbol index(Ast.Index ast, Symbol parent) {
+        Symbol.TypeSymbol indexType = visit(ast.right(), parent);
+        Symbol.ArrayTypeSymbol arrayType = (Symbol.ArrayTypeSymbol) visit(ast.left(), parent);
 
         if (arrayType == null || !indexType.equals(PrimitiveTypeSymbol.intType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
@@ -222,8 +221,8 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol newArray(Ast.NewArray ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.TypeSymbol capacityType = visit(ast.arg(), enclosingType);
+    public Symbol.TypeSymbol newArray(Ast.NewArray ast, Symbol parent) {
+        Symbol.TypeSymbol capacityType = visit(ast.arg(), parent);
         Symbol.TypeSymbol elementSymbol = typeFromStr(ast.typeName);
 
         if (!capacityType.equals(PrimitiveTypeSymbol.intType)) {
@@ -234,7 +233,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol newObject(Ast.NewObject ast, Symbol.TypeSymbol enclosingType) {
+    public Symbol.TypeSymbol newObject(Ast.NewObject ast, Symbol parent) {
         Symbol.ClassSymbol objType = globalSymbolTable.get(ast.typeName);
 
         if (objType == null) {
@@ -245,13 +244,13 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol methodCall(Ast.MethodCall ast, Symbol.TypeSymbol enclosingType) {
+    public Symbol.TypeSymbol methodCall(Ast.MethodCall ast, Symbol parent) {
         Ast.MethodCallExpr methodCallExpr = ast.getMethodCallExpr();
         Symbol.ClassSymbol recvType;
 
         // Get the recieving class.
         try {
-            recvType = (Symbol.ClassSymbol) visit(methodCallExpr.receiver(), enclosingType);
+            recvType = (Symbol.ClassSymbol) visit(methodCallExpr.receiver(), parent);
         } catch (ClassCastException ex) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
@@ -262,7 +261,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
         }
 
         List<Symbol.TypeSymbol> actualArgTypes = methodCallExpr.argumentsWithoutReceiver().stream()
-                .map(expr -> visit(expr, enclosingType))
+                .map(expr -> visit(expr, parent))
                 .collect(Collectors.toList());
 
         List<Symbol.TypeSymbol> formalArgTypes = methodCallExpr.sym.parameters.stream()
@@ -281,8 +280,8 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol field(Ast.Field ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.ClassSymbol targetType = (Symbol.ClassSymbol) visit(ast.arg(), enclosingType);
+    public Symbol.TypeSymbol field(Ast.Field ast, Symbol parent) {
+        Symbol.ClassSymbol targetType = (Symbol.ClassSymbol) visit(ast.arg(), parent);
         if (targetType == null) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
@@ -297,10 +296,10 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol returnStmt(Ast.ReturnStmt ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.TypeSymbol returnType = visit(ast.arg(), enclosingType);
+    public Symbol.TypeSymbol returnStmt(Ast.ReturnStmt ast, Symbol parent) {
+        Symbol.TypeSymbol returnType = visit(ast.arg(), parent);
 
-        if (!returnType.isSubtype(enclosingType)) {
+        if (!returnType.isSubtype((Symbol.TypeSymbol) parent)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
                     "Returned value does not match expected type.");
         }
@@ -309,8 +308,8 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol builtInWrite(Ast.BuiltInWrite ast, Symbol.TypeSymbol enclosingType) {
-        Symbol.TypeSymbol exprType = visit(ast.arg(), enclosingType);
+    public Symbol.TypeSymbol builtInWrite(Ast.BuiltInWrite ast, Symbol parent) {
+        Symbol.TypeSymbol exprType = visit(ast.arg(), parent);
 
         if (!exprType.equals(Symbol.PrimitiveTypeSymbol.intType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
@@ -324,7 +323,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     // Base Cases
 
     @Override
-    public Symbol.TypeSymbol varDecl(Ast.VarDecl ast, Symbol.TypeSymbol enclosingType) {
+    public Symbol.TypeSymbol varDecl(Ast.VarDecl ast, Symbol parent) {
         Symbol.TypeSymbol varType = ast.sym.type;
         if (varType instanceof Symbol.ClassSymbol) {
             // Fix-up with global symbol table.
@@ -340,7 +339,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol var(Ast.Var ast, Symbol.TypeSymbol enclosingType) {
+    public Symbol.TypeSymbol var(Ast.Var ast, Symbol parent) {
         Symbol.TypeSymbol varType = ast.sym.type;
         if (varType instanceof Symbol.ClassSymbol) {
             // Fix-up with global symbol table.
@@ -356,27 +355,27 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol.TypeSymb
     }
 
     @Override
-    public Symbol.TypeSymbol builtInRead(Ast.BuiltInRead ast, Symbol.TypeSymbol enclosingType) {
+    public Symbol.TypeSymbol builtInRead(Ast.BuiltInRead ast, Symbol parent) {
         return Symbol.PrimitiveTypeSymbol.intType;
     }
 
     @Override
-    public Symbol.TypeSymbol booleanConst(Ast.BooleanConst ast, Symbol.TypeSymbol enclosingType) {
+    public Symbol.TypeSymbol booleanConst(Ast.BooleanConst ast, Symbol parent) {
         return Symbol.PrimitiveTypeSymbol.booleanType;
     }
 
     @Override
-    public Symbol.TypeSymbol intConst(Ast.IntConst ast, Symbol.TypeSymbol enclosingType) {
+    public Symbol.TypeSymbol intConst(Ast.IntConst ast, Symbol parent) {
         return Symbol.PrimitiveTypeSymbol.intType;
     }
 
     @Override
-    public Symbol.TypeSymbol thisRef(Ast.ThisRef ast, Symbol.TypeSymbol enclosingType) {
-        return enclosingType;
+    public Symbol.TypeSymbol thisRef(Ast.ThisRef ast, Symbol parent) {
+        return (Symbol.TypeSymbol) parent;
     }
 
     @Override
-    public Symbol.TypeSymbol nullConst(Ast.NullConst ast, Symbol.TypeSymbol enclosingType) {
+    public Symbol.TypeSymbol nullConst(Ast.NullConst ast, Symbol parent) {
         return Symbol.ClassSymbol.nullType;
     }
 
