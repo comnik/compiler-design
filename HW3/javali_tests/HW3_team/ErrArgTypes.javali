@@ -1,0 +1,13 @@
+/* Ensures that argument types are type-checked. */
+
+class Main {
+    void main() {
+        int i;
+        i = 42;
+        this.f(i, i);
+    }
+
+    boolean f(int i, boolean j) {
+        return true;
+    }
+}

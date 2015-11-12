@@ -53,7 +53,7 @@ public abstract class Symbol {
         @Override
         public boolean isSubtype(TypeSymbol parent) {
             // void is never a subtype of anything
-            return !(this.name.equals(voidType.name)) || super.isSubtype(parent);
+            return (!this.name.equals(voidType.name)) && super.isSubtype(parent);
         }
 	}
 	
