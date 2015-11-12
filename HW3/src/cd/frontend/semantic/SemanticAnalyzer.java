@@ -1,14 +1,12 @@
 package cd.frontend.semantic;
 
+import cd.Main;
+import cd.ir.Ast.ClassDecl;
+import cd.ir.Symbol;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import cd.Main;
-import cd.ToDoException;
-import cd.ir.Ast.ClassDecl;
-import cd.ir.Symbol;
-import sun.jvm.hotspot.debugger.cdbg.Sym;
 
 public class SemanticAnalyzer {
 	

@@ -307,18 +307,17 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
 
     @Override
     public Symbol.TypeSymbol returnStmt(Ast.ReturnStmt ast, Symbol parent) {
-        if (ast.arg() == null) {
-            return PrimitiveTypeSymbol.voidType;
-        } else {
-            Symbol.TypeSymbol returnType = visit(ast.arg(), parent);
-
-            if (!returnType.isSubtype(((Symbol.MethodSymbol) parent).returnType)) {
-                throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
-                        "Returned value does not match expected type.");
-            }
-
-            return returnType;
+        Symbol.TypeSymbol returnType = PrimitiveTypeSymbol.voidType;
+        if (ast.arg() != null) {
+            returnType = visit(ast.arg(), parent);
         }
+
+        if (!returnType.isSubtype(((Symbol.MethodSymbol) parent).returnType)) {
+            throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR,
+                    "Returned value does not match expected type.");
+        }
+
+        return returnType;
     }
 
     @Override

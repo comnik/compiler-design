@@ -1,0 +1,10 @@
+/* Ensures that empty return statements are not allowed for methods with a return type. */
+
+class Main {
+    void main() {
+        shouldReturnSomething();
+    }
+    int shouldReturnSomething() {
+        return;
+    }
+}
