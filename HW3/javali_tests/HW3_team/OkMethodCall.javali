@@ -1,0 +1,17 @@
+// Test method call.
+
+class Main {
+	void main() {
+		int i, l;
+		a = fii();
+		test();
+		i = foo();
+	}
+	int foo() {
+		return 0;
+	}
+	void test() {
+
+	}
+}
+
