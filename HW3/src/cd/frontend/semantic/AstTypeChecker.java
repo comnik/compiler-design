@@ -211,7 +211,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
         Symbol.TypeSymbol indexType = visit(ast.right(), parent);
         Symbol.ArrayTypeSymbol arrayType = (Symbol.ArrayTypeSymbol) visit(ast.left(), parent);
 
-        if (arrayType == null || !indexType.equals(PrimitiveTypeSymbol.intType)) {
+        if (!indexType.equals(PrimitiveTypeSymbol.intType)) {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
