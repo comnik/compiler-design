@@ -1,0 +1,10 @@
+/* 3 way circular inheritance test. */
+
+class Main {
+    void main() {
+    }
+}
+
+class A extends B {}
+class B extends C {}
+class C extends B {}

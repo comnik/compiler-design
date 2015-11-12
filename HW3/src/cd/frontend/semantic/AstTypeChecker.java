@@ -7,8 +7,10 @@ import cd.ir.Symbol.PrimitiveTypeSymbol;
 import cd.util.Pair;
 import cd.util.TypeUtils;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -424,19 +426,24 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
      *  occurs somewhere, thus detecting circular inheritance.
      */
     private Boolean hasCircularInheritance(Symbol.ClassSymbol cls) {
+        Set<String> seen = new HashSet<String>();
+
         checkClass = (classSym) -> {
+            classSym = globalSymbolTable.get(classSym.name);
+
             if (classSym.name.equals(Symbol.ClassSymbol.objectType.name)) {
                 // We have reached "Object".
                 return false;
-            } else if (classSym.name.equals(cls.name)) {
+            } else if (seen.contains(classSym.name)) {
                 // Cycle detected.
                 return true;
             } else {
+                seen.add(classSym.name);
                 return checkClass.apply(classSym.superClass);
             }
         };
 
-        return checkClass.apply(cls.superClass);
+        return checkClass.apply(globalSymbolTable.get(cls.name).superClass);
     }
 
 }
