@@ -255,6 +255,12 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
             throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_METHOD);
         }
 
+        // WRONG_NUMBER_OF_ARGUMENTS
+        if (ast.argumentsWithoutReceiver().size() != ast.sym.parameters.size()) {
+            String errorFmt = "Method %s called with %d parameters, but expects %d.";
+            throw new SemanticFailure(SemanticFailure.Cause.WRONG_NUMBER_OF_ARGUMENTS, errorFmt, ast.methodName);
+        }
+
         List<Symbol.TypeSymbol> actualArgTypes = ast.argumentsWithoutReceiver().stream()
                 .map(expr -> visit(expr, parent))
                 .collect(Collectors.toList());

@@ -3,8 +3,13 @@
 class Main {
 	void main() {
 		int i, l;
+		Test t;
+
 		test();
 		l = foo();
+
+        t = new Test();
+		t.definitelyAMethod();
 	}
 	int foo() {
 		return 0;
@@ -14,3 +19,8 @@ class Main {
 	}
 }
 
+class Test {
+    void definitelyAMethod() {
+         write(1);
+    }
+}

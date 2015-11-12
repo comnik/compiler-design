@@ -73,25 +73,6 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
     }
 
     @Override
-    public Void methodCall(Ast.MethodCall ast, Symbol parent) {
-        Ast.MethodCallExpr callExpr = ast.getMethodCallExpr();
-        Symbol.MethodSymbol methodSymbol = ((Symbol.ClassSymbol) parent).getMethod(callExpr.methodName);
-
-        // NO_SUCH_METHOD
-        if (methodSymbol == null) {
-            throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_METHOD);
-        }
-
-        // WRONG_NUMBER_OF_ARGUMENTS
-        if (callExpr.argumentsWithoutReceiver().size() != methodSymbol.parameters.size()) {
-            String errorFmt = "Method %s called with %d parameters, but expects %d.";
-            throw new SemanticFailure(SemanticFailure.Cause.WRONG_NUMBER_OF_ARGUMENTS, errorFmt, callExpr.methodName);
-        }
-
-        return null;
-    }
-
-    @Override
     public Void assign(Ast.Assign ast, Symbol parent){
         // NOT_ASSIGNABLE
         if (ast.left().getClass().getName().equals("ThisRef")){
