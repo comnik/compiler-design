@@ -255,6 +255,7 @@ public class AstTypeChecker extends AstVisitor<Symbol.TypeSymbol,Symbol> {
             throw new SemanticFailure(SemanticFailure.Cause.TYPE_ERROR);
         }
 
+        recvType = globalSymbolTable.get(recvType.name);
         ast.sym = recvType.getMethod(ast.methodName);
         if (ast.sym == null) {
             throw new SemanticFailure(SemanticFailure.Cause.NO_SUCH_METHOD);
