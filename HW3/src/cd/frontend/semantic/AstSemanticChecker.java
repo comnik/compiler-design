@@ -96,19 +96,12 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
             return true;
         } else if (listOfChildren.contains("IfElse")) {
             // Build a list of then and otherwise parts of IfElse
-            List<Ast> thenOtherwiseList = new ArrayList();
-            ast.children().stream()
+            return ast.children().stream()
                     .filter(ast2 -> ast2.getClass().getSimpleName().equals("IfElse"))
-                    .forEach( ifElseAst -> {
-                                thenOtherwiseList.add(((Ast.IfElse) ifElseAst).then());
-                                thenOtherwiseList.add(((Ast.IfElse) ifElseAst).otherwise());
+                    .anyMatch( ifElseAst -> { return ((hasReturn(((Ast.IfElse) ifElseAst).then())) &&
+                                (hasReturn(((Ast.IfElse) ifElseAst).otherwise())));
                             }
                     );
-
-            // Go through all the then and otherwise nodes and check if they have a return statement.
-            return thenOtherwiseList.stream()
-                    .map(ast3 -> hasReturn(ast3))
-                    .reduce(true, (a, b) -> a && b);
         }
         return false;
     }
