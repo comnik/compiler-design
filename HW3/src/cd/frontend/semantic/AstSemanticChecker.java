@@ -75,9 +75,9 @@ public class AstSemanticChecker extends AstVisitor<Void,Symbol> {
     @Override
     public Void assign(Ast.Assign ast, Symbol parent){
         // NOT_ASSIGNABLE
-        if (ast.left().getClass().getName().equals("ThisRef")){
+        if (ast.left().getClass().getSimpleName().equals("ThisRef")){
             throw new SemanticFailure(SemanticFailure.Cause.NOT_ASSIGNABLE);
-        } else if (ast.left().getClass().getName().equals("MethodCallExpr")){
+        } else if (ast.left().getClass().getSimpleName().equals("MethodCallExpr")){
             throw new SemanticFailure((SemanticFailure.Cause.NOT_ASSIGNABLE));
         }
         return null;
