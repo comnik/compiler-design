@@ -3,6 +3,7 @@ package cd.backend.codegen;
 import java.io.Writer;
 import java.util.List;
 
+import cd.Config;
 import cd.Main;
 import cd.backend.codegen.RegisterManager.Register;
 import cd.ir.Ast.ClassDecl;
@@ -59,6 +60,13 @@ public class AstCodeGenerator {
 	 * </ol>
 	 */
 	public void go(List<? extends ClassDecl> astRoots) {
+        // Emit some useful string constants:
+        emit.emitRaw(Config.DATA_STR_SECTION);
+        emit.emitLabel("STR_NL");
+        emit.emitRaw(Config.DOT_STRING + " \"\\n\"");
+        emit.emitLabel("STR_D");
+        emit.emitRaw(Config.DOT_STRING + " \"%d\"");
+
 		for (ClassDecl ast : astRoots) {
 			sg.gen(ast);
 		}

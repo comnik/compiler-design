@@ -64,33 +64,12 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 	// Emit vtable for arrays of this class:
 	@Override
 	public Register classDecl(ClassDecl ast, Void arg) {
-		// TODO throw new ToDoException();
-		// TODO The code below is from HW1 solution.
-		//      You will need to re-implement this method in HW4.
-		if (!ast.name.equals("Main"))
-			throw new RuntimeException(
-					"Only expected one class, named 'main'");
-		return visitChildren(ast, arg);
+        // TODO
+        return visitChildren(ast, arg);
 	}
 
 	@Override
 	public Register methodDecl(MethodDecl ast, Void arg) {
-		
-		// ------------------------------------------------------------
-		// Homework 1 Prologue Generation:
-		// Rather simplistic due to limited requirements!
-
-		if (!ast.name.equals("main"))
-			throw new RuntimeException(
-					"Only expected one method named 'main'");
-
-		// Emit some useful string constants:
-		cg.emit.emitRaw(Config.DATA_STR_SECTION);
-		cg.emit.emitLabel("STR_NL");
-		cg.emit.emitRaw(Config.DOT_STRING + " \"\\n\"");
-		cg.emit.emitLabel("STR_D");
-		cg.emit.emitRaw(Config.DOT_STRING + " \"%d\"");
-
 		// Emit a label for each variable:
 		// Let the AST Visitor do the iteration for us.
 		cg.emit.emitRaw(Config.DATA_INT_SECTION);
@@ -106,10 +85,16 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 			}
 		}, null);
 
-		// Emit the main() method:
-		cg.emit.emitRaw(Config.TEXT_SECTION);
-		cg.emit.emitRaw(".globl " + MAIN);
-		cg.emit.emitLabel(MAIN);
+        if (ast.sym.name.equals("main")) {
+            // TODO Check if we are in class Main as well.
+
+            // Emit the main() method:
+            cg.emit.emitRaw(Config.TEXT_SECTION);
+            cg.emit.emitRaw(".globl " + MAIN);
+            cg.emit.emitLabel(MAIN);
+        } else {
+            cg.emit.emitLabel(ast.sym.name);
+        }
 
 		cg.emit.emit("enter", "$8", "$0");
 		cg.emit.emit("and", -16, STACK_REG);
