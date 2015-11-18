@@ -90,10 +90,12 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
 
 	@Override
 	public Register booleanConst(BooleanConst ast, Void arg) {
-		{
-			throw new ToDoException();
-		}
-	}
+        Register reg = cg.rm.getRegister();
+        String booleanValue = (ast.value == true) ? "$0x1" : "$0x0";
+
+        cg.emit.emit("movb", booleanValue, reg);
+        return reg;
+    }
 
 	@Override
 	public Register builtInRead(BuiltInRead ast, Void arg) {
@@ -124,11 +126,9 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
 
 	@Override
 	public Register intConst(IntConst ast, Void arg) {
-		{
-			Register reg = cg.rm.getRegister();
-			cg.emit.emit("movl", "$" + ast.value, reg);
-			return reg;
-		}
+        Register reg = cg.rm.getRegister();
+        cg.emit.emit("movl", "$" + ast.value, reg);
+        return reg;
 	}
 
 	@Override
@@ -175,24 +175,22 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
 
 	@Override
 	public Register unaryOp(UnaryOp ast, Void arg) {
-		{
-			Register argReg = gen(ast.arg());
-			switch (ast.operator) {
-			case U_PLUS:
-				break;
+        Register argReg = gen(ast.arg());
+        switch (ast.operator) {
+        case U_PLUS:
+            break;
 
-			case U_MINUS:
-				cg.emit.emit("negl", argReg);
-				break;
+        case U_MINUS:
+            cg.emit.emit("negl", argReg);
+            break;
 
-			case U_BOOL_NOT:
-				cg.emit.emit("negl", argReg);
-				cg.emit.emit("incl", argReg);
-				break;
-			}
+        case U_BOOL_NOT:
+            cg.emit.emit("negl", argReg);
+            cg.emit.emit("incl", argReg);
+            break;
+        }
 
-			return argReg;
-		}
+        return argReg;
 	}
 	
 	@Override

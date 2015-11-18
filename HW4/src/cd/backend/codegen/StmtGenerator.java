@@ -100,6 +100,7 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 		cg.emit.emit("and", -16, STACK_REG);
 		gen(ast.body());
 		cg.emitMethodSuffix(true);
+
 		return null;
 	}
 
