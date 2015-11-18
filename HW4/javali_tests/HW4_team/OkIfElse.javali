@@ -3,7 +3,7 @@ class Main {
     int i;
 
     void main() {
-        i = 2
+        i = 2;
         if (i < 3) {
             write(i);
             writeln();

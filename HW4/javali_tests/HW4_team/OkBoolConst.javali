@@ -1,10 +1,13 @@
 /* Test boolean constants. */
 class Main {
-    boolean b1 = true;
-    boolean b2 = false;
+    boolean b1;
+    boolean b2;
 
     void main() {
-        boolean res = b1 && b2;
+        boolean res;
+        b1 = true;
+        b2 = false;
+        res = b1 && b2;
         writeln();
     }
 }
