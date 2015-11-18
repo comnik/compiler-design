@@ -2,4 +2,7 @@
 *.iml
 *.ref
 *.err
-HW3/bin/
+*.s
+*.bin
+HW3/bin
+HW4/bin/
