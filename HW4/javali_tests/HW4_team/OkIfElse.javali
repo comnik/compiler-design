@@ -1,0 +1,15 @@
+/* Test a simple if else statement. */
+class Main {
+    int i;
+
+    void main() {
+        i = 2
+        if (i < 3) {
+            write(i);
+            writeln();
+        } else {
+            write(2);
+            writeln();
+        }
+   }
+}
