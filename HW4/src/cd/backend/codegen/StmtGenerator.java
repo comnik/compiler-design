@@ -163,9 +163,9 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 
 	@Override
 	public Register returnStmt(ReturnStmt ast, Void arg) {
-		{
-			throw new ToDoException();
-		}
+        Register result = visit(ast, arg);
+        cg.emit.emit("movl", result, Register.EAX);
+        return Register.EAX;
 	}
 
 }
