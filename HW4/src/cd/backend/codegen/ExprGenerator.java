@@ -3,6 +3,7 @@ package cd.backend.codegen;
 import static cd.Config.SCANF;
 import static cd.backend.codegen.AssemblyEmitter.constant;
 import static cd.backend.codegen.RegisterManager.BASE_REG;
+import static cd.backend.codegen.RegisterManager.RESULT_REG;
 import static cd.backend.codegen.RegisterManager.STACK_REG;
 import cd.ToDoException;
 import cd.backend.codegen.RegisterManager.Register;
@@ -23,6 +24,10 @@ import cd.ir.Ast.UnaryOp;
 import cd.ir.Ast.Var;
 import cd.ir.ExprVisitor;
 import cd.util.debug.AstOneLine;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Generates code to evaluate expressions. After emitting the code, returns a
@@ -169,9 +174,21 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
 
 	@Override
 	public Register methodCall(MethodCallExpr ast, Void arg) {
-		{
-			throw new ToDoException();
-		}
+        // We have to push arguments in reverse order onto the stack.
+        List<Expr> argsWithoutReciever = new ArrayList<Expr>();
+        argsWithoutReciever.addAll(ast.argumentsWithoutReceiver());
+        Collections.reverse(argsWithoutReciever);
+
+        argsWithoutReciever.forEach(argExpr -> {
+            // TODO check if pushl or pushb
+            Register argValue = visit(argExpr, null);
+            cg.emit.emit("pushl", argValue);
+        });
+
+        // Call the function.
+        cg.emit.emit("call", 0);
+
+        return RESULT_REG;
 	}
 
 	@Override

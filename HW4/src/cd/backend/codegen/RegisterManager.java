@@ -24,6 +24,7 @@ public class RegisterManager {
 	// special purpose registers
 	public static final Register BASE_REG = Register.EBP;
 	public static final Register STACK_REG = Register.ESP;
+    public static final Register RESULT_REG = Register.EAX;
 
 	public static final int SIZEOF_REG = 4;
 

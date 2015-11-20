@@ -13,6 +13,7 @@ import java.util.List;
 
 import static cd.Config.MAIN;
 import static cd.backend.codegen.AssemblyEmitter.constant;
+import static cd.backend.codegen.RegisterManager.RESULT_REG;
 import static cd.backend.codegen.RegisterManager.STACK_REG;
 import static cd.backend.codegen.RegisterManager.BASE_REG;
 
@@ -73,6 +74,9 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 
         // Get the stack size required to hold all local variables.
         Integer stackSize = new AstVisitor<Integer, Integer>() {
+            private final static int SIZEOF_INT = 4;
+            private final static int SIZEOF_BOOL = 1;
+
             @Override
             public Integer seq(Ast.Seq ast, Integer base) {
                 // This could just be a stream.reduce :: Integer -> Ast -> Integer,
@@ -89,11 +93,13 @@ class StmtGenerator extends AstVisitor<Register, Void> {
                 // Remember the position on the stack, relative to the base pointer.
                 switch (ast.type) {
                     case "int":
-                        ast.sym.offset = offset - 4; break;
+                        ast.sym.offset = offset - SIZEOF_INT; break;
                     case "boolean":
-                        ast.sym.offset = offset - 1; break;
+                        ast.sym.offset = offset - SIZEOF_BOOL; break;
                     default:
-                        throw new RuntimeException("Unknown variable type " + ast.type);
+                        // Were dealing with a reference here, semantic checking has
+                        // already ensured that no unknown types occur.
+                        ast.sym.offset = offset - Config.SIZEOF_PTR;
                 }
                 return ast.sym.offset;
             }
@@ -127,15 +133,12 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 
 	@Override
 	public Register assign(Assign ast, Void arg) {
-        try {
-            Var var = (Var) ast.left();
-            Register rhsReg = cg.eg.gen(ast.right());
+        // TODO Support for array access and fields, besides normal vars.
+        Var var = (Var) ast.left();
+        Register rhsReg = cg.eg.gen(ast.right());
 
-            cg.emit.emitStore(rhsReg, var.sym.offset, BASE_REG);
-            cg.rm.releaseRegister(rhsReg);
-        } catch (ClassCastException ex) {
-            throw new RuntimeException("LHS must be var in HW1");
-        }
+        cg.emit.emitStore(rhsReg, var.sym.offset, BASE_REG);
+        cg.rm.releaseRegister(rhsReg);
 
         return null;
     }
@@ -165,7 +168,7 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 	public Register returnStmt(ReturnStmt ast, Void arg) {
         Register result = visit(ast, arg);
         cg.emit.emit("movl", result, Register.EAX);
-        return Register.EAX;
+        return RESULT_REG;
 	}
 
 }
