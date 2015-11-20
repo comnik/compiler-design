@@ -142,14 +142,14 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 
 	@Override
 	public Register builtInWrite(BuiltInWrite ast, Void arg) {
-		Register reg = cg.eg.gen(ast.arg());
-		cg.emit.emit("sub", constant(16), STACK_REG);
-		cg.emit.emitStore(reg, 4, STACK_REG);
-		cg.emit.emitStore("$STR_D", 0, STACK_REG);
-		cg.emit.emit("call", Config.PRINTF);
-		cg.emit.emit("add", constant(16), STACK_REG);
-		cg.rm.releaseRegister(reg);
-		return null;
+        Register printfArg = cg.eg.gen(ast.arg());
+
+        cg.emit.emit("pushl", printfArg);
+        cg.emit.emit("pushl", "$STR_D");
+        cg.emit.emit("call", Config.PRINTF);
+
+        cg.rm.releaseRegister(printfArg);
+        return null;
 	}
 
 	@Override
