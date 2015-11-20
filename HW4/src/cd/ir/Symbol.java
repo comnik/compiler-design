@@ -156,6 +156,7 @@ public abstract class Symbol {
 		public static enum Kind { PARAM, LOCAL, FIELD };
 		public final TypeSymbol type;
 		public final Kind kind;
+        public int offset;
 		
 		public VariableSymbol(String name, TypeSymbol type) {
 			this(name, type, Kind.PARAM);

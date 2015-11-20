@@ -195,8 +195,18 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
 	
 	@Override
 	public Register var(Var ast, Void arg) {
-		Register reg = cg.rm.getRegister();
-		cg.emit.emit("movl", AstCodeGenerator.VAR_PREFIX + ast.name, reg);
+        Register reg = cg.rm.getRegister();
+        switch (ast.sym.kind) {
+            case LOCAL:
+                cg.emit.emitLoad(ast.sym.offset, Register.EBP, reg);
+                break;
+            case PARAM:
+                // TODO
+                break;
+            case FIELD:
+                // TODO
+                break;
+        }
 		return reg;
 	}
 
