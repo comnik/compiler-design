@@ -2,6 +2,7 @@ package cd.backend.codegen;
 
 import static cd.Config.SCANF;
 import static cd.backend.codegen.AssemblyEmitter.constant;
+import static cd.backend.codegen.RegisterManager.BASE_REG;
 import static cd.backend.codegen.RegisterManager.STACK_REG;
 import cd.ToDoException;
 import cd.backend.codegen.RegisterManager.Register;
@@ -198,7 +199,7 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
         Register reg = cg.rm.getRegister();
         switch (ast.sym.kind) {
             case LOCAL:
-                cg.emit.emitLoad(ast.sym.offset, Register.EBP, reg);
+                cg.emit.emitLoad(ast.sym.offset, BASE_REG, reg);
                 break;
             case PARAM:
                 // TODO

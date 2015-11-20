@@ -86,7 +86,7 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 
             @Override
             public Integer varDecl(VarDecl ast, Integer offset) {
-                // Remember the position on the stack, relative to %ebp.
+                // Remember the position on the stack, relative to the base pointer.
                 switch (ast.type) {
                     case "int":
                         ast.sym.offset = offset - 4; break;
@@ -103,7 +103,7 @@ class StmtGenerator extends AstVisitor<Register, Void> {
         cg.emit.emit("movl", STACK_REG, BASE_REG);
 
         // Make space on the stack.
-        cg.emit.emit("addl", stackSize, Register.ESP);
+        cg.emit.emit("addl", stackSize, STACK_REG);
 
         gen(ast.body());
 		cg.emitMethodSuffix(true);
@@ -131,7 +131,7 @@ class StmtGenerator extends AstVisitor<Register, Void> {
             Var var = (Var) ast.left();
             Register rhsReg = cg.eg.gen(ast.right());
 
-            cg.emit.emitStore(rhsReg, var.sym.offset, Register.EBP);
+            cg.emit.emitStore(rhsReg, var.sym.offset, BASE_REG);
             cg.rm.releaseRegister(rhsReg);
         } catch (ClassCastException ex) {
             throw new RuntimeException("LHS must be var in HW1");
