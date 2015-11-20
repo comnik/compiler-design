@@ -138,7 +138,13 @@ class StmtGenerator extends AstVisitor<Register, Void> {
         Register rhsReg = cg.eg.gen(ast.right());
 
         cg.emit.emitStore(rhsReg, var.sym.offset, BASE_REG);
-        cg.rm.releaseRegister(rhsReg);
+
+        // We need to check if the result register is in use,
+        // because for method expressions, RESULT_REG is used without
+        // marking it as used in the register manager.
+        if (cg.rm.isInUse(rhsReg)) {
+            cg.rm.releaseRegister(rhsReg);
+        }
 
         return null;
     }
