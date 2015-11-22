@@ -119,9 +119,24 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 
 	@Override
 	public Register ifElse(IfElse ast, Void arg) {
-		{
-			throw new ToDoException();
-		}
+		// TODO Support for multiple IfElse statements via name mangling.
+		Register reg = cg.eg.gen(ast.condition());
+
+		cg.emit.emit("cmpl", "$0", reg.toString());
+		cg.emit.emit("jle", "otherwise");
+
+		// then branch
+		cg.emit.emitLabel("then");
+		cg.sg.gen(ast.then());
+		cg.emit.emit("jmp", "done");
+
+		// otherwise branch
+		cg.emit.emitLabel("otherwise");
+		cg.sg.gen(ast.otherwise());
+		cg.emit.emit("jmp", "done");
+
+		cg.emit.emitLabel("done");
+		return null;
 	}
 
 	@Override
