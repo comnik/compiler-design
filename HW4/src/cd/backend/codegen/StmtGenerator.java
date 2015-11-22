@@ -141,9 +141,22 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 
 	@Override
 	public Register whileLoop(WhileLoop ast, Void arg) {
-		{
-			throw new ToDoException();
-		}
+		// TODO Support for multiple WhileLoop statements via name mangling.
+		Register reg = cg.eg.gen(ast.condition());
+
+		// Check condition initially.
+		cg.emit.emit("cmpl", "$0", reg.toString());
+		cg.emit.emit("jle", "done");
+
+		// Main while loop.
+		cg.emit.emitLabel("loop");
+		cg.sg.gen(ast.body());
+		reg = cg.eg.gen(ast.condition());
+		cg.emit.emit("cmpl", "$0", reg.toString());
+		cg.emit.emit("jg", "loop");
+
+		cg.emit.emitLabel("done");
+		return null;
 	}
 
 	@Override
