@@ -85,7 +85,18 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
 		case B_MINUS:
 			cg.emit.emit("sub", rightReg, leftReg);
 			break;
-		default:
+        case B_AND:
+            cg.emit.emit("and", rightReg, leftReg);
+            break;
+        case B_OR:
+            cg.emit.emit("or", rightReg, leftReg);
+            break;
+        case B_LESS_THAN:
+            cg.emit.emit("sub", leftReg, rightReg);
+            cg.emit.emit("movl", rightReg, leftReg);
+            break;
+        // TODO Support for remaining binary ops.
+        default:
 			throw new ToDoException();
 		}
 
