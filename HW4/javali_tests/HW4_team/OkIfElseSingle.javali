@@ -1,8 +1,8 @@
 /* Test a simple if else statement. */
 class Main {
-    int i;
 
     void main() {
+        int i;
         i = 2;
         if (i < 3) {
             write(i);
