@@ -1,0 +1,18 @@
+/* Test a simple while loop. */
+class Main {
+    int i;
+
+    void main() {
+        int k;
+
+        k = 5;
+        i = 0;
+
+        while (i < k) {
+            i = i + 1;
+        }
+
+        write(i);
+        writeln();
+   }
+}
