@@ -46,8 +46,9 @@ class ExprGenerator extends ExprVisitor<Register, Void> {
 
 	@Override
 	public Register visit(Expr ast, Void arg) {
-		try {
-			cg.emit.increaseIndent("Emitting " + AstOneLine.toString(ast));
+        cg.emit.increaseIndent("Emitting " + AstOneLine.toString(ast));
+
+        try {
 			return super.visit(ast, null);
 		} finally {
 			cg.emit.decreaseIndent();

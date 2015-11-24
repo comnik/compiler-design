@@ -33,8 +33,9 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 
 	@Override
 	public Register visit(Ast ast, Void arg) {
-		try {
-			cg.emit.increaseIndent("Emitting " + AstOneLine.toString(ast));
+        cg.emit.increaseIndent("Emitting " + AstOneLine.toString(ast));
+
+        try {
 			return super.visit(ast, arg);
 		} finally {
 			cg.emit.decreaseIndent();
