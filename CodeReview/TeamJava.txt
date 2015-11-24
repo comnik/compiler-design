@@ -1,0 +1,15 @@
+Code review for TeamJava
+------------------------
+
+
+
+SemanticAnalyzer.java
+---------------------
+
+21	why not choose an short name for ‘classSymbolCreatorVisitor’?
+39	unused boolean ‘ValidStart’
+
+
+ClassSymbolCreatorVisitor.java
+------------------------------
+
