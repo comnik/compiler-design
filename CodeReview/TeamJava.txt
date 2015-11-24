@@ -1,0 +1,27 @@
+Code review for TeamJava
+------------------------
+
+
+
+SemanticAnalyzer.java
+---------------------
+
+20	Less cryptic names (“sm”, “stc”, etc.) would make code more legible.
+39	Unused boolean ‘ValidStart’.
+
+
+ClassSymbolCreatorVisitor.java
+------------------------------
+
+
+SymbolManager.java
+------------------
+
+4	Wildcard import could be used to make the rest of the code in the class less verbose.
+29-31	Use of magic constants. Use Symbol.PrimitiveTypeSymbol.intType.name instead of “int”.
+67	No case for non-existent class symbol.
+
+General comments
+---------------- 
+
+- Almost no comments
