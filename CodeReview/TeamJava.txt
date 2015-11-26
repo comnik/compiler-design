@@ -1,30 +1,12 @@
 # Hw3 Code Review
 
 + Nice separation of concerns, 
-
 + I like that you have a method called ‘preFlightCheck’.
-
 - Human readable error output would have been nice.
-
-SemanticAnalyzer.java
----------------------
-
-- Less cryptic names (“sm”, “stc”, etc.) would make code more legible; 20.
+- Less cryptic names (“sm”, “stc”, etc.) would make code more legible (SemanticAnalyzer, 20).
 - Unused boolean ‘ValidStart’; 39.
+- Almost no comments.
+- Wildcard import could be used to make the rest of the code in the class less verbose (SymbolManager, 4).
+- Use of magic constants. Use Symbol.PrimitiveTypeSymbol.intType.name instead of “int”. (SymbolManager, 29-32).
+- No case for non-existent class symbol (SymbolManager 67).
 
-
-ClassSymbolCreatorVisitor.java
-------------------------------
-
-
-SymbolManager.java
-------------------
-
-- Wildcard import could be used to make the rest of the code in the class less verbose; 4.
-- Use of magic constants. Use Symbol.PrimitiveTypeSymbol.intType.name instead of “int”; 29-32.
-- No case for non-existent class symbol; 67.
-
-General comments
----------------- 
-
-- Almost no comments
