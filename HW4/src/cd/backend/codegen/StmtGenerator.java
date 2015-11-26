@@ -108,15 +108,16 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
             }
         }.visit(ast.decls(), 0);
 
-        // Align the stack to 16 bytes.
-        cg.emit.emit("andl", constant(-16), STACK_REG);
 
-        if (Config.systemKind == Config.SystemKind.MACOSX) {
-            stackSize = alignedTo16(4 + stackSize);
-        }
+		cg.emit.emit("pushl", BASE_REG);
+		cg.emit.emit("movl", STACK_REG, BASE_REG);
 
-        cg.emit.emit("pushl", BASE_REG);
-        cg.emit.emit("movl", STACK_REG, BASE_REG);
+		if (Config.systemKind == Config.SystemKind.MACOSX) {
+			// Align the stack to 16 bytes.
+			cg.emit.emit("andl", constant(-16), STACK_REG);
+
+			stackSize = alignedTo16(stackSize);
+		}
 
         // Make space on the stack.
         cg.emit.emit("subl", stackSize, STACK_REG);
