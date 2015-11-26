@@ -3,6 +3,7 @@ package cd.backend.codegen;
 import cd.Config;
 import cd.ToDoException;
 import cd.backend.codegen.RegisterManager.Register;
+import cd.backend.codegen.VRegManager.VRegister;
 import cd.ir.Ast;
 import cd.ir.Ast.*;
 import cd.ir.AstVisitor;
@@ -20,7 +21,7 @@ import static cd.backend.codegen.RegisterManager.BASE_REG;
 /**
  * Generates code to process statements and declarations.
  */
-class StmtGenerator extends AstVisitor<Register, Void> {
+class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 	protected final AstCodeGenerator cg;
 
 	StmtGenerator(AstCodeGenerator astCodeGenerator) {
@@ -32,36 +33,36 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 	}
 
 	@Override
-	public Register visit(Ast ast, Void arg) {
+	public VRegister visit(Ast ast, VRegManager vRegManager) {
         cg.emit.increaseIndent("Emitting " + AstOneLine.toString(ast));
 
         try {
-			return super.visit(ast, arg);
+			return super.visit(ast, vRegManager);
 		} finally {
 			cg.emit.decreaseIndent();
 		}
 	}
 
 	@Override
-	public Register methodCall(MethodCall ast, Void dummy) {
+	public VRegister methodCall(MethodCall ast, VRegManager vRegManager) {
 		{
 			throw new ToDoException();
 		}
 	}
 
-	public Register methodCall(MethodSymbol sym, List<Expr> allArguments) {
+	public VRegister methodCall(MethodSymbol sym, List<Expr> allArguments) {
 		throw new RuntimeException("Not required");
 	}
 
 	// Emit vtable for arrays of this class:
 	@Override
-	public Register classDecl(ClassDecl ast, Void arg) {
+	public VRegister classDecl(ClassDecl ast, VRegManager vRegManager) {
         // TODO
-        return visitChildren(ast, arg);
+        return visitChildren(ast, vRegManager);
 	}
 
 	@Override
-	public Register methodDecl(MethodDecl ast, Void arg) {
+	public VRegister methodDecl(MethodDecl ast, VRegManager vRegManager) {
         if (ast.sym.name.equals("main")) {
             // TODO Check if we are in class Main as well.
 
@@ -112,16 +113,20 @@ class StmtGenerator extends AstVisitor<Register, Void> {
         // Make space on the stack.
         cg.emit.emit("addl", stackSize, STACK_REG);
 
-        gen(ast.body());
+        // Create a new virtual register manager for this stack frame
+        // and generate code for the body.
+        vRegManager = new VRegManager(stackSize, cg);
+        visit(ast.body(), vRegManager);
+
 		cg.emitMethodSuffix(true);
 
 		return null;
 	}
 
 	@Override
-	public Register ifElse(IfElse ast, Void arg) {
+	public VRegister ifElse(IfElse ast, VRegManager vRegManager) {
 		// TODO Support for multiple IfElse statements via name mangling.
-		Register reg = cg.eg.gen(ast.condition());
+		VRegister reg = cg.eg.gen(ast.condition(), vRegManager);
 
 		cg.emit.emit("cmpl", "$0", reg.toString());
 		cg.emit.emit("jle", "otherwise");
@@ -141,9 +146,9 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 	}
 
 	@Override
-	public Register whileLoop(WhileLoop ast, Void arg) {
+	public VRegister whileLoop(WhileLoop ast, VRegManager vRegManager) {
 		// TODO Support for multiple WhileLoop statements via name mangling.
-		Register reg = cg.eg.gen(ast.condition());
+		VRegister reg = cg.eg.gen(ast.condition(), vRegManager);
 
 		// Check condition initially.
 		cg.emit.emit("cmpl", "$0", reg.toString());
@@ -152,7 +157,9 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 		// Main while loop.
 		cg.emit.emitLabel("loop");
 		cg.sg.gen(ast.body());
-		reg = cg.eg.gen(ast.condition());
+
+        reg = cg.eg.gen(ast.condition(), vRegManager);
+
 		cg.emit.emit("cmpl", "$0", reg.toString());
 		cg.emit.emit("jg", "loop");
 
@@ -161,37 +168,31 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 	}
 
 	@Override
-	public Register assign(Assign ast, Void arg) {
+	public VRegister assign(Assign ast, VRegManager vRegManager) {
         // TODO Support for array access and fields, besides normal vars.
         Var var = (Var) ast.left();
-        Register rhsReg = cg.eg.gen(ast.right());
+        VRegister rhsReg = cg.eg.gen(ast.right(), vRegManager);
 
-        cg.emit.emitStore(rhsReg, var.sym.offset, BASE_REG);
+        cg.emit.emitStore(vRegManager.toPhysical(rhsReg), var.sym.offset, BASE_REG);
 
-        // We need to check if the result register is in use,
-        // because for method expressions, RESULT_REG is used without
-        // marking it as used in the register manager.
-        if (cg.rm.isInUse(rhsReg)) {
-            cg.rm.releaseRegister(rhsReg);
-        }
-
+        vRegManager.releaseRegister(rhsReg);
         return null;
     }
 
 	@Override
-	public Register builtInWrite(BuiltInWrite ast, Void arg) {
-        Register printfArg = cg.eg.gen(ast.arg());
+	public VRegister builtInWrite(BuiltInWrite ast, VRegManager vRegManager) {
+        VRegister printfArg = cg.eg.gen(ast.arg(), vRegManager);
 
-        cg.emit.emit("pushl", printfArg);
+        cg.emit.emit("pushl", vRegManager.toPhysical(printfArg));
         cg.emit.emit("pushl", "$STR_D");
         cg.emit.emit("call", Config.PRINTF);
 
-        cg.rm.releaseRegister(printfArg);
+        vRegManager.releaseRegister(printfArg);
         return null;
 	}
 
 	@Override
-	public Register builtInWriteln(BuiltInWriteln ast, Void arg) {
+	public VRegister builtInWriteln(BuiltInWriteln ast, VRegManager vRegManager) {
 		cg.emit.emit("sub", constant(16), STACK_REG);
 		cg.emit.emitStore("$STR_NL", 0, STACK_REG);
 		cg.emit.emit("call", Config.PRINTF);
@@ -200,10 +201,10 @@ class StmtGenerator extends AstVisitor<Register, Void> {
 	}
 
 	@Override
-	public Register returnStmt(ReturnStmt ast, Void arg) {
-        Register result = visit(ast, arg);
-        cg.emit.emit("movl", result, Register.EAX);
-        return RESULT_REG;
+	public VRegister returnStmt(ReturnStmt ast, VRegManager vRegManager) {
+        VRegister result = visit(ast, vRegManager);
+        cg.emit.emit("movl", vRegManager.toPhysical(result), vRegManager.toPhysical(vRegManager.RESULT_REG));
+        return vRegManager.RESULT_REG;
 	}
 
 }
