@@ -87,7 +87,7 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
                 for (Ast node : ast.rwChildren()) {
                     accum = visit(node, accum);
                 }
-                return accum;
+                return -accum; // Return negative maximum offset so it is a size.
             }
 
             @Override
@@ -116,7 +116,7 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
         cg.emit.emit("movl", STACK_REG, BASE_REG);
 
         // Make space on the stack.
-        cg.emit.emit("addl", stackSize, STACK_REG);
+        cg.emit.emit("subl", stackSize, STACK_REG);
 
         // Create a new virtual register manager for this stack frame
         // and generate code for the body.
