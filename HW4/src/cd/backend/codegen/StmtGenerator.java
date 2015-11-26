@@ -107,6 +107,11 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
             }
         }.visit(ast.decls(), 0);
 
+        // On OSX, we need to align to 16 bytes.
+        if (Config.systemKind == Config.SystemKind.MACOSX) {
+            stackSize = alignedTo16(stackSize);
+        }
+
         cg.emit.emit("pushl", BASE_REG);
         cg.emit.emit("movl", STACK_REG, BASE_REG);
 
@@ -183,9 +188,11 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 	public VRegister builtInWrite(BuiltInWrite ast, VRegManager vRegManager) {
         VRegister printfArg = cg.eg.gen(ast.arg(), vRegManager);
 
-        cg.emit.emit("pushl", vRegManager.toPhysical(printfArg));
-        cg.emit.emit("pushl", "$STR_D");
+        cg.emit.emit("subl", constant(16), STACK_REG);
+        cg.emit.emitStore(vRegManager.toPhysical(printfArg), 4, STACK_REG);
+        cg.emit.emitStore("$STR_D", 0, STACK_REG);
         cg.emit.emit("call", Config.PRINTF);
+        cg.emit.emit("add", constant(16), STACK_REG);
 
         vRegManager.releaseRegister(printfArg);
         return null;
@@ -206,5 +213,16 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
         cg.emit.emit("movl", vRegManager.toPhysical(result), vRegManager.toPhysical(vRegManager.RESULT_REG));
         return vRegManager.RESULT_REG;
 	}
+
+    // Helper functions.
+
+    /** Returns the next highest multiple y of 16, such that x < y. */
+    private int alignedTo16(int x) {
+        int y = 16;
+        while (x > y) {
+            y += 16;
+        }
+        return y;
+    }
 
 }
