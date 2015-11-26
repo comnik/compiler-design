@@ -9,6 +9,7 @@ import cd.ir.Ast.*;
 import cd.ir.AstVisitor;
 import cd.ir.Symbol.MethodSymbol;
 import cd.util.debug.AstOneLine;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.util.List;
 
@@ -107,9 +108,11 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
             }
         }.visit(ast.decls(), 0);
 
-        // On OSX, we need to align to 16 bytes.
+        // Align the stack to 16 bytes.
+        cg.emit.emit("andl", constant(-16), STACK_REG);
+
         if (Config.systemKind == Config.SystemKind.MACOSX) {
-            stackSize = alignedTo16(stackSize);
+            stackSize = alignedTo16(4 + stackSize);
         }
 
         cg.emit.emit("pushl", BASE_REG);
