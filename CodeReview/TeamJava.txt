@@ -7,9 +7,8 @@
   is there a reason for that?
 
 - Human readable error output would have been nice.
-- Less cryptic names (“sm”, “stc”, etc.) would make code more legible (SemanticAnalyzer, 20).
-- Unused boolean ‘ValidStart’; 39.
 - Almost no comments.
+- Less cryptic names (“sm”, “stc”, etc.) would make code more legible (SemanticAnalyzer, 20).
+- Unused boolean ‘ValidStart’ (SemanticAnalyzer, 39).
 - Wildcard import could be used to make the rest of the code in the class less verbose (SymbolManager, 4).
 - Use of magic constants. Use Symbol.PrimitiveTypeSymbol.intType.name instead of “int”. (SymbolManager, 29-32).
-
