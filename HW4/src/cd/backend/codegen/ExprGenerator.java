@@ -77,7 +77,7 @@ class ExprGenerator extends ExprVisitor<VRegister, VRegManager> {
             cg.emit.emit("or", rightReg, leftReg);
             break;
         case B_LESS_THAN:
-            cg.emit.emit("sub", leftReg, rightReg);
+            cg.emit.emit("subl", leftReg, rightReg);
             cg.emit.emit("movl", rightReg, leftReg);
             break;
         // TODO Support for remaining binary ops.
