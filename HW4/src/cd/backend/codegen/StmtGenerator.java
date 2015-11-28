@@ -2,22 +2,19 @@ package cd.backend.codegen;
 
 import cd.Config;
 import cd.ToDoException;
-import cd.backend.codegen.RegisterManager.Register;
 import cd.backend.codegen.VRegManager.VRegister;
 import cd.ir.Ast;
 import cd.ir.Ast.*;
 import cd.ir.AstVisitor;
 import cd.ir.Symbol.MethodSymbol;
 import cd.util.debug.AstOneLine;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.util.List;
 
 import static cd.Config.MAIN;
 import static cd.backend.codegen.AssemblyEmitter.constant;
-import static cd.backend.codegen.RegisterManager.RESULT_REG;
-import static cd.backend.codegen.RegisterManager.STACK_REG;
 import static cd.backend.codegen.RegisterManager.BASE_REG;
+import static cd.backend.codegen.RegisterManager.STACK_REG;
 
 /**
  * Generates code to process statements and declarations.
@@ -63,7 +60,7 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 	}
 
 	@Override
-	public VRegister methodDecl(MethodDecl ast, VRegManager vRegManager) {
+	public VRegister methodDecl(MethodDecl ast, VRegManager willBeIgnored) {
         if (ast.sym.name.equals("main")) {
             // TODO Check if we are in class Main as well.
 
@@ -75,42 +72,31 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
             cg.emit.emitLabel(ast.sym.name);
         }
 
-        // Get the stack size required to hold all local variables.
-        Integer stackSize = new AstVisitor<Integer, Integer>() {
-            private final static int SIZEOF_INT = 4;
-            private final static int SIZEOF_BOOL = 1;
+        // Create a new virtual register manager for this stack frame
+        // and generate code for the body.
+        final VRegManager vRegManager = new VRegManager(0, cg);
 
-            @Override
-            public Integer seq(Ast.Seq ast, Integer base) {
-                // This could just be a stream.reduce :: Integer -> Ast -> Integer,
-                // but Java won't let me..
-                Integer accum = base;
-                for (Ast node : ast.rwChildren()) {
-                    accum = visit(node, accum);
-                }
-                return -accum; // Return negative maximum offset so it is a size.
+        // Create virtual registers for all local variables.
+        ast.decls().children().stream().forEach(astNode -> {
+            VarDecl varDecl = (VarDecl) astNode;
+
+            switch (varDecl.type) {
+            case "int":
+                varDecl.sym.vregister = vRegManager.getRegister(); break;
+            case "boolean":
+                varDecl.sym.vregister = vRegManager.getByteRegister(); break;
+            default:
+                // Were dealing with a reference here, semantic checking has
+                // already ensured that no unknown types occur.
+                varDecl.sym.vregister = vRegManager.getRegister();
             }
+        });
 
-            @Override
-            public Integer varDecl(VarDecl ast, Integer offset) {
-                // Remember the position on the stack, relative to the base pointer.
-                switch (ast.type) {
-                    case "int":
-                        ast.sym.offset = offset - SIZEOF_INT; break;
-                    case "boolean":
-                        ast.sym.offset = offset - SIZEOF_BOOL; break;
-                    default:
-                        // Were dealing with a reference here, semantic checking has
-                        // already ensured that no unknown types occur.
-                        ast.sym.offset = offset - Config.SIZEOF_PTR;
-                }
-                return ast.sym.offset;
-            }
-        }.visit(ast.decls(), 0);
+        // Get the stack size required to hold locals.
+        int stackSize = vRegManager.getStackSize();
 
-
-		cg.emit.emit("pushl", BASE_REG);
-		cg.emit.emit("movl", STACK_REG, BASE_REG);
+        cg.emit.emit("pushl", BASE_REG);
+        cg.emit.emit("movl", STACK_REG, BASE_REG);
 
 		if (Config.systemKind == Config.SystemKind.MACOSX) {
 			// Align the stack to 16 bytes.
@@ -119,12 +105,12 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 			stackSize = alignedTo16(stackSize);
 		}
 
-        // Make space on the stack.
-        cg.emit.emit("subl", stackSize, STACK_REG);
+        // Make space on the stack, if required.
+        if (stackSize > 0) {
+            cg.emit.emit("subl", stackSize, STACK_REG);
+        }
 
-        // Create a new virtual register manager for this stack frame
-        // and generate code for the body.
-        vRegManager = new VRegManager(stackSize, cg);
+        // Generate code for the body.
         visit(ast.body(), vRegManager);
 
 		cg.emitMethodSuffix(true);
@@ -142,12 +128,12 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 
 		// then branch
 		cg.emit.emitLabel("then");
-		cg.sg.gen(ast.then());
+		visit(ast.then(), vRegManager);
 		cg.emit.emit("jmp", "done");
 
 		// otherwise branch
 		cg.emit.emitLabel("otherwise");
-		cg.sg.gen(ast.otherwise());
+		visit(ast.otherwise(), vRegManager);
 		cg.emit.emit("jmp", "done");
 
 		cg.emit.emitLabel("done");
@@ -165,7 +151,7 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 
 		// Main while loop.
 		cg.emit.emitLabel("loop");
-		cg.sg.gen(ast.body());
+		visit(ast.body(), vRegManager);
 
         reg = cg.eg.gen(ast.condition(), vRegManager);
 
@@ -182,9 +168,9 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
         Var var = (Var) ast.left();
         VRegister rhsReg = cg.eg.gen(ast.right(), vRegManager);
 
-        cg.emit.emitStore(vRegManager.toPhysical(rhsReg), var.sym.offset, BASE_REG);
+        cg.emit.emit("movl", vRegManager.toPhysical(rhsReg), vRegManager.toPhysical(var.sym.vregister));
 
-        vRegManager.releaseRegister(rhsReg);
+        // vRegManager.releaseRegister(rhsReg);
         return null;
     }
 
@@ -198,7 +184,7 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
         cg.emit.emit("call", Config.PRINTF);
         cg.emit.emit("add", constant(16), STACK_REG);
 
-        vRegManager.releaseRegister(printfArg);
+        // vRegManager.releaseRegister(printfArg);
         return null;
 	}
 

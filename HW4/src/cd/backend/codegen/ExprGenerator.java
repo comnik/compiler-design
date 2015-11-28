@@ -1,34 +1,19 @@
 package cd.backend.codegen;
 
-import static cd.Config.SCANF;
-import static cd.backend.codegen.AssemblyEmitter.constant;
-import static cd.backend.codegen.RegisterManager.BASE_REG;
-import static cd.backend.codegen.RegisterManager.RESULT_REG;
-import static cd.backend.codegen.RegisterManager.STACK_REG;
-import cd.backend.codegen.VRegManager.VRegister;
 import cd.ToDoException;
 import cd.backend.codegen.RegisterManager.Register;
-import cd.ir.Ast.BinaryOp;
-import cd.ir.Ast.BooleanConst;
-import cd.ir.Ast.BuiltInRead;
-import cd.ir.Ast.Cast;
-import cd.ir.Ast.Expr;
-import cd.ir.Ast.Field;
-import cd.ir.Ast.Index;
-import cd.ir.Ast.IntConst;
-import cd.ir.Ast.MethodCallExpr;
-import cd.ir.Ast.NewArray;
-import cd.ir.Ast.NewObject;
-import cd.ir.Ast.NullConst;
-import cd.ir.Ast.ThisRef;
-import cd.ir.Ast.UnaryOp;
-import cd.ir.Ast.Var;
+import cd.backend.codegen.VRegManager.VRegister;
+import cd.ir.Ast.*;
 import cd.ir.ExprVisitor;
 import cd.util.debug.AstOneLine;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static cd.Config.SCANF;
+import static cd.backend.codegen.AssemblyEmitter.constant;
+import static cd.backend.codegen.RegisterManager.STACK_REG;
 
 /**
  * Generates code to evaluate expressions. After emitting the code, returns a
@@ -59,10 +44,6 @@ class ExprGenerator extends ExprVisitor<VRegister, VRegManager> {
 
 	@Override
 	public VRegister binaryOp(BinaryOp ast, VRegManager vRegManager) {
-		// Simplistic HW1 implementation that does
-		// not care if it runs out of registers, and
-		// supports only a limited range of operations:
-
 		int leftRN = cg.rnv.calc(ast.left());
 		int rightRN = cg.rnv.calc(ast.right());
 
@@ -104,7 +85,7 @@ class ExprGenerator extends ExprVisitor<VRegister, VRegManager> {
 			throw new ToDoException();
 		}
 
-		vRegManager.releaseRegister(vRightReg);
+		// vRegManager.releaseRegister(vRightReg);
 
 		return vLeftReg;
 	}
@@ -233,18 +214,21 @@ class ExprGenerator extends ExprVisitor<VRegister, VRegManager> {
 	
 	@Override
 	public VRegister var(Var ast, VRegManager vRegManager) {
-        VRegister reg = vRegManager.getRegister();
+        VRegister reg;
+
         switch (ast.sym.kind) {
-            case LOCAL:
-                cg.emit.emitLoad(ast.sym.offset, BASE_REG, vRegManager.toPhysical(reg));
-                break;
-            case PARAM:
-                // TODO
-                break;
-            case FIELD:
-                // TODO
-                break;
+        case LOCAL:
+            reg = ast.sym.vregister; break;
+        case PARAM:
+            // TODO
+            reg = vRegManager.getRegister(); break;
+        case FIELD:
+            // TODO
+            reg = vRegManager.getRegister(); break;
+        default:
+            throw new RuntimeException("Unknown kind " + ast.sym.kind);
         }
+
 		return reg;
 	}
 

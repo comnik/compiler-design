@@ -54,10 +54,10 @@ public class VRegManager {
         }
 
         public String toString() {
-            if (!isSpilled()) {
-                return reg.toString();
-            } else {
+            if (isSpilled()) {
                 return "Spilled register @ " + offset;
+            } else {
+                return reg.toString();
             }
         }
     }
@@ -74,14 +74,20 @@ public class VRegManager {
         this.offset -= RegisterManager.SIZEOF_REG;
 
         // Spill it's value into memory.
+        codeGen.emit.emitComment("Spilling register " + target + " onto the stack.");
         codeGen.emit.emitStore(target.reg, target.offset, RegisterManager.BASE_REG);
 
         // Release the register.
-        codeGen.rm.releaseRegister(target.reg);
-        target.reg = null;
+        releaseRegister(target);
     }
 
     // API
+
+    /** Returns the size of the stack, as known to the vreg manager. */
+    public int getStackSize() {
+        System.out.println("Stack size is: " + (-this.offset));
+        return -this.offset;
+    }
 
     /**
      * Returns an available physical register,
@@ -97,6 +103,12 @@ public class VRegManager {
         backedRegs.add(vReg);
 
         return vReg;
+    }
+
+    /** Just like getRegister() but works with physical byte registers. */
+    public VRegister getByteRegister() {
+        // TODO actually do what it says
+        return this.getRegister();
     }
 
     public void releaseRegister(VRegister vReg) {
@@ -121,8 +133,11 @@ public class VRegManager {
             // There exists a physical backing.
             return vReg.reg;
         } else {
-            if (codeGen.rm.availableRegisters() == 0)
+            codeGen.emit.emitComment("Reifying virtual register into " + vReg);
+
+            if (codeGen.rm.availableRegisters() == 0) {
                 spill();
+            }
 
             vReg.reg = codeGen.rm.getRegister();
 

@@ -1,5 +1,7 @@
 package cd.ir;
 
+import cd.backend.codegen.VRegManager;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -156,7 +158,7 @@ public abstract class Symbol {
 		public static enum Kind { PARAM, LOCAL, FIELD };
 		public final TypeSymbol type;
 		public final Kind kind;
-        public int offset;
+        public VRegManager.VRegister vregister;
 		
 		public VariableSymbol(String name, TypeSymbol type) {
 			this(name, type, Kind.PARAM);
