@@ -3,12 +3,12 @@ class Main {
 
     void main() {
         int i;
-        i = 2;
+        i = 1;
         if (i < 3) {
             write(i);
             writeln();
         } else {
-            write(2);
+            write(10);
             writeln();
         }
    }
