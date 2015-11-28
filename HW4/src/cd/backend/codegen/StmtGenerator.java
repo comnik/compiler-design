@@ -30,6 +30,8 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 		visit(ast, null);
 	}
 
+    public int labelCounter = 0;
+
 	@Override
 	public VRegister visit(Ast ast, VRegManager vRegManager) {
         cg.emit.increaseIndent("Emitting " + AstOneLine.toString(ast));
@@ -81,14 +83,16 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
             VarDecl varDecl = (VarDecl) astNode;
 
             switch (varDecl.type) {
-            case "int":
-                varDecl.sym.vregister = vRegManager.getRegister(); break;
-            case "boolean":
-                varDecl.sym.vregister = vRegManager.getByteRegister(); break;
-            default:
-                // Were dealing with a reference here, semantic checking has
-                // already ensured that no unknown types occur.
-                varDecl.sym.vregister = vRegManager.getRegister();
+                case "int":
+                    varDecl.sym.vregister = vRegManager.getRegister();
+                    break;
+                case "boolean":
+                    varDecl.sym.vregister = vRegManager.getByteRegister();
+                    break;
+                default:
+                    // Were dealing with a reference here, semantic checking has
+                    // already ensured that no unknown types occur.
+                    varDecl.sym.vregister = vRegManager.getRegister();
             }
         });
 
@@ -120,45 +124,52 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 
 	@Override
 	public VRegister ifElse(IfElse ast, VRegManager vRegManager) {
-		// TODO Support for multiple IfElse statements via name mangling.
 		VRegister reg = cg.eg.gen(ast.condition(), vRegManager);
 
+		String thenLabel = getAndIncrementLabel();
+        String otherwiseLabel = getAndIncrementLabel();
+        String doneLabel = getAndIncrementLabel();
+
 		cg.emit.emit("cmpl", "$0", reg.toString());
-		cg.emit.emit("jle", "otherwise");
+		cg.emit.emit("jle", otherwiseLabel);
 
-		// then branch
-		cg.emit.emitLabel("then");
+		// Then branch.
+		cg.emit.emitLabel(thenLabel);
 		visit(ast.then(), vRegManager);
-		cg.emit.emit("jmp", "done");
+		cg.emit.emit("jmp", doneLabel);
 
-		// otherwise branch
-		cg.emit.emitLabel("otherwise");
+		// Otherwise branch.
+		cg.emit.emitLabel(otherwiseLabel);
 		visit(ast.otherwise(), vRegManager);
-		cg.emit.emit("jmp", "done");
+		cg.emit.emit("jmp", doneLabel);
 
-		cg.emit.emitLabel("done");
+        // We're done.
+		cg.emit.emitLabel(doneLabel);
 		return null;
 	}
 
 	@Override
 	public VRegister whileLoop(WhileLoop ast, VRegManager vRegManager) {
-		// TODO Support for multiple WhileLoop statements via name mangling.
 		VRegister reg = cg.eg.gen(ast.condition(), vRegManager);
 
-		// Check condition initially.
+        String loopLabel = getAndIncrementLabel();
+        String doneLabel = getAndIncrementLabel();
+
+        // Check loop condition initially.
 		cg.emit.emit("cmpl", "$0", reg.toString());
-		cg.emit.emit("jle", "done");
+		cg.emit.emit("jle", doneLabel);
 
 		// Main while loop.
-		cg.emit.emitLabel("loop");
+		cg.emit.emitLabel(loopLabel);
 		visit(ast.body(), vRegManager);
 
+        // Check if loop condition has changed.
         reg = cg.eg.gen(ast.condition(), vRegManager);
-
 		cg.emit.emit("cmpl", "$0", reg.toString());
-		cg.emit.emit("jg", "loop");
+		cg.emit.emit("jg", loopLabel);
 
-		cg.emit.emitLabel("done");
+        // We're done.
+		cg.emit.emitLabel(doneLabel);
 		return null;
 	}
 
@@ -213,6 +224,13 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
             y += 16;
         }
         return y;
+    }
+
+    /** Returns a unique label and increments the label counter. */
+    private String getAndIncrementLabel() {
+        String ret = "L" + Integer.toString(labelCounter);
+        labelCounter++;
+        return ret;
     }
 
 }
