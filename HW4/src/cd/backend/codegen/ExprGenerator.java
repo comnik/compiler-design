@@ -64,12 +64,18 @@ class ExprGenerator extends ExprVisitor<VRegister, VRegManager> {
 		case B_TIMES:
 			cg.emit.emit("imul", rightReg, leftReg);
 			break;
+        case B_DIV:
+            // TODO
+            break;
 		case B_PLUS:
 			cg.emit.emit("add", rightReg, leftReg);
 			break;
 		case B_MINUS:
 			cg.emit.emit("sub", rightReg, leftReg);
 			break;
+        case B_MOD:
+            // TODO
+            break;
         case B_AND:
             cg.emit.emit("and", rightReg, leftReg);
             break;
@@ -80,7 +86,27 @@ class ExprGenerator extends ExprVisitor<VRegister, VRegManager> {
             cg.emit.emit("subl", leftReg, rightReg);
             cg.emit.emit("movl", rightReg, leftReg);
             break;
-        // TODO Support for remaining binary ops.
+        case B_LESS_OR_EQUAL:
+            // TODO
+            break;
+        case B_GREATER_THAN:
+            // TODO
+            break;
+        case B_GREATER_OR_EQUAL:
+            // TODO
+            break;
+        case B_EQUAL:
+            cg.emit.emit("compl", leftReg, rightReg); // Set the Zero Flag.
+            cg.emit.emit("xorl", leftReg, leftReg);   // Set leftReg to 0.
+            cg.emit.emit("sete", leftReg);            // Set leftReg to the value of the ZF.
+            break;
+        case B_NOT_EQUAL:
+            // Do the same as in the EQUAL case, invert the result.
+            cg.emit.emit("compl", leftReg, rightReg);
+            cg.emit.emit("xorl", leftReg, leftReg);
+            cg.emit.emit("sete", leftReg);
+            cg.emit.emit("notl", leftReg);
+            break;
         default:
 			throw new ToDoException();
 		}
