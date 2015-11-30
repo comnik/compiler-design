@@ -100,7 +100,7 @@ public class RegisterManager {
 		return registers.remove(last);
 	}
 
-	/**
+    /**
 	 * marks a currently used register as free
 	 */
 	public void releaseRegister(Register reg) {

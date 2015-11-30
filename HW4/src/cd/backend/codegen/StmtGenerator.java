@@ -2,7 +2,7 @@ package cd.backend.codegen;
 
 import cd.Config;
 import cd.ToDoException;
-import cd.backend.codegen.VRegManager.VRegister;
+import cd.backend.codegen.StackManager.Value;
 import cd.ir.Ast;
 import cd.ir.Ast.*;
 import cd.ir.AstVisitor;
@@ -19,7 +19,7 @@ import static cd.backend.codegen.RegisterManager.STACK_REG;
 /**
  * Generates code to process statements and declarations.
  */
-class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
+class StmtGenerator extends AstVisitor<Value, StackManager> {
 	protected final AstCodeGenerator cg;
 
 	StmtGenerator(AstCodeGenerator astCodeGenerator) {
@@ -33,36 +33,36 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
     public int labelCounter = 0;
 
 	@Override
-	public VRegister visit(Ast ast, VRegManager vRegManager) {
+	public Value visit(Ast ast, StackManager stackManager) {
         cg.emit.increaseIndent("Emitting " + AstOneLine.toString(ast));
 
         try {
-			return super.visit(ast, vRegManager);
+			return super.visit(ast, stackManager);
 		} finally {
 			cg.emit.decreaseIndent();
 		}
 	}
 
 	@Override
-	public VRegister methodCall(MethodCall ast, VRegManager vRegManager) {
+	public Value methodCall(MethodCall ast, StackManager stackManager) {
 		{
 			throw new ToDoException();
 		}
 	}
 
-	public VRegister methodCall(MethodSymbol sym, List<Expr> allArguments) {
+	public Value methodCall(MethodSymbol sym, List<Expr> allArguments) {
 		throw new RuntimeException("Not required");
 	}
 
 	// Emit vtable for arrays of this class:
 	@Override
-	public VRegister classDecl(ClassDecl ast, VRegManager vRegManager) {
+	public Value classDecl(ClassDecl ast, StackManager stackManager) {
         // TODO
-        return visitChildren(ast, vRegManager);
+        return visitChildren(ast, stackManager);
 	}
 
 	@Override
-	public VRegister methodDecl(MethodDecl ast, VRegManager willBeIgnored) {
+	public Value methodDecl(MethodDecl ast, StackManager willBeIgnored) {
         if (ast.sym.name.equals("main")) {
             // TODO Check if we are in class Main as well.
 
@@ -74,30 +74,27 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
             cg.emit.emitLabel(ast.sym.name);
         }
 
-        // Create a new virtual register manager for this stack frame
-        // and generate code for the body.
-        final VRegManager vRegManager = new VRegManager(0, cg);
+        Integer lastOffset = 0;
 
         // Create virtual registers for all local variables.
-        ast.decls().children().stream().forEach(astNode -> {
-            VarDecl varDecl = (VarDecl) astNode;
+        for (Ast node : ast.decls().children()) {
+            VarDecl varDecl = (VarDecl) node;
 
             switch (varDecl.type) {
-                case "int":
-                    varDecl.sym.vregister = vRegManager.getRegister();
-                    break;
-                case "boolean":
-                    varDecl.sym.vregister = vRegManager.getByteRegister();
-                    break;
-                default:
-                    // Were dealing with a reference here, semantic checking has
-                    // already ensured that no unknown types occur.
-                    varDecl.sym.vregister = vRegManager.getRegister();
+            case "boolean":
+                varDecl.sym.offset = lastOffset;
+                lastOffset -= 1;
+                break;
+            default:
+                // Were dealing with an int or a reference here, semantic checking has
+                // already ensured that no unknown types occur.
+                varDecl.sym.offset = lastOffset;
+                lastOffset -= 4;
             }
-        });
+        }
 
         // Get the stack size required to hold locals.
-        int stackSize = vRegManager.getStackSize();
+        int stackSize = -lastOffset;
 
         cg.emit.emit("pushl", BASE_REG);
         cg.emit.emit("movl", STACK_REG, BASE_REG);
@@ -105,7 +102,6 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 		if (Config.systemKind == Config.SystemKind.MACOSX) {
 			// Align the stack to 16 bytes.
 			cg.emit.emit("andl", constant(-16), STACK_REG);
-
 			stackSize = alignedTo16(stackSize);
 		}
 
@@ -114,8 +110,11 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
             cg.emit.emit("subl", stackSize, STACK_REG);
         }
 
+        // Create a new virtual register manager for this stack frame.
+        final StackManager stackManager = new StackManager(lastOffset, cg);
+
         // Generate code for the body.
-        visit(ast.body(), vRegManager);
+        visit(ast.body(), stackManager);
 
 		cg.emitMethodSuffix(true);
 
@@ -123,8 +122,8 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 	}
 
 	@Override
-	public VRegister ifElse(IfElse ast, VRegManager vRegManager) {
-		VRegister reg = cg.eg.gen(ast.condition(), vRegManager);
+	public Value ifElse(IfElse ast, StackManager stackManager) {
+		Value reg = cg.eg.gen(ast.condition(), stackManager);
 
 		String thenLabel = getAndIncrementLabel();
         String otherwiseLabel = getAndIncrementLabel();
@@ -136,7 +135,7 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
             cg.emit.emit("jle", doneLabel);
 
             // Then branch.
-            visit(ast.then(), vRegManager);
+            visit(ast.then(), stackManager);
             cg.emit.emit("jmp", doneLabel);
 
             // We're done.
@@ -149,12 +148,12 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 
             // Then branch.
             cg.emit.emitLabel(thenLabel);
-            visit(ast.then(), vRegManager);
+            visit(ast.then(), stackManager);
             cg.emit.emit("jmp", doneLabel);
 
             // Otherwise branch.
             cg.emit.emitLabel(otherwiseLabel);
-            visit(ast.otherwise(), vRegManager);
+            visit(ast.otherwise(), stackManager);
             cg.emit.emit("jmp", doneLabel);
 
             // We're done.
@@ -164,8 +163,8 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 	}
 
 	@Override
-	public VRegister whileLoop(WhileLoop ast, VRegManager vRegManager) {
-		VRegister reg = cg.eg.gen(ast.condition(), vRegManager);
+	public Value whileLoop(WhileLoop ast, StackManager stackManager) {
+		Value reg = cg.eg.gen(ast.condition(), stackManager);
 
         String loopLabel = getAndIncrementLabel();
         String doneLabel = getAndIncrementLabel();
@@ -176,10 +175,10 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 
 		// Main while loop.
 		cg.emit.emitLabel(loopLabel);
-		visit(ast.body(), vRegManager);
+		visit(ast.body(), stackManager);
 
         // Check if loop condition has changed.
-        reg = cg.eg.gen(ast.condition(), vRegManager);
+        reg = cg.eg.gen(ast.condition(), stackManager);
 		cg.emit.emit("cmpl", "$0", reg.toString());
 		cg.emit.emit("jg", loopLabel);
 
@@ -189,45 +188,58 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
 	}
 
 	@Override
-	public VRegister assign(Assign ast, VRegManager vRegManager) {
+	public Value assign(Assign ast, StackManager stackManager) {
         // TODO Support for array access and fields, besides normal vars.
         Var var = (Var) ast.left();
-        VRegister rhsReg = cg.eg.gen(ast.right(), vRegManager);
+        Value rhsReg = cg.eg.gen(ast.right(), stackManager);
 
-        cg.emit.emit("movl", vRegManager.toPhysical(rhsReg), vRegManager.toPhysical(var.sym.vregister));
+        stackManager.reify(rhsReg);
+        cg.emit.emit("movl", rhsReg.toRegister(), AssemblyEmitter.registerOffset(var.sym.offset, BASE_REG));
 
-        // vRegManager.releaseRegister(rhsReg);
+        // stackManager.releaseRegister(rhsReg);
         return null;
     }
 
 	@Override
-	public VRegister builtInWrite(BuiltInWrite ast, VRegManager vRegManager) {
-        VRegister printfArg = cg.eg.gen(ast.arg(), vRegManager);
+	public Value builtInWrite(BuiltInWrite ast, StackManager stackManager) {
+        Value printfArg = cg.eg.gen(ast.arg(), stackManager);
+
+        stackManager.emitCallerSave();
 
         cg.emit.emit("subl", constant(16), STACK_REG);
-        cg.emit.emitStore(vRegManager.toPhysical(printfArg), 4, STACK_REG);
+
+        stackManager.reify(printfArg);
+        cg.emit.emitStore(printfArg.toRegister(), 4, STACK_REG);
+
         cg.emit.emitStore("$STR_D", 0, STACK_REG);
         cg.emit.emit("call", Config.PRINTF);
         cg.emit.emit("add", constant(16), STACK_REG);
 
-        // vRegManager.releaseRegister(printfArg);
+        stackManager.release(printfArg);
         return null;
 	}
 
 	@Override
-	public VRegister builtInWriteln(BuiltInWriteln ast, VRegManager vRegManager) {
-		cg.emit.emit("sub", constant(16), STACK_REG);
+	public Value builtInWriteln(BuiltInWriteln ast, StackManager stackManager) {
+        stackManager.emitCallerSave();
+
+        cg.emit.emit("sub", constant(16), STACK_REG);
 		cg.emit.emitStore("$STR_NL", 0, STACK_REG);
 		cg.emit.emit("call", Config.PRINTF);
 		cg.emit.emit("add", constant(16), STACK_REG);
+
 		return null;
 	}
 
 	@Override
-	public VRegister returnStmt(ReturnStmt ast, VRegManager vRegManager) {
-        VRegister result = visit(ast, vRegManager);
-        cg.emit.emit("movl", vRegManager.toPhysical(result), vRegManager.toPhysical(vRegManager.RESULT_REG));
-        return vRegManager.RESULT_REG;
+	public Value returnStmt(ReturnStmt ast, StackManager stackManager) {
+        Value result = visit(ast, stackManager);
+        stackManager.reify(result);
+
+        Value returnValue = stackManager.getRegister(RegisterManager.RESULT_REG);
+
+        cg.emit.emit("movl", result.toString(), returnValue.toRegister());
+        return returnValue;
 	}
 
     // Helper functions.

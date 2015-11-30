@@ -2,7 +2,7 @@ package cd.backend.codegen;
 
 import cd.ToDoException;
 import cd.backend.codegen.RegisterManager.Register;
-import cd.backend.codegen.VRegManager.VRegister;
+import cd.backend.codegen.StackManager.Value;
 import cd.ir.Ast.*;
 import cd.ir.ExprVisitor;
 import cd.util.debug.AstOneLine;
@@ -13,29 +13,30 @@ import java.util.List;
 
 import static cd.Config.SCANF;
 import static cd.backend.codegen.AssemblyEmitter.constant;
+import static cd.backend.codegen.RegisterManager.BASE_REG;
 import static cd.backend.codegen.RegisterManager.STACK_REG;
 
 /**
  * Generates code to evaluate expressions. After emitting the code, returns a
  * Register where the result can be found.
  */
-class ExprGenerator extends ExprVisitor<VRegister, VRegManager> {
+class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	protected final AstCodeGenerator cg;
 
 	ExprGenerator(AstCodeGenerator astCodeGenerator) {
 		cg = astCodeGenerator;
 	}
 
-	public VRegister gen(Expr ast, VRegManager vRegManager) {
-		return visit(ast, vRegManager);
+	public Value gen(Expr ast, StackManager stackManager) {
+		return visit(ast, stackManager);
 	}
 
 	@Override
-	public VRegister visit(Expr ast, VRegManager vRegManager) {
+	public Value visit(Expr ast, StackManager stackManager) {
         cg.emit.increaseIndent("Emitting " + AstOneLine.toString(ast));
 
         try {
-			return super.visit(ast, vRegManager);
+			return super.visit(ast, stackManager);
 		} finally {
 			cg.emit.decreaseIndent();
 		}
@@ -43,168 +44,175 @@ class ExprGenerator extends ExprVisitor<VRegister, VRegManager> {
 	}
 
 	@Override
-	public VRegister binaryOp(BinaryOp ast, VRegManager vRegManager) {
+	public Value binaryOp(BinaryOp ast, StackManager stackManager) {
 		int leftRN = cg.rnv.calc(ast.left());
 		int rightRN = cg.rnv.calc(ast.right());
 
-		VRegister vLeftReg, vRightReg;
+		Value leftReg, rightReg;
 		if (leftRN > rightRN) {
-            vLeftReg = gen(ast.left(), vRegManager);
-            vRightReg = gen(ast.right(), vRegManager);
+            leftReg = gen(ast.left(), stackManager);
+            rightReg = gen(ast.right(), stackManager);
         } else {
-            vRightReg = gen(ast.right(), vRegManager);
-            vLeftReg = gen(ast.left(), vRegManager);
+            rightReg = gen(ast.right(), stackManager);
+            leftReg = gen(ast.left(), stackManager);
         }
-        Register leftReg = vRegManager.toPhysical(vLeftReg);
-        Register rightReg = vRegManager.toPhysical(vRightReg);
+
+        stackManager.reify(rightReg);
+        stackManager.reify(leftReg);
 
 		cg.debug("Binary Op: %s (%s,%s)", ast, leftReg, rightReg);
 
 		switch (ast.operator) {
 		case B_TIMES:
-			cg.emit.emit("imul", rightReg, leftReg);
+			cg.emit.emit("imul", rightReg.toString(), leftReg.toRegister());
 			break;
         case B_DIV:
             // TODO
             break;
 		case B_PLUS:
-			cg.emit.emit("add", rightReg, leftReg);
+			cg.emit.emit("add", rightReg.toString(), leftReg.toRegister());
 			break;
 		case B_MINUS:
-			cg.emit.emit("sub", rightReg, leftReg);
+			cg.emit.emit("sub", rightReg.toString(), leftReg.toRegister());
 			break;
         case B_MOD:
             // TODO
             break;
         case B_AND:
-            cg.emit.emit("and", rightReg, leftReg);
+            cg.emit.emit("and", rightReg.toString(), leftReg.toRegister());
             break;
         case B_OR:
-            cg.emit.emit("or", rightReg, leftReg);
+            cg.emit.emit("or", rightReg.toString(), leftReg.toRegister());
             break;
         case B_LESS_THAN:
             // TODO change to similar implementation like the others, if it works.
-            cg.emit.emit("subl", leftReg, rightReg);
-            cg.emit.emit("movl", rightReg, leftReg);
+            cg.emit.emit("subl", leftReg.toString(), rightReg.toRegister());
+            cg.emit.emit("movl", rightReg.toString(), leftReg.toRegister());
             break;
         case B_LESS_OR_EQUAL:
-            cg.emit.emit("compl", leftReg, rightReg); // Set flags.
-            cg.emit.emit("xorl", leftReg, leftReg);   // Set leftReg to 0.
-            cg.emit.emit("setle", leftReg);           // Set leftReg to 1 if ((SF xor OF) || ZF) == true.
+            cg.emit.emit("compl", leftReg.toString(), rightReg.toRegister()); // Set flags.
+            cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
+            cg.emit.emit("setle", leftReg.toRegister());           // Set leftReg to 1 if ((SF xor OF) || ZF) == true.
             break;
         case B_GREATER_THAN:
-            cg.emit.emit("compl", leftReg, rightReg); // Set flags.
-            cg.emit.emit("xorl", leftReg, leftReg);   // Set leftReg to 0.
-            cg.emit.emit("setg", leftReg);            // Set leftReg to 1 if (!(SF xor OF) && !ZF) == true.
+            cg.emit.emit("compl", leftReg.toString(), rightReg.toRegister()); // Set flags.
+            cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
+            cg.emit.emit("setg", leftReg.toRegister());            // Set leftReg to 1 if (!(SF xor OF) && !ZF) == true.
             break;
         case B_GREATER_OR_EQUAL:
-            cg.emit.emit("compl", leftReg, rightReg); // Set flags.
-            cg.emit.emit("xorl", leftReg, leftReg);   // Set leftReg to 0.
-            cg.emit.emit("setge", leftReg);           // Set leftReg to 1 if !(SF xor OF) == true.
+            cg.emit.emit("compl", leftReg.toString(), rightReg.toRegister()); // Set flags.
+            cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
+            cg.emit.emit("setge", leftReg.toRegister());           // Set leftReg to 1 if !(SF xor OF) == true.
             break;
         case B_EQUAL:
-            cg.emit.emit("compl", leftReg, rightReg); // Set flags.
-            cg.emit.emit("xorl", leftReg, leftReg);   // Set leftReg to 0.
-            cg.emit.emit("sete", leftReg);            // Set leftReg to 1 if ZF == true.
+            cg.emit.emit("compl", leftReg.toString(), rightReg.toRegister()); // Set flags.
+            cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
+            cg.emit.emit("sete", leftReg.toRegister());            // Set leftReg to 1 if ZF == true.
             break;
         case B_NOT_EQUAL:
-            cg.emit.emit("compl", leftReg, rightReg); // Set flags.
-            cg.emit.emit("xorl", leftReg, leftReg);   // Set leftReg to 0.
-            cg.emit.emit("sete", leftReg);            // Set leftReg to 1 if ZF == true.
-            cg.emit.emit("notl", leftReg);            // Invert result.
+            cg.emit.emit("compl", leftReg.toString(), rightReg.toRegister()); // Set flags.
+            cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
+            cg.emit.emit("sete", leftReg.toRegister());            // Set leftReg to 1 if ZF == true.
+            cg.emit.emit("notl", leftReg.toRegister());            // Invert result.
             break;
         default:
 			throw new ToDoException();
 		}
 
-		// vRegManager.releaseRegister(vRightReg);
+		stackManager.release(rightReg);
 
-		return vLeftReg;
+		return leftReg;
 	}
 
 	@Override
-	public VRegister booleanConst(BooleanConst ast, VRegManager vRegManager) {
-        VRegister reg = vRegManager.getRegister();
+	public Value booleanConst(BooleanConst ast, StackManager stackManager) {
+        Value v = stackManager.getRegister();
         String booleanValue = (ast.value == true) ? "$0x1" : "$0x0";
 
-        cg.emit.emit("movb", booleanValue, vRegManager.toPhysical(reg));
-        return reg;
+        stackManager.reify(v);
+        cg.emit.emit("movb", booleanValue, v.toString());
+        return v;
     }
 
 	@Override
-	public VRegister builtInRead(BuiltInRead ast, VRegManager vRegManager) {
-		VRegister reg = vRegManager.getRegister();
-        Register physicalReg = vRegManager.toPhysical(reg);
+	public Value builtInRead(BuiltInRead ast, StackManager stackManager) {
+		Value v = stackManager.getRegister();
 
-		cg.emit.emit("sub", constant(16), STACK_REG);
-		cg.emit.emit("leal", AssemblyEmitter.registerOffset(8, STACK_REG), physicalReg);
-		cg.emit.emitStore(physicalReg, 4, STACK_REG);
+        stackManager.emitCallerSave();
+        stackManager.reify(v);
+
+        cg.emit.emit("sub", constant(16), STACK_REG);
+		cg.emit.emit("leal", AssemblyEmitter.registerOffset(8, STACK_REG), v.toRegister());
+		cg.emit.emitStore(v.toRegister(), 4, STACK_REG);
 		cg.emit.emitStore("$STR_D", 0, STACK_REG);
 		cg.emit.emit("call", SCANF);
-		cg.emit.emitLoad(8, STACK_REG, physicalReg);
+		cg.emit.emitLoad(8, STACK_REG, v.toRegister());
 		cg.emit.emit("add", constant(16), STACK_REG);
 
+        return v;
+	}
+
+	@Override
+	public Value cast(Cast ast, StackManager stackManager) {
+		{
+			throw new ToDoException();
+		}
+	}
+
+	@Override
+	public Value index(Index ast, StackManager stackManager) {
+		{
+			throw new ToDoException();
+		}
+	}
+
+	@Override
+	public Value intConst(IntConst ast, StackManager stackManager) {
+        Value reg = stackManager.getRegister();
+        stackManager.reify(reg);
+        cg.emit.emit("movl", constant(ast.value), reg.toString());
         return reg;
 	}
 
 	@Override
-	public VRegister cast(Cast ast, VRegManager vRegManager) {
+	public Value field(Field ast, StackManager stackManager) {
 		{
 			throw new ToDoException();
 		}
 	}
 
 	@Override
-	public VRegister index(Index ast, VRegManager vRegManager) {
+	public Value newArray(NewArray ast, StackManager stackManager) {
 		{
 			throw new ToDoException();
 		}
 	}
 
 	@Override
-	public VRegister intConst(IntConst ast, VRegManager vRegManager) {
-        VRegister reg = vRegManager.getRegister();
-        cg.emit.emit("movl", "$" + ast.value, vRegManager.toPhysical(reg));
-        return reg;
-	}
-
-	@Override
-	public VRegister field(Field ast, VRegManager vRegManager) {
+	public Value newObject(NewObject ast, StackManager stackManager) {
 		{
 			throw new ToDoException();
 		}
 	}
 
 	@Override
-	public VRegister newArray(NewArray ast, VRegManager vRegManager) {
+	public Value nullConst(NullConst ast, StackManager stackManager) {
 		{
 			throw new ToDoException();
 		}
 	}
 
 	@Override
-	public VRegister newObject(NewObject ast, VRegManager vRegManager) {
+	public Value thisRef(ThisRef ast, StackManager stackManager) {
 		{
 			throw new ToDoException();
 		}
 	}
 
 	@Override
-	public VRegister nullConst(NullConst ast, VRegManager vRegManager) {
-		{
-			throw new ToDoException();
-		}
-	}
+	public Value methodCall(MethodCallExpr ast, StackManager stackManager) {
+        stackManager.emitCallerSave();
 
-	@Override
-	public VRegister thisRef(ThisRef ast, VRegManager vRegManager) {
-		{
-			throw new ToDoException();
-		}
-	}
-
-	@Override
-	public VRegister methodCall(MethodCallExpr ast, VRegManager vRegManager) {
         // We have to push arguments in reverse order onto the stack.
         List<Expr> argsWithoutReciever = new ArrayList<Expr>();
         argsWithoutReciever.addAll(ast.argumentsWithoutReceiver());
@@ -212,51 +220,53 @@ class ExprGenerator extends ExprVisitor<VRegister, VRegManager> {
 
         argsWithoutReciever.forEach(argExpr -> {
             // TODO check if pushl or pushb
-            VRegister argValue = visit(argExpr, vRegManager);
-            cg.emit.emit("pushl", vRegManager.toPhysical(argValue));
+            Value argValue = visit(argExpr, stackManager);
+            stackManager.reify(argValue);
+            cg.emit.emit("pushl", argValue.toRegister());
         });
 
         // Call the function.
         cg.emit.emit("call", 0);
 
-        return vRegManager.RESULT_REG;
+        return stackManager.getRegister(RegisterManager.RESULT_REG);
 	}
 
 	@Override
-	public VRegister unaryOp(UnaryOp ast, VRegManager vRegManager) {
-        VRegister vArgReg = gen(ast.arg(), vRegManager);
-        Register argReg = vRegManager.toPhysical(vArgReg);
+	public Value unaryOp(UnaryOp ast, StackManager stackManager) {
+        Value argValue = gen(ast.arg(), stackManager);
+        stackManager.reify(argValue);
 
         switch (ast.operator) {
         case U_PLUS:
             break;
 
         case U_MINUS:
-            cg.emit.emit("negl", argReg);
+            cg.emit.emit("negl", argValue.toRegister());
             break;
 
         case U_BOOL_NOT:
-            cg.emit.emit("negl", argReg);
-            cg.emit.emit("incl", argReg);
+            cg.emit.emit("negl", argValue.toRegister());
+            cg.emit.emit("incl", argValue.toRegister());
             break;
         }
 
-        return vArgReg;
+        return argValue;
 	}
 	
 	@Override
-	public VRegister var(Var ast, VRegManager vRegManager) {
-        VRegister reg;
+	public Value var(Var ast, StackManager stackManager) {
+        Value reg = stackManager.getRegister();
+        stackManager.reify(reg);
 
         switch (ast.sym.kind) {
         case LOCAL:
-            reg = ast.sym.vregister; break;
+            cg.emit.emitLoad(ast.sym.offset, BASE_REG, reg.toRegister()); break;
         case PARAM:
             // TODO
-            reg = vRegManager.getRegister(); break;
+            break;
         case FIELD:
             // TODO
-            reg = vRegManager.getRegister(); break;
+            break;
         default:
             throw new RuntimeException("Unknown kind " + ast.sym.kind);
         }
