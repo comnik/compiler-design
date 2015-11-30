@@ -83,22 +83,29 @@ class ExprGenerator extends ExprVisitor<VRegister, VRegManager> {
             cg.emit.emit("or", rightReg, leftReg);
             break;
         case B_LESS_THAN:
+            // TODO change to similar implementation like the others, if it works.
             cg.emit.emit("subl", leftReg, rightReg);
             cg.emit.emit("movl", rightReg, leftReg);
             break;
         case B_LESS_OR_EQUAL:
-            // TODO
+            cg.emit.emit("compl", leftReg, rightReg); // Set flags.
+            cg.emit.emit("xorl", leftReg, leftReg);   // Set leftReg to 0.
+            cg.emit.emit("setle", leftReg);           // Set leftReg to 1 if ((SF xor OF) || ZF) == true.
             break;
         case B_GREATER_THAN:
-            // TODO
+            cg.emit.emit("compl", leftReg, rightReg); // Set flags.
+            cg.emit.emit("xorl", leftReg, leftReg);   // Set leftReg to 0.
+            cg.emit.emit("setg", leftReg);            // Set leftReg to 1 if (!(SF xor OF) && !ZF) == true.
             break;
         case B_GREATER_OR_EQUAL:
-            // TODO
+            cg.emit.emit("compl", leftReg, rightReg); // Set flags.
+            cg.emit.emit("xorl", leftReg, leftReg);   // Set leftReg to 0.
+            cg.emit.emit("setge", leftReg);           // Set leftReg to 1 if !(SF xor OF) == true.
             break;
         case B_EQUAL:
-            cg.emit.emit("compl", leftReg, rightReg); // Set the Zero Flag.
+            cg.emit.emit("compl", leftReg, rightReg); // Set flags.
             cg.emit.emit("xorl", leftReg, leftReg);   // Set leftReg to 0.
-            cg.emit.emit("sete", leftReg);            // Set leftReg to the value of the ZF.
+            cg.emit.emit("sete", leftReg);            // Set leftReg to 1 if ZF == true.
             break;
         case B_NOT_EQUAL:
             // Do the same as in the EQUAL case, invert the result.
