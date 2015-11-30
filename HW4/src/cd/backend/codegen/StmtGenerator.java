@@ -130,22 +130,37 @@ class StmtGenerator extends AstVisitor<VRegister, VRegManager> {
         String otherwiseLabel = getAndIncrementLabel();
         String doneLabel = getAndIncrementLabel();
 
-		cg.emit.emit("cmpl", "$0", reg.toString());
-		cg.emit.emit("jle", otherwiseLabel);
+        if (ast.otherwise() == null) {
+            // Just an if statement, no else part.
+            cg.emit.emit("cmpl", "$0", reg.toString());
+            cg.emit.emit("jle", doneLabel);
 
-		// Then branch.
-		cg.emit.emitLabel(thenLabel);
-		visit(ast.then(), vRegManager);
-		cg.emit.emit("jmp", doneLabel);
+            // Then branch.
+            visit(ast.then(), vRegManager);
+            cg.emit.emit("jmp", doneLabel);
 
-		// Otherwise branch.
-		cg.emit.emitLabel(otherwiseLabel);
-		visit(ast.otherwise(), vRegManager);
-		cg.emit.emit("jmp", doneLabel);
+            // We're done.
+            cg.emit.emitLabel(doneLabel);
+            return null;
+        } else {
+            // There is an else part.
+            cg.emit.emit("cmpl", "$0", reg.toString());
+            cg.emit.emit("jle", otherwiseLabel);
 
-        // We're done.
-		cg.emit.emitLabel(doneLabel);
-		return null;
+            // Then branch.
+            cg.emit.emitLabel(thenLabel);
+            visit(ast.then(), vRegManager);
+            cg.emit.emit("jmp", doneLabel);
+
+            // Otherwise branch.
+            cg.emit.emitLabel(otherwiseLabel);
+            visit(ast.otherwise(), vRegManager);
+            cg.emit.emit("jmp", doneLabel);
+
+            // We're done.
+            cg.emit.emitLabel(doneLabel);
+            return null;
+        }
 	}
 
 	@Override
