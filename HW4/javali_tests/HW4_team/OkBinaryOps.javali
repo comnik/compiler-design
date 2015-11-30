@@ -1,0 +1,58 @@
+/* Test binary ops. */
+class Main {
+
+    void main() {
+        boolean resBool;
+        int resInt;
+
+        // LESS THAN
+        resBool = (1 < 2);
+        if (resBool) { write(1); }
+        writeln();
+
+        // LESS THAN OR EQUAL
+        resBool = (1 <= 1);
+        if (resBool) { write(1); }
+        writeln();
+
+        // GREATER THAN
+        resBool = 2 > 1;
+        if (resBool) { write(1); }
+        writeln();
+
+        // GREATER THAN OR EQUAL
+        resBool = 2 >= 2;
+        if (resBool) { write(1); }
+        writeln();
+
+        // EQUAL 1
+        resBool = (1 == 1);
+        if (resBool) { write(1); }
+        writeln();
+
+        // EQUAL 2
+        resBool = (1 == 2);
+        if (!(resBool)) { write(1); }
+        writeln();
+
+        // NOT EQUAL 1
+        resBool = (2 != 1);
+        if (resBool) { write(1); }
+        writeln();
+
+        // NOT EQUAL 2
+        resBool = (2 != 2);
+        if (!(resBool)) { write(1); }
+        writeln();
+
+        // DIV
+        resInt = (5 / 3);
+        write(resInt);
+        writeln();
+
+        // MOD
+        resInt = (5 % 4);
+        write(resInt);
+        writeln();
+    }
+}
