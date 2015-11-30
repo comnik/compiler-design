@@ -108,11 +108,10 @@ class ExprGenerator extends ExprVisitor<VRegister, VRegManager> {
             cg.emit.emit("sete", leftReg);            // Set leftReg to 1 if ZF == true.
             break;
         case B_NOT_EQUAL:
-            // Do the same as in the EQUAL case, invert the result.
-            cg.emit.emit("compl", leftReg, rightReg);
-            cg.emit.emit("xorl", leftReg, leftReg);
-            cg.emit.emit("sete", leftReg);
-            cg.emit.emit("notl", leftReg);
+            cg.emit.emit("compl", leftReg, rightReg); // Set flags.
+            cg.emit.emit("xorl", leftReg, leftReg);   // Set leftReg to 0.
+            cg.emit.emit("sete", leftReg);            // Set leftReg to 1 if ZF == true.
+            cg.emit.emit("notl", leftReg);            // Invert result.
             break;
         default:
 			throw new ToDoException();
