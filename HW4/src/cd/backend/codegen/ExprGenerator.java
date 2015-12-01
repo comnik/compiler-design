@@ -1,5 +1,6 @@
 package cd.backend.codegen;
 
+import cd.Config;
 import cd.ToDoException;
 import cd.backend.codegen.StackManager.Value;
 import cd.ir.Ast.*;
@@ -197,7 +198,24 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	@Override
 	public Value newObject(NewObject ast, StackManager stackManager) {
 		{
-			throw new ToDoException();
+            // TODO: Support for class hierarchy.
+
+            Value ptr = stackManager.getRegister();
+            int fieldSize = ast.type.getFieldSize();
+
+            stackManager.emitCallerSave();
+            cg.emit.emit("sub", constant(16), STACK_REG);
+
+            // The desired block size in bytes is passed in EDI.
+            // May need to be refactored to use StackManager?
+            cg.emit.emitStore(constant(fieldSize), 0, RegisterManager.Register.EDI);
+
+            // The resulting pointer is saved in EAX.
+            cg.emit.emit("call", Config.CALLOC);
+            cg.emit.emitMove(RegisterManager.Register.EAX, ptr.toSrc());
+            cg.emit.emit("add", constant(16), STACK_REG);
+
+            return ptr;
 		}
 	}
 

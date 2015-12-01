@@ -26,7 +26,10 @@ public abstract class Symbol {
 
         /** Returns the size of a reference to this type. */
         public int getRefSize() { return Config.SIZEOF_PTR; }
-		
+
+        /** Returns the size of all fields pertaining to this type. */
+		public abstract int getFieldSize();
+
 		public abstract TypeSymbol getSuperType();
 		
 		public boolean isSuperTypeOf(TypeSymbol sub) {
@@ -60,7 +63,18 @@ public abstract class Symbol {
 		public PrimitiveTypeSymbol(String name) {
 			super(name);
 		}		
-		
+
+        @Override
+        public int getFieldSize() {
+            if (this == booleanType) {
+                return 1;
+            } else if (this == voidType) {
+                return 1;
+            } else {
+                return 4;
+            }
+        }
+
 		public boolean isReferenceType() {
 			return false;
 		}
@@ -85,7 +99,11 @@ public abstract class Symbol {
 			super(elementType.name+"[]");
 			this.elementType = elementType;
 		}
-		
+
+        public int getFieldSize() {
+            return getRefSize();
+        }
+
 		public boolean isReferenceType() {
 			return true;
 		}
@@ -121,7 +139,15 @@ public abstract class Symbol {
 			super(name);
 			this.ast = null;
 		}
-		
+
+        // Go through the fields of the class and sum their sizes.
+        public int getFieldSize() {
+            return fields.keySet()
+                    .stream()
+                    .map(a -> getField(a).type.getFieldSize())
+                    .reduce(0, Integer::sum);
+        }
+
 		public boolean isReferenceType() {
 			return true;
 		}
