@@ -260,9 +260,8 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
         switch (ast.sym.kind) {
         case LOCAL:
-            cg.emit.emitLoad(ast.sym.offset, BASE_REG, reg.toRegister()); break;
         case PARAM:
-            // TODO
+            cg.emit.emitLoad(ast.sym.offset, BASE_REG, reg.toRegister());
             break;
         case FIELD:
             // TODO

@@ -1,5 +1,6 @@
 package cd.ir;
 
+import cd.Config;
 import cd.backend.codegen.StackManager;
 
 import java.util.ArrayList;
@@ -22,6 +23,9 @@ public abstract class Symbol {
 		public String toString() {
 			return name;
 		}
+
+        /** Returns the size of a reference to this type. */
+        public int getRefSize() { return Config.SIZEOF_PTR; }
 		
 		public abstract TypeSymbol getSuperType();
 		
@@ -64,6 +68,14 @@ public abstract class Symbol {
 		public TypeSymbol getSuperType() {
 			throw new RuntimeException("should not call this on PrimitiveTypeSymbol");
 		}
+
+        @Override
+        public int getRefSize() {
+            if (this == booleanType)
+                return 1;
+
+            return super.getRefSize();
+        }
 	}
 	
 	public static class ArrayTypeSymbol extends TypeSymbol {

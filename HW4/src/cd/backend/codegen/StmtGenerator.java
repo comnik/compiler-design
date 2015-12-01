@@ -6,10 +6,12 @@ import cd.backend.codegen.StackManager.Value;
 import cd.ir.Ast;
 import cd.ir.Ast.*;
 import cd.ir.AstVisitor;
+import cd.ir.Symbol;
 import cd.ir.Symbol.MethodSymbol;
 import cd.util.debug.AstOneLine;
 
 import java.util.List;
+import java.util.function.BinaryOperator;
 
 import static cd.Config.MAIN;
 import static cd.backend.codegen.AssemblyEmitter.constant;
@@ -74,24 +76,19 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
             cg.emit.emitLabel(ast.sym.name);
         }
 
-        Integer lastOffset = 0;
+        // Set parameter offsets.
+        ast.sym.parameters.stream().reduce(0, (nextOffset, varSym) -> {
+            varSym.offset = nextOffset;
+            return nextOffset + varSym.type.getRefSize();
+        }, (o1, o2) -> o1);
 
         // Create virtual registers for all local variables.
-        for (Ast node : ast.decls().children()) {
-            VarDecl varDecl = (VarDecl) node;
-
-            switch (varDecl.type) {
-            case "boolean":
-                varDecl.sym.offset = lastOffset;
-                lastOffset -= 1;
-                break;
-            default:
-                // Were dealing with an int or a reference here, semantic checking has
-                // already ensured that no unknown types occur.
-                varDecl.sym.offset = lastOffset;
-                lastOffset -= 4;
-            }
-        }
+        Integer lastOffset = ast.decls().children().stream()
+                .map(node -> ((VarDecl) node).sym)
+                .reduce(0, (nextOffset, varSym) -> {
+                    varSym.offset = nextOffset;
+                    return nextOffset - varSym.type.getRefSize();
+                }, (o1, o2) -> o1);
 
         // Get the stack size required to hold locals.
         int stackSize = -lastOffset;
@@ -259,5 +256,4 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         labelCounter++;
         return ret;
     }
-
 }
