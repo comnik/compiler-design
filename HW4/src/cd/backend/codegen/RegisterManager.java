@@ -3,6 +3,7 @@ package cd.backend.codegen;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Simple class that manages the set of currently used
@@ -99,6 +100,11 @@ public class RegisterManager {
 
 		return registers.remove(last);
 	}
+
+    /** Finds a free physical register with a low byte version. Does not allocate it! */
+    public Register findRegisterWithLowByte() {
+        return registers.stream().filter(Register::hasLowByteVersion).findAny().orElse(Register.EAX);
+    }
 
     /**
 	 * marks a currently used register as free

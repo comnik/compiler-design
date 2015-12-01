@@ -3,12 +3,11 @@ package cd.backend.codegen;
 import cd.ToDoException;
 import cd.backend.codegen.StackManager.Value;
 import cd.ir.Ast.*;
+import cd.ir.Ast.BinaryOp.BOp;
 import cd.ir.ExprVisitor;
 import cd.util.debug.AstOneLine;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static cd.Config.SCANF;
 import static cd.backend.codegen.AssemblyEmitter.constant;
@@ -42,80 +41,90 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	}
 
-	@Override
+    // Small lookup tables to make binaryOp implementation more concise.
+    private static final Map<BOp,String> compToCondition;
+    static {
+        compToCondition = new HashMap<>();
+        compToCondition.put(BOp.B_LESS_OR_EQUAL, "setle");
+        compToCondition.put(BOp.B_GREATER_THAN, "setg");
+        compToCondition.put(BOp.B_GREATER_OR_EQUAL, "setge");
+        compToCondition.put(BOp.B_EQUAL, "sete");
+    }
+
+    private static final Map<BOp,String> operatorToOp;
+    static {
+        operatorToOp = new HashMap<>();
+        operatorToOp.put(BOp.B_TIMES, "imul");
+        operatorToOp.put(BOp.B_PLUS, "addl");
+        operatorToOp.put(BOp.B_MINUS, "subl");
+        operatorToOp.put(BOp.B_AND, "andl");
+        operatorToOp.put(BOp.B_OR, "orl");
+    }
+
+    @Override
 	public Value binaryOp(BinaryOp ast, StackManager stackManager) {
-		int leftRN = cg.rnv.calc(ast.left());
+		// Check which path to evaluate first.
+        int leftRN = cg.rnv.calc(ast.left());
 		int rightRN = cg.rnv.calc(ast.right());
 
-		Value leftReg, rightReg;
+		Value left, right;
 		if (leftRN > rightRN) {
-            leftReg = gen(ast.left(), stackManager);
-            rightReg = gen(ast.right(), stackManager);
+            left = gen(ast.left(), stackManager);
+            right = gen(ast.right(), stackManager);
         } else {
-            rightReg = gen(ast.right(), stackManager);
-            leftReg = gen(ast.left(), stackManager);
+            right = gen(ast.right(), stackManager);
+            left = gen(ast.left(), stackManager);
         }
 
-        stackManager.reify(rightReg);
-        stackManager.reify(leftReg);
+        // Get an output register.
+        Value out = left;
 
-		cg.debug("Binary Op: %s (%s,%s)", ast, leftReg, rightReg);
+        stackManager.reify(right);
+        stackManager.reify(left);
 
-		switch (ast.operator) {
-		case B_TIMES:
-			cg.emit.emit("imul", rightReg.toSrc(), leftReg.toReg()); break;
-        case B_DIV:
-            // TODO
-            break;
-		case B_PLUS:
-			cg.emit.emit("add", rightReg.toSrc(), leftReg.toReg()); break;
-		case B_MINUS:
-			cg.emit.emit("sub", rightReg.toSrc(), leftReg.toReg()); break;
-        case B_MOD:
-            // TODO
-            break;
-        case B_AND:
-            cg.emit.emit("and", rightReg.toSrc(), leftReg.toReg()); break;
-        case B_OR:
-            cg.emit.emit("or", rightReg.toSrc(), leftReg.toReg()); break;
-        case B_LESS_THAN:
-            // TODO change to similar implementation like the others, if it works.
-            cg.emit.emit("subl", leftReg.toSrc(), rightReg.toReg());
-            cg.emit.emit("movl", rightReg.toSrc(), leftReg.toReg());
-            break;
-        case B_LESS_OR_EQUAL:
-            cg.emit.emit("cmpl", leftReg.toSrc(), rightReg.toReg()); // Set flags.
-            cg.emit.emit("xorl", leftReg.toSrc(), leftReg.toReg());   // Set leftReg to 0.
-            cg.emit.emit("setle", leftReg.toReg());           // Set leftReg to 1 if ((SF xor OF) || ZF) == true.
-            break;
-        case B_GREATER_THAN:
-            cg.emit.emit("cmpl", leftReg.toSrc(), rightReg.toReg()); // Set flags.
-            cg.emit.emit("xorl", leftReg.toSrc(), leftReg.toReg());   // Set leftReg to 0.
-            cg.emit.emit("setg", leftReg.toReg());            // Set leftReg to 1 if (!(SF xor OF) && !ZF) == true.
-            break;
-        case B_GREATER_OR_EQUAL:
-            cg.emit.emit("cmpl", leftReg.toSrc(), rightReg.toReg()); // Set flags.
-            cg.emit.emit("xorl", leftReg.toSrc(), leftReg.toReg());   // Set leftReg to 0.
-            cg.emit.emit("setge", leftReg.toReg());           // Set leftReg to 1 if !(SF xor OF) == true.
-            break;
-        case B_EQUAL:
-            cg.emit.emit("cmpl", leftReg.toSrc(), rightReg.toReg()); // Set flags.
-            cg.emit.emit("xorl", leftReg.toSrc(), leftReg.toReg());   // Set leftReg to 0.
-            cg.emit.emit("sete", leftReg.toReg());            // Set leftReg to 1 if ZF == true.
-            break;
-        case B_NOT_EQUAL:
-            cg.emit.emit("cmpl", leftReg.toSrc(), rightReg.toReg()); // Set flags.
-            cg.emit.emit("xorl", leftReg.toSrc(), leftReg.toReg());   // Set leftReg to 0.
-            cg.emit.emit("sete", leftReg.toReg());            // Set leftReg to 1 if ZF == true.
-            cg.emit.emit("notl", leftReg.toReg());            // Invert result.
-            break;
-        default:
-			throw new ToDoException();
-		}
+		cg.debug("Binary Op: %s (%s,%s)", ast, out, right);
 
-		stackManager.release(rightReg);
+        if (operatorToOp.containsKey(ast.operator)) {
+            // B_TIMES, B_PLUS, B_MINUS, B_AND, B_OR
+            cg.emit.emit(operatorToOp.get(ast.operator), right.toSrc(), out.toReg());
+        } else if (compToCondition.containsKey(ast.operator)) {
+            // B_LESS_OR_EQUAL, B_GREATER_THAN, B_GREATER_OR_EQUAL, B_EQUAL
 
-		return leftReg;
+            // Ensure that we have a low byte register available.
+            if (!out.toReg().hasLowByteVersion()) {
+                out = 
+            }
+
+            cg.emit.emit("cmpl", out.toSrc(), right.toReg()); // Set flags.
+            cg.emit.emit("xorl", out.toSrc(), out.toReg());   // Set leftReg to 0.
+            cg.emit.emit(compToCondition.get(ast.operator), out.toReg());
+        } else {
+            switch (ast.operator) {
+                case B_DIV:
+                    // TODO
+                    break;
+                case B_MOD:
+                    // TODO
+                    break;
+                case B_LESS_THAN:
+                    // TODO change to similar implementation like the others, if it works.
+                    cg.emit.emit("subl", out.toSrc(), right.toReg());
+                    cg.emit.emit("movl", right.toSrc(), out.toReg());
+                    break;
+                case B_NOT_EQUAL:
+                    cg.emit.emit("cmpl", left.toSrc(), right.toReg()); // Set flags.
+                    cg.emit.emit("xorl", left.toSrc(), left.toReg());   // Set leftReg to 0.
+                    cg.emit.emit("sete", left.toReg());            // Set leftReg to 1 if ZF == true.
+                    cg.emit.emit("notl", left.toReg());            // Invert result.
+                    break;
+                default:
+                    throw new ToDoException();
+            }
+        }
+
+		stackManager.release(right);
+
+		return left;
 	}
 
 	@Override

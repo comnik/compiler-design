@@ -110,6 +110,11 @@ public class StackManager {
 
     public Value getRegister() { return getRegister(getPhysical()); }
 
+    public Value getRegisterWithLowByte() {
+        Register byteReg = codeGen.rm.findRegisterWithLowByte();
+        return getRegister(byteReg);
+    }
+
     public void release(Value value) {
         if (!value.isDetached())
             detach(value);
