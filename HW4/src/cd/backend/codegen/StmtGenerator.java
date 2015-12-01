@@ -47,9 +47,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 
 	@Override
 	public Value methodCall(MethodCall ast, StackManager stackManager) {
-		{
-			throw new ToDoException();
-		}
+        return cg.eg.gen(ast.getMethodCallExpr(), stackManager);
 	}
 
 	public Value methodCall(MethodSymbol sym, List<Expr> allArguments) {
