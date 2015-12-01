@@ -49,6 +49,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         compToCondition.put(BOp.B_GREATER_THAN, "setg");
         compToCondition.put(BOp.B_GREATER_OR_EQUAL, "setge");
         compToCondition.put(BOp.B_EQUAL, "sete");
+        compToCondition.put(BOp.B_NOT_EQUAL, "sete");
     }
 
     private static final Map<BOp,String> operatorToOp;
@@ -92,12 +93,20 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
             // Ensure that we have a low byte register available.
             if (!out.toReg().hasLowByteVersion()) {
-                out = 
+                out = stackManager.getRegisterWithLowByte();
+                stackManager.reify(out);
+                cg.emit.emit("movl", left.toSrc(), out.toReg());
+                stackManager.release(left);
             }
 
             cg.emit.emit("cmpl", out.toSrc(), right.toReg()); // Set flags.
             cg.emit.emit("xorl", out.toSrc(), out.toReg());   // Set leftReg to 0.
-            cg.emit.emit(compToCondition.get(ast.operator), out.toReg());
+            cg.emit.emit(compToCondition.get(ast.operator), out.toReg().lowByteVersion().toString());
+
+            if (ast.operator == BOp.B_NOT_EQUAL) {
+                // For not equal we will have to invert the result.
+                cg.emit.emit("notl", out.toReg());
+            }
         } else {
             switch (ast.operator) {
                 case B_DIV:
@@ -111,12 +120,6 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
                     cg.emit.emit("subl", out.toSrc(), right.toReg());
                     cg.emit.emit("movl", right.toSrc(), out.toReg());
                     break;
-                case B_NOT_EQUAL:
-                    cg.emit.emit("cmpl", left.toSrc(), right.toReg()); // Set flags.
-                    cg.emit.emit("xorl", left.toSrc(), left.toReg());   // Set leftReg to 0.
-                    cg.emit.emit("sete", left.toReg());            // Set leftReg to 1 if ZF == true.
-                    cg.emit.emit("notl", left.toReg());            // Invert result.
-                    break;
                 default:
                     throw new ToDoException();
             }
@@ -124,7 +127,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 		stackManager.release(right);
 
-		return left;
+		return out;
 	}
 
 	@Override
