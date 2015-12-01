@@ -1,7 +1,6 @@
 package cd.backend.codegen;
 
 import cd.Config;
-import cd.ToDoException;
 import cd.backend.codegen.StackManager.Value;
 import cd.ir.Ast;
 import cd.ir.Ast.*;
@@ -11,7 +10,6 @@ import cd.ir.Symbol.MethodSymbol;
 import cd.util.debug.AstOneLine;
 
 import java.util.List;
-import java.util.function.BinaryOperator;
 
 import static cd.Config.MAIN;
 import static cd.backend.codegen.AssemblyEmitter.constant;
@@ -32,7 +30,8 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 		visit(ast, null);
 	}
 
-    public int labelCounter = 0;
+    private int labelCounter = 0;
+    private Symbol.ClassSymbol currentClassSym;
 
 	@Override
 	public Value visit(Ast ast, StackManager stackManager) {
@@ -45,6 +44,17 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 		}
 	}
 
+    @Override
+    /** Constructs the virtual method table for this class. */
+    public Value classDecl(ClassDecl ast, StackManager stackManager) {
+        // Set the current class symbol.
+        currentClassSym = ast.sym;
+
+
+
+        return visitChildren(ast, stackManager);
+    }
+
 	@Override
 	public Value methodCall(MethodCall ast, StackManager stackManager) {
         return cg.eg.gen(ast.getMethodCallExpr(), stackManager);
@@ -52,13 +62,6 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 
 	public Value methodCall(MethodSymbol sym, List<Expr> allArguments) {
 		throw new RuntimeException("Not required");
-	}
-
-	// Emit vtable for arrays of this class:
-	@Override
-	public Value classDecl(ClassDecl ast, StackManager stackManager) {
-        // TODO
-        return visitChildren(ast, stackManager);
 	}
 
 	@Override
@@ -71,7 +74,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
             cg.emit.emitRaw(".globl " + MAIN);
             cg.emit.emitLabel(MAIN);
         } else {
-            cg.emit.emitLabel(ast.sym.name);
+            cg.emit.emitLabel(getMethodLabel(currentClassSym, ast.sym));
         }
 
         // Set parameter offsets.
@@ -189,7 +192,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         Value rhsReg = cg.eg.gen(ast.right(), stackManager);
 
         stackManager.reify(rhsReg);
-        cg.emit.emit("movl", rhsReg.toRegister(), AssemblyEmitter.registerOffset(var.sym.offset, BASE_REG));
+        cg.emit.emit("movl", rhsReg.toReg(), AssemblyEmitter.registerOffset(var.sym.offset, BASE_REG));
 
         // stackManager.releaseRegister(rhsReg);
         return null;
@@ -204,7 +207,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         cg.emit.emit("subl", constant(16), STACK_REG);
 
         stackManager.reify(printfArg);
-        cg.emit.emitStore(printfArg.toRegister(), 4, STACK_REG);
+        cg.emit.emitStore(printfArg.toReg(), 4, STACK_REG);
 
         cg.emit.emitStore("$STR_D", 0, STACK_REG);
         cg.emit.emit("call", Config.PRINTF);
@@ -233,7 +236,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 
         Value returnValue = stackManager.getRegister(RegisterManager.RESULT_REG);
 
-        cg.emit.emit("movl", result.toString(), returnValue.toRegister());
+        cg.emit.emit("movl", result.toString(), returnValue.toReg());
         return returnValue;
 	}
 
@@ -253,5 +256,10 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         String ret = "L" + Integer.toString(labelCounter);
         labelCounter++;
         return ret;
+    }
+
+    /** Returns a unique method label. */
+    private String getMethodLabel(Symbol.ClassSymbol clsSym, MethodSymbol methodSym) {
+        return clsSym.name + "::" + methodSym.name;
     }
 }

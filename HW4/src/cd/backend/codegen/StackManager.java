@@ -1,6 +1,7 @@
 package cd.backend.codegen;
 
 import cd.backend.codegen.RegisterManager.Register;
+import cd.backend.codegen.RegisterManager.ByteRegister;
 
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -68,7 +69,11 @@ public class StackManager {
             }
         }
 
-        public Register toRegister() {
+        public String toSrc() {
+            return isDetached() ? AssemblyEmitter.registerOffset(this.offset, RegisterManager.BASE_REG) : reg.toString();
+        }
+
+        public Register toReg() {
             if (this.isDetached()) {
                 throw new RuntimeException(
                         "This virtual register has no physical register associated with it." +
@@ -104,12 +109,6 @@ public class StackManager {
     }
 
     public Value getRegister() { return getRegister(getPhysical()); }
-
-    /** Just like getRegister() but for a single byte value. */
-    public Value getByteRegister() {
-        // TODO actually do what it says
-        return this.getRegister();
-    }
 
     public void release(Value value) {
         if (!value.isDetached())

@@ -1,7 +1,6 @@
 package cd.backend.codegen;
 
 import cd.ToDoException;
-import cd.backend.codegen.RegisterManager.Register;
 import cd.backend.codegen.StackManager.Value;
 import cd.ir.Ast.*;
 import cd.ir.ExprVisitor;
@@ -64,56 +63,51 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 		switch (ast.operator) {
 		case B_TIMES:
-			cg.emit.emit("imul", rightReg.toString(), leftReg.toRegister());
-			break;
+			cg.emit.emit("imul", rightReg.toSrc(), leftReg.toReg()); break;
         case B_DIV:
             // TODO
             break;
 		case B_PLUS:
-			cg.emit.emit("add", rightReg.toString(), leftReg.toRegister());
-			break;
+			cg.emit.emit("add", rightReg.toSrc(), leftReg.toReg()); break;
 		case B_MINUS:
-			cg.emit.emit("sub", rightReg.toString(), leftReg.toRegister());
-			break;
+			cg.emit.emit("sub", rightReg.toSrc(), leftReg.toReg()); break;
         case B_MOD:
             // TODO
             break;
         case B_AND:
-            cg.emit.emit("and", rightReg.toString(), leftReg.toRegister());
-            break;
+            cg.emit.emit("and", rightReg.toSrc(), leftReg.toReg()); break;
         case B_OR:
-            cg.emit.emit("or", rightReg.toString(), leftReg.toRegister());
-            break;
+            cg.emit.emit("or", rightReg.toSrc(), leftReg.toReg()); break;
         case B_LESS_THAN:
             // TODO change to similar implementation like the others, if it works.
-            cg.emit.emit("subl", leftReg.toString(), rightReg.toRegister());
-            cg.emit.emit("movl", rightReg.toString(), leftReg.toRegister());
+            cg.emit.emit("subl", leftReg.toSrc(), rightReg.toReg());
+            cg.emit.emit("movl", rightReg.toSrc(), leftReg.toReg());
             break;
         case B_LESS_OR_EQUAL:
-            cg.emit.emit("cmpl", leftReg.toString(), rightReg.toRegister()); // Set flags.
-            cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
-            cg.emit.emit("setle", leftReg.toRegister());           // Set leftReg to 1 if ((SF xor OF) || ZF) == true.
+            cg.emit.emit("cmpl", leftReg.toSrc(), rightReg.toReg()); // Set flags.
+            cg.emit.emit("xorl", leftReg.toSrc(), leftReg.toReg());   // Set leftReg to 0.
+            cg.emit.emit("setle", leftReg.toReg());           // Set leftReg to 1 if ((SF xor OF) || ZF) == true.
             break;
         case B_GREATER_THAN:
-            cg.emit.emit("cmpl", leftReg.toString(), rightReg.toRegister()); // Set flags.
-            cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
-            cg.emit.emit("setg", leftReg.toRegister());            // Set leftReg to 1 if (!(SF xor OF) && !ZF) == true.
+            cg.emit.emit("cmpl", leftReg.toSrc(), rightReg.toReg()); // Set flags.
+            cg.emit.emit("xorl", leftReg.toSrc(), leftReg.toReg());   // Set leftReg to 0.
+            cg.emit.emit("setg", leftReg.toReg());            // Set leftReg to 1 if (!(SF xor OF) && !ZF) == true.
             break;
         case B_GREATER_OR_EQUAL:
-            cg.emit.emit("cmpl", leftReg.toString(), rightReg.toRegister()); // Set flags.
-            cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
-            cg.emit.emit("setge", leftReg.toRegister());           // Set leftReg to 1 if !(SF xor OF) == true.
+            cg.emit.emit("cmpl", leftReg.toSrc(), rightReg.toReg()); // Set flags.
+            cg.emit.emit("xorl", leftReg.toSrc(), leftReg.toReg());   // Set leftReg to 0.
+            cg.emit.emit("setge", leftReg.toReg());           // Set leftReg to 1 if !(SF xor OF) == true.
             break;
         case B_EQUAL:
-            cg.emit.emit("cmpl", leftReg.toString(), rightReg.toRegister()); // Set flags.
-            cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
-            cg.emit.emit("sete", leftReg.toRegister());            // Set leftReg to 1 if ZF == true.
+            cg.emit.emit("cmpl", leftReg.toSrc(), rightReg.toReg()); // Set flags.
+            cg.emit.emit("xorl", leftReg.toSrc(), leftReg.toReg());   // Set leftReg to 0.
+            cg.emit.emit("sete", leftReg.toReg());            // Set leftReg to 1 if ZF == true.
             break;
         case B_NOT_EQUAL:
-            cg.emit.emit("cmpl", leftReg.toString(), rightReg.toRegister()); // Set flags.
-            cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
-            cg.emit.emit("sete", leftReg.toRegister());            // Set leftReg to 1 if ZF == true.
-            cg.emit.emit("notl", leftReg.toRegister());            // Invert result.
+            cg.emit.emit("cmpl", leftReg.toSrc(), rightReg.toReg()); // Set flags.
+            cg.emit.emit("xorl", leftReg.toSrc(), leftReg.toReg());   // Set leftReg to 0.
+            cg.emit.emit("sete", leftReg.toReg());            // Set leftReg to 1 if ZF == true.
+            cg.emit.emit("notl", leftReg.toReg());            // Invert result.
             break;
         default:
 			throw new ToDoException();
@@ -142,11 +136,11 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         stackManager.reify(v);
 
         cg.emit.emit("sub", constant(16), STACK_REG);
-		cg.emit.emit("leal", AssemblyEmitter.registerOffset(8, STACK_REG), v.toRegister());
-		cg.emit.emitStore(v.toRegister(), 4, STACK_REG);
+		cg.emit.emit("leal", AssemblyEmitter.registerOffset(8, STACK_REG), v.toReg());
+		cg.emit.emitStore(v.toReg(), 4, STACK_REG);
 		cg.emit.emitStore("$STR_D", 0, STACK_REG);
 		cg.emit.emit("call", SCANF);
-		cg.emit.emitLoad(8, STACK_REG, v.toRegister());
+		cg.emit.emitLoad(8, STACK_REG, v.toReg());
 		cg.emit.emit("add", constant(16), STACK_REG);
 
         return v;
@@ -222,7 +216,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
             // TODO check if pushl or pushb
             Value argValue = visit(argExpr, stackManager);
             stackManager.reify(argValue);
-            cg.emit.emit("pushl", argValue.toRegister());
+            cg.emit.emit("pushl", argValue.toReg());
         });
 
         // Call the function.
@@ -241,12 +235,12 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
             break;
 
         case U_MINUS:
-            cg.emit.emit("negl", argValue.toRegister());
+            cg.emit.emit("negl", argValue.toReg());
             break;
 
         case U_BOOL_NOT:
-            cg.emit.emit("negl", argValue.toRegister());
-            cg.emit.emit("incl", argValue.toRegister());
+            cg.emit.emit("negl", argValue.toReg());
+            cg.emit.emit("incl", argValue.toReg());
             break;
         }
 
@@ -261,7 +255,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         switch (ast.sym.kind) {
         case LOCAL:
         case PARAM:
-            cg.emit.emitLoad(ast.sym.offset, BASE_REG, reg.toRegister());
+            cg.emit.emitLoad(ast.sym.offset, BASE_REG, reg.toReg());
             break;
         case FIELD:
             // TODO
