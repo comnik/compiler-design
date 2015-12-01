@@ -90,27 +90,27 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
             cg.emit.emit("movl", rightReg.toString(), leftReg.toRegister());
             break;
         case B_LESS_OR_EQUAL:
-            cg.emit.emit("compl", leftReg.toString(), rightReg.toRegister()); // Set flags.
+            cg.emit.emit("cmpl", leftReg.toString(), rightReg.toRegister()); // Set flags.
             cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
             cg.emit.emit("setle", leftReg.toRegister());           // Set leftReg to 1 if ((SF xor OF) || ZF) == true.
             break;
         case B_GREATER_THAN:
-            cg.emit.emit("compl", leftReg.toString(), rightReg.toRegister()); // Set flags.
+            cg.emit.emit("cmpl", leftReg.toString(), rightReg.toRegister()); // Set flags.
             cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
             cg.emit.emit("setg", leftReg.toRegister());            // Set leftReg to 1 if (!(SF xor OF) && !ZF) == true.
             break;
         case B_GREATER_OR_EQUAL:
-            cg.emit.emit("compl", leftReg.toString(), rightReg.toRegister()); // Set flags.
+            cg.emit.emit("cmpl", leftReg.toString(), rightReg.toRegister()); // Set flags.
             cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
             cg.emit.emit("setge", leftReg.toRegister());           // Set leftReg to 1 if !(SF xor OF) == true.
             break;
         case B_EQUAL:
-            cg.emit.emit("compl", leftReg.toString(), rightReg.toRegister()); // Set flags.
+            cg.emit.emit("cmpl", leftReg.toString(), rightReg.toRegister()); // Set flags.
             cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
             cg.emit.emit("sete", leftReg.toRegister());            // Set leftReg to 1 if ZF == true.
             break;
         case B_NOT_EQUAL:
-            cg.emit.emit("compl", leftReg.toString(), rightReg.toRegister()); // Set flags.
+            cg.emit.emit("cmpl", leftReg.toString(), rightReg.toRegister()); // Set flags.
             cg.emit.emit("xorl", leftReg.toString(), leftReg.toRegister());   // Set leftReg to 0.
             cg.emit.emit("sete", leftReg.toRegister());            // Set leftReg to 1 if ZF == true.
             cg.emit.emit("notl", leftReg.toRegister());            // Invert result.
