@@ -122,27 +122,25 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 	@Override
 	public Value ifElse(IfElse ast, StackManager stackManager) {
 		Value reg = cg.eg.gen(ast.condition(), stackManager);
+        stackManager.reify(reg);
 
-		String thenLabel = getAndIncrementLabel();
-        String otherwiseLabel = getAndIncrementLabel();
-        String doneLabel = getAndIncrementLabel();
+		String doneLabel = getAndIncrementLabel();
 
         if (ast.otherwise() == null) {
             // Just an if statement, no else part.
-            cg.emit.emit("cmpl", "$0", reg.toString());
-            cg.emit.emit("jle", doneLabel);
+            cg.emit.emit("cmpl", constant(0), reg.toSrc());
+            cg.emit.emit("je", doneLabel);
 
             // Then branch.
             visit(ast.then(), stackManager);
             cg.emit.emit("jmp", doneLabel);
-
-            // We're done.
-            cg.emit.emitLabel(doneLabel);
-            return null;
         } else {
             // There is an else part.
-            cg.emit.emit("cmpl", "$0", reg.toString());
-            cg.emit.emit("jle", otherwiseLabel);
+            String thenLabel = getAndIncrementLabel();
+            String otherwiseLabel = getAndIncrementLabel();
+
+            cg.emit.emit("cmpl", constant(0), reg.toSrc());
+            cg.emit.emit("je", otherwiseLabel);
 
             // Then branch.
             cg.emit.emitLabel(thenLabel);
@@ -153,11 +151,12 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
             cg.emit.emitLabel(otherwiseLabel);
             visit(ast.otherwise(), stackManager);
             cg.emit.emit("jmp", doneLabel);
-
-            // We're done.
-            cg.emit.emitLabel(doneLabel);
-            return null;
         }
+
+        // We're done.
+        cg.emit.emitLabel(doneLabel);
+
+        return null;
 	}
 
 	@Override

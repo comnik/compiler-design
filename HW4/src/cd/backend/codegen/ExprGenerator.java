@@ -46,6 +46,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
     private static final Map<BOp,String> compToCondition;
     static {
         compToCondition = new HashMap<>();
+        compToCondition.put(BOp.B_LESS_THAN, "setl");
         compToCondition.put(BOp.B_LESS_OR_EQUAL, "setle");
         compToCondition.put(BOp.B_GREATER_THAN, "setg");
         compToCondition.put(BOp.B_GREATER_OR_EQUAL, "setge");
@@ -100,8 +101,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
                 stackManager.release(left);
             }
 
-            cg.emit.emit("cmpl", out.toSrc(), right.toReg()); // Set flags.
-            cg.emit.emit("xorl", out.toSrc(), out.toReg());   // Set leftReg to 0.
+            cg.emit.emit("cmpl", right.toSrc(), out.toReg()); // Set flags.
             cg.emit.emit(compToCondition.get(ast.operator), out.toReg().lowByteVersion().toString());
 
             if (ast.operator == BOp.B_NOT_EQUAL) {
@@ -115,11 +115,6 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
                     break;
                 case B_MOD:
                     // TODO
-                    break;
-                case B_LESS_THAN:
-                    // TODO change to similar implementation like the others, if it works.
-                    cg.emit.emit("subl", out.toSrc(), right.toReg());
-                    cg.emit.emit("movl", right.toSrc(), out.toReg());
                     break;
                 default:
                     throw new ToDoException();
