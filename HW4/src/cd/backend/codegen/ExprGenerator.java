@@ -117,7 +117,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
                     // TODO
                     break;
                 default:
-                    throw new ToDoException();
+                    throw new RuntimeException("Unknown operator " + ast.operator);
             }
         }
 
