@@ -274,11 +274,11 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         stackManager.emitCallerSave();
 
         // We have to push arguments in reverse order onto the stack.
-        List<Expr> argsWithoutReciever = new ArrayList<Expr>();
-        argsWithoutReciever.addAll(ast.argumentsWithoutReceiver());
-        Collections.reverse(argsWithoutReciever);
+        List<Expr> argsWithoutReceiver = new ArrayList<Expr>();
+        argsWithoutReceiver.addAll(ast.argumentsWithoutReceiver());
+        Collections.reverse(argsWithoutReceiver);
 
-        argsWithoutReciever.forEach(argExpr -> {
+        argsWithoutReceiver.forEach(argExpr -> {
             // TODO check if pushl or pushb
             Value argValue = visit(argExpr, stackManager);
             stackManager.reify(argValue);
