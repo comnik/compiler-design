@@ -12,6 +12,7 @@ import java.util.*;
 
 import static cd.Config.SCANF;
 import static cd.backend.codegen.AssemblyEmitter.constant;
+import static cd.backend.codegen.AssemblyEmitter.registerOffset;
 import static cd.backend.codegen.RegisterManager.BASE_REG;
 import static cd.backend.codegen.RegisterManager.STACK_REG;
 
@@ -273,9 +274,13 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         // The receiver is passed as the first argument.
         cg.emit.emit("pushl", stackManager.reify(receiver));
 
-        // Call the function.
-        cg.emit.emit("call", 0);
+        // Lookup function address and call.
+        Value funcAddr = stackManager.getRegister();
+        cg.emit.emitLoad(0, stackManager.reify(receiver), stackManager.reify(funcAddr));
+        cg.emit.emitLoad(ast.sym.offset, stackManager.reify(funcAddr), stackManager.reify(funcAddr));
+        cg.emit.emit("call", "*"+stackManager.reify(funcAddr));
 
+        stackManager.release(funcAddr);
         stackManager.release(receiver);
         return stackManager.getRegister(RegisterManager.RESULT_REG);
 	}

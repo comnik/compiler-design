@@ -179,7 +179,9 @@ public abstract class Symbol {
 			new ArrayList<VariableSymbol>();
 		
 		public TypeSymbol returnType;
-		
+
+        public int offset;
+
 		public MethodSymbol(Ast.MethodDecl ast) {
 			super(ast.name);
 			this.ast = ast;
