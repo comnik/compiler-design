@@ -247,14 +247,17 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	@Override
 	public Value thisRef(ThisRef ast, StackManager stackManager) {
-		{
-			throw new ToDoException();
-		}
+        Value v = stackManager.getRegister();
+        // Reciever is always at 8(%ebp).
+        cg.emit.emitLoad(8, BASE_REG, stackManager.reify(v));
+        return v;
 	}
 
 	@Override
 	public Value methodCall(MethodCallExpr ast, StackManager stackManager) {
         stackManager.emitCallerSave();
+
+        Value receiver = gen(ast.receiver(), stackManager);
 
         // We have to push arguments in reverse order onto the stack.
         List<Expr> argsWithoutReceiver = new ArrayList<Expr>();
@@ -265,11 +268,16 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
             // TODO check if pushl or pushb
             Value argValue = visit(argExpr, stackManager);
             cg.emit.emit("pushl", stackManager.reify(argValue));
+            stackManager.release(argValue);
         });
+
+        // The receiver is passed as the first argument.
+        cg.emit.emit("pushl", stackManager.reify(receiver));
 
         // Call the function.
         cg.emit.emit("call", 0);
 
+        stackManager.release(receiver);
         return stackManager.getRegister(RegisterManager.RESULT_REG);
 	}
 

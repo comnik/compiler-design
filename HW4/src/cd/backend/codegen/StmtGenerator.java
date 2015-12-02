@@ -70,8 +70,8 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 	public Value methodDecl(MethodDecl ast, StackManager willBeIgnored) {
         cg.emit.emitLabel(getMethodLabel(currentClassSym, ast.sym));
 
-        // Set parameter offsets.
-        ast.sym.parameters.stream().reduce(0, (nextOffset, varSym) -> {
+        // Set parameter offsets, leaving 12 bytes for return address and reciever.
+        ast.sym.parameters.stream().reduce(12, (nextOffset, varSym) -> {
             varSym.offset = nextOffset;
             return nextOffset + varSym.type.getRefSize();
         }, (o1, o2) -> o1);
