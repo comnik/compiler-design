@@ -48,6 +48,8 @@ public class StackManager {
         // in case it was spilled.
         protected int offset = NO_OFFSET;
 
+        protected int src = NO_OFFSET;
+
         // Physical register holding the value at this offset (if any).
         protected Register reg = null;
 
@@ -70,10 +72,7 @@ public class StackManager {
         }
 
         public String toOffset() {
-            if (!onStack())
-                throw new RuntimeException("Value not on stack.");
-
-            return AssemblyEmitter.registerOffset(this.offset, RegisterManager.BASE_REG);
+            return AssemblyEmitter.registerOffset(this.src, RegisterManager.BASE_REG);
         }
 
         public String toSrc() {

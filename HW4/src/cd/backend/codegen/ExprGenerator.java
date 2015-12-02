@@ -322,6 +322,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         switch (ast.sym.kind) {
         case LOCAL:
         case PARAM:
+            reg.src = ast.sym.offset;
             cg.emit.emitLoad(ast.sym.offset, BASE_REG, reg.toReg());
             break;
         case FIELD:
