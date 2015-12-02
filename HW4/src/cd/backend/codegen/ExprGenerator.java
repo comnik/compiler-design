@@ -128,11 +128,12 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	@Override
 	public Value booleanConst(BooleanConst ast, StackManager stackManager) {
-        Value v = stackManager.getRegister();
-        String booleanValue = (ast.value == true) ? "$0x1" : "$0x0";
-
+        Value v = stackManager.getRegisterWithLowByte();
         stackManager.reify(v);
-        cg.emit.emit("movb", booleanValue, v.toString());
+
+        String booleanValue = (ast.value == true) ? constant(1) : constant(0);
+
+        cg.emit.emit("movb", booleanValue, v.toReg().lowByteVersion().toString());
         return v;
     }
 
@@ -163,9 +164,16 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	@Override
 	public Value index(Index ast, StackManager stackManager) {
-		{
-			throw new ToDoException();
-		}
+        Value arrayAddr = gen(ast.left(), stackManager);
+        Value index = gen(ast.right(), stackManager);
+
+        stackManager.reify(arrayAddr);
+        stackManager.reify(index);
+
+        cg.emit.emit("leal", AssemblyEmitter.arrayAddress(arrayAddr.toReg(),index.toReg()), arrayAddr.toReg());
+
+        stackManager.release(index);
+        return arrayAddr;
 	}
 
 	@Override
@@ -178,9 +186,12 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	@Override
 	public Value field(Field ast, StackManager stackManager) {
-		{
-			throw new ToDoException();
-		}
+        Value objAddr = gen(ast.arg(), stackManager);
+        stackManager.reify(objAddr);
+
+        cg.emit.emit("leal", AssemblyEmitter.registerOffset(ast.sym.offset, objAddr.toReg()), objAddr.toReg());
+
+        return objAddr;
 	}
 
 	@Override

@@ -69,8 +69,15 @@ public class StackManager {
             }
         }
 
+        public String toOffset() {
+            if (!onStack())
+                throw new RuntimeException("Value not on stack.");
+
+            return AssemblyEmitter.registerOffset(this.offset, RegisterManager.BASE_REG);
+        }
+
         public String toSrc() {
-            return isDetached() ? AssemblyEmitter.registerOffset(this.offset, RegisterManager.BASE_REG) : reg.toString();
+            return isDetached() ? this.toOffset() : reg.toString();
         }
 
         public Register toReg() {
@@ -140,7 +147,7 @@ public class StackManager {
 
     /** Emits code to persist all caller saved registers in use. */
     public void emitCallerSave() {
-        // codeGen.emit.emitComment("Persisting CALLER_SAVE registers...");
+        codeGen.emit.emitComment("Persisting CALLER_SAVE registers...");
         for (Register reg : RegisterManager.CALLER_SAVE) {
             Value value = registerMap.get(reg);
             if (value != null) {
@@ -169,7 +176,7 @@ public class StackManager {
 
     /** Associates a stack offset with a physical register to hold its value. Will not load the value! */
     private void attach(Value value, Register reg) {
-        // codeGen.emit.emitComment("Attaching " + value + " to " + reg);
+        codeGen.emit.emitComment("Attaching " + value + " to " + reg);
         value.reg = reg;
         registerMap.put(value.reg, value);
         regsInUse.add(value.reg);
@@ -177,7 +184,7 @@ public class StackManager {
 
     /** Disassociates a stack offset from the register holding its value. */
     private void detach(Value value) {
-        // codeGen.emit.emitComment("Detaching " + value);
+        codeGen.emit.emitComment("Detaching " + value);
         if (codeGen.rm.isInUse(value.reg))
             codeGen.rm.releaseRegister(value.reg);
 
@@ -192,7 +199,7 @@ public class StackManager {
         if (!value.onStack())
             allocate(value);
 
-        // codeGen.emit.emitComment("Writing back " + value + " onto the stack.");
+        codeGen.emit.emitComment("Writing back " + value + " onto the stack.");
         codeGen.emit.emitStore(value.reg, value.offset, RegisterManager.BASE_REG);
     }
 

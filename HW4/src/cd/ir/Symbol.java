@@ -1,7 +1,6 @@
 package cd.ir;
 
 import cd.Config;
-import cd.backend.codegen.StackManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -186,14 +186,15 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 
 	@Override
 	public Value assign(Assign ast, StackManager stackManager) {
-        // TODO Support for array access and fields, besides normal vars.
-        Var var = (Var) ast.left();
-        Value rhsReg = cg.eg.gen(ast.right(), stackManager);
+        Value target = cg.eg.gen(ast.left(), stackManager);
+        Value value = cg.eg.gen(ast.right(), stackManager);
 
-        stackManager.reify(rhsReg);
-        cg.emit.emit("movl", rhsReg.toReg(), AssemblyEmitter.registerOffset(var.sym.offset, BASE_REG));
+        stackManager.reify(target);
+        stackManager.reify(value);
 
-        // stackManager.releaseRegister(rhsReg);
+        cg.emit.emit("movl", value.toSrc(), target.toOffset());
+
+        stackManager.release(value);
         return null;
     }
 

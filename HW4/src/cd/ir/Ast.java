@@ -1,16 +1,16 @@
 package cd.ir;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import cd.ir.Symbol.ClassSymbol;
 import cd.ir.Symbol.MethodSymbol;
 import cd.ir.Symbol.TypeSymbol;
 import cd.ir.Symbol.VariableSymbol;
 import cd.util.Pair;
 import cd.util.debug.AstOneLine;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public abstract class Ast {
 
@@ -287,8 +287,7 @@ public abstract class Ast {
 			((Field)item).sym = sym;
 			return super.postCopy(item);
 		}
-		
-	}
+    }
 	
 	public static class Index extends LeftRightExpr {
 		
@@ -300,8 +299,7 @@ public abstract class Ast {
 		public <R, A> R accept(ExprVisitor<R, A> visitor, A arg) {
 			return visitor.index(this, arg);
 		}
-		
-	}
+    }
 	
 	public static class NewObject extends LeafExpr {
 		
@@ -400,8 +398,7 @@ public abstract class Ast {
 			sym = variableSymbol;
 			name = sym.toString();
 		}
-		
-	}
+    }
 	
 	public static class BuiltInRead extends LeafExpr {
 		
