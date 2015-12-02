@@ -76,7 +76,7 @@ public class AstCodeGenerator {
         emit.emitRaw(".globl " + Config.MAIN);
         emit.emitLabel(Config.MAIN);
 
-        emitMethodPrefix();
+        emitMethodPrefix(0);
         emit.emit("call", "__Main_main");
         emitMethodSuffix(true);
     }
@@ -85,9 +85,21 @@ public class AstCodeGenerator {
         rm.initRegisters();
     }
 
-    protected void emitMethodPrefix() {
+    protected void emitMethodPrefix(int stackSize) {
         emit.emit("pushl", RegisterManager.BASE_REG);
         emit.emit("movl", RegisterManager.STACK_REG, RegisterManager.BASE_REG);
+
+        if (Config.systemKind == Config.SystemKind.MACOSX) {
+            // Align the stack to 16 bytes.
+            emit.emit("andl", AssemblyEmitter.constant(-16), RegisterManager.STACK_REG);
+            stackSize = alignedTo16(stackSize);
+        }
+
+        // Make space on the stack, if required.
+        if (stackSize > 0) {
+            emit.emit("subl", stackSize, RegisterManager.STACK_REG);
+        }
+
     }
 
 	protected void emitMethodSuffix(boolean returnNull) {
@@ -96,4 +108,13 @@ public class AstCodeGenerator {
 		emit.emitRaw("leave");
 		emit.emitRaw("ret");
 	}
+
+    /** Returns the next highest multiple y of 16, such that x < y. */
+    private int alignedTo16(int x) {
+        int y = 16;
+        while (x > y) {
+            y += 16;
+        }
+        return y;
+    }
 }

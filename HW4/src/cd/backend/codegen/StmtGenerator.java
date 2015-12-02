@@ -87,18 +87,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         // Get the stack size required to hold locals.
         int stackSize = -lastOffset;
 
-        cg.emitMethodPrefix();
-
-		if (Config.systemKind == Config.SystemKind.MACOSX) {
-			// Align the stack to 16 bytes.
-			cg.emit.emit("andl", constant(-16), STACK_REG);
-			stackSize = alignedTo16(stackSize);
-		}
-
-        // Make space on the stack, if required.
-        if (stackSize > 0) {
-            cg.emit.emit("subl", stackSize, STACK_REG);
-        }
+        cg.emitMethodPrefix(stackSize);
 
         // Create a new virtual register manager for this stack frame.
         final StackManager stackManager = new StackManager(lastOffset, cg);
@@ -230,15 +219,6 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 	}
 
     // Helper functions.
-
-    /** Returns the next highest multiple y of 16, such that x < y. */
-    private int alignedTo16(int x) {
-        int y = 16;
-        while (x > y) {
-            y += 16;
-        }
-        return y;
-    }
 
     /** Returns a unique label and increments the label counter. */
     private String getAndIncrementLabel() {
