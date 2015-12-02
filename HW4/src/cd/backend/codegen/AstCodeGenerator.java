@@ -67,12 +67,13 @@ public class AstCodeGenerator {
         emit.emitLabel("STR_D");
         emit.emitRaw(Config.DOT_STRING + " \"%d\"");
 
+        emit.emitRaw(Config.TEXT_SECTION);
+
         for (ClassDecl ast : astRoots) {
             sg.gen(ast);
         }
 
         // Emit the start of execution.
-        emit.emitRaw(Config.TEXT_SECTION);
         emit.emitRaw(".globl " + Config.MAIN);
         emit.emitLabel(Config.MAIN);
 
