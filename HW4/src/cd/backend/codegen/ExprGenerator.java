@@ -111,7 +111,21 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         } else {
             switch (ast.operator) {
                 case B_DIV:
-                    // TODO
+                    // Operand is stored in eax.
+                    Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
+                    stackManager.reify(eax);
+                    cg.emit.emitStore(right.toReg(), 0, eax.toReg());
+
+                    // Number to be divided by is stored in ebx.
+                    Value ebx = stackManager.getRegister(RegisterManager.Register.EBX);
+                    stackManager.reify(ebx);
+                    cg.emit.emitStore(left.toReg(), 0, ebx.toReg());
+
+                    // Result is stored in eax.
+                    cg.emit.emitRaw("cdq");
+                    cg.emit.emit("idiv", ebx.toReg());
+
+                    out = eax;
                     break;
                 case B_MOD:
                     // TODO
