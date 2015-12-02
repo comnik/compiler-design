@@ -218,7 +218,6 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	@Override
 	public Value newObject(NewObject ast, StackManager stackManager) {
         // TODO: Support for class hierarchy.
-
         Value ptr = stackManager.getRegister();
         int fieldSize = ast.type.getFieldSize();
 
@@ -227,7 +226,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
         // The desired block size in bytes is passed in EDI.
         Value edi = stackManager.getRegister(RegisterManager.Register.EDI);
-        cg.emit.emitStore(constant(fieldSize), 0, stackManager.reify(edi));
+        cg.emit.emitMove(constant(fieldSize), stackManager.reify(edi));
 
         // The resulting pointer is saved in EAX.
         cg.emit.emit("call", Config.CALLOC);

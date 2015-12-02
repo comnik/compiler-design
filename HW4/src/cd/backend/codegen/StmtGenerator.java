@@ -87,14 +87,12 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         // Get the stack size required to hold locals.
         int stackSize = -lastOffset;
 
-        cg.emitMethodPrefix(stackSize);
-
         // Create a new virtual register manager for this stack frame.
         final StackManager stackManager = new StackManager(lastOffset, cg);
 
         // Generate code for the body.
+        cg.emitMethodPrefix(stackSize);
         visit(ast.body(), stackManager);
-
 		cg.emitMethodSuffix(true);
 
 		return null;
