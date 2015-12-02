@@ -11,7 +11,6 @@ import cd.util.debug.AstOneLine;
 
 import java.util.List;
 
-import static cd.Config.MAIN;
 import static cd.backend.codegen.AssemblyEmitter.constant;
 import static cd.backend.codegen.RegisterManager.BASE_REG;
 import static cd.backend.codegen.RegisterManager.STACK_REG;
@@ -50,7 +49,10 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         // Set the current class symbol.
         currentClassSym = ast.sym;
 
-
+        cg.emit.emitLabel(getVtableLabel(ast.sym));
+        ast.methods().stream().forEach(methodDecl -> {
+            cg.emit.emitConstantData(getMethodLabel(ast.sym, methodDecl.sym));
+        });
 
         return visitChildren(ast, stackManager);
     }
@@ -66,16 +68,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 
 	@Override
 	public Value methodDecl(MethodDecl ast, StackManager willBeIgnored) {
-        if (ast.sym.name.equals("main")) {
-            // TODO Check if we are in class Main as well.
-
-            // Emit the main() method:
-            cg.emit.emitRaw(Config.TEXT_SECTION);
-            cg.emit.emitRaw(".globl " + MAIN);
-            cg.emit.emitLabel(MAIN);
-        } else {
-            cg.emit.emitLabel(getMethodLabel(currentClassSym, ast.sym));
-        }
+        cg.emit.emitLabel(getMethodLabel(currentClassSym, ast.sym));
 
         // Set parameter offsets.
         ast.sym.parameters.stream().reduce(0, (nextOffset, varSym) -> {
@@ -86,7 +79,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         // Create virtual registers for all local variables.
         Integer lastOffset = ast.decls().children().stream()
                 .map(node -> ((VarDecl) node).sym)
-                .reduce(0, (nextOffset, varSym) -> {
+                .reduce(-4, (nextOffset, varSym) -> {
                     varSym.offset = nextOffset;
                     return nextOffset - varSym.type.getRefSize();
                 }, (o1, o2) -> o1);
@@ -94,8 +87,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         // Get the stack size required to hold locals.
         int stackSize = -lastOffset;
 
-        cg.emit.emit("pushl", BASE_REG);
-        cg.emit.emit("movl", STACK_REG, BASE_REG);
+        cg.emitMethodPrefix();
 
 		if (Config.systemKind == Config.SystemKind.MACOSX) {
 			// Align the stack to 16 bytes.
@@ -255,8 +247,12 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         return ret;
     }
 
+    private String getVtableLabel(Symbol.ClassSymbol clsSym) {
+        return clsSym.name;
+    }
+
     /** Returns a unique method label. */
     private String getMethodLabel(Symbol.ClassSymbol clsSym, MethodSymbol methodSym) {
-        return clsSym.name + "::" + methodSym.name;
+        return "__" + clsSym.name + "_" + methodSym.name;
     }
 }
