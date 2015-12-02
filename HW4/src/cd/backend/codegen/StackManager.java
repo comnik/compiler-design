@@ -78,16 +78,6 @@ public class StackManager {
         public String toSrc() {
             return isDetached() ? this.toOffset() : reg.toString();
         }
-
-        public Register toReg() {
-            if (this.isDetached()) {
-                throw new RuntimeException(
-                        "This virtual register has no physical register associated with it." +
-                                "Have you forgotten to reify it first?");
-            }
-
-            return this.reg;
-        }
     }
 
 
@@ -133,15 +123,14 @@ public class StackManager {
      * Readies the value to be used in code generation.
      * If it is not represented in a physical register, code will be generated to load it first.
      */
-    public void reify(Value v) {
+    public Register reify(Value v) {
         // If there is no physical register available, cycle one in.
         if (v.isDetached()) {
             attach(v, getPhysical());
-
-            // We only load the value if it was detached from the register.
-            if (v.onStack())
-                load(v, v.reg);
+            load(v, v.reg);
         }
+
+        return v.reg;
     }
 
     /** Emits code to persist all caller saved registers in use. */
@@ -175,9 +164,11 @@ public class StackManager {
 
     /** Associates a stack offset with a physical register to hold its value. Will not load the value! */
     private void attach(Value value, Register reg) {
-        codeGen.emit.emitComment("Attaching " + value + " to " + reg);
         value.reg = reg;
         registerMap.put(value.reg, value);
+
+        // Update the queue.
+        regsInUse.remove(value.reg);
         regsInUse.add(value.reg);
     }
 

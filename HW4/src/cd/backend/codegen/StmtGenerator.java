@@ -206,8 +206,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 
         cg.emit.emit("subl", constant(16), STACK_REG);
 
-        stackManager.reify(printfArg);
-        cg.emit.emitStore(printfArg.toReg(), 4, STACK_REG);
+        cg.emit.emitStore(stackManager.reify(printfArg), 4, STACK_REG);
 
         cg.emit.emitStore("$STR_D", 0, STACK_REG);
         cg.emit.emit("call", Config.PRINTF);
@@ -232,11 +231,9 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 	@Override
 	public Value returnStmt(ReturnStmt ast, StackManager stackManager) {
         Value result = visit(ast, stackManager);
-        stackManager.reify(result);
-
         Value returnValue = stackManager.getRegister(RegisterManager.RESULT_REG);
 
-        cg.emit.emit("movl", result.toString(), returnValue.toReg());
+        cg.emit.emit("movl", stackManager.reify(result), stackManager.reify(returnValue));
         return returnValue;
 	}
 

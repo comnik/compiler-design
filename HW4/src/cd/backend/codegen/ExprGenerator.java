@@ -82,64 +82,57 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         // Get an output register.
         Value out = left;
 
-        stackManager.reify(right);
-        stackManager.reify(left);
-
 		cg.debug("Binary Op: %s (%s,%s)", ast, out, right);
 
         if (operatorToOp.containsKey(ast.operator)) {
             // B_TIMES, B_PLUS, B_MINUS, B_AND, B_OR
-            cg.emit.emit(operatorToOp.get(ast.operator), right.toSrc(), out.toReg());
+            cg.emit.emit(operatorToOp.get(ast.operator), stackManager.reify(right), stackManager.reify(out));
         } else if (compToCondition.containsKey(ast.operator)) {
             // B_LESS_OR_EQUAL, B_GREATER_THAN, B_GREATER_OR_EQUAL, B_EQUAL
 
             // Ensure that we have a low byte register available.
-            if (!out.toReg().hasLowByteVersion()) {
+            if (!stackManager.reify(out).hasLowByteVersion()) {
                 out = stackManager.getRegisterWithLowByte();
-                stackManager.reify(out);
-                cg.emit.emit("movl", left.toSrc(), out.toReg());
+                cg.emit.emit("movl", stackManager.reify(left), stackManager.reify(out));
                 stackManager.release(left);
             }
 
-            cg.emit.emit("cmpl", right.toSrc(), out.toReg()); // Set flags.
-            cg.emit.emit(compToCondition.get(ast.operator), out.toReg().lowByteVersion().toString());
+            cg.emit.emit("cmpl", stackManager.reify(right), stackManager.reify(out)); // Set flags.
+            cg.emit.emit(compToCondition.get(ast.operator), stackManager.reify(out).lowByteVersion().toString());
 
             if (ast.operator == BOp.B_NOT_EQUAL) {
                 // For not equal we will have to invert the result.
-                cg.emit.emit("notl", out.toReg());
+                cg.emit.emit("notl", stackManager.reify(out));
             }
         } else {
             Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
             Value ebx = stackManager.getRegister(RegisterManager.Register.EBX);
             Value edx = stackManager.getRegister(RegisterManager.Register.EDX);
-            stackManager.reify(eax);
-            stackManager.reify(ebx);
-            stackManager.reify(edx);
-            
+
             switch (ast.operator) {
                 case B_DIV:
                     // Operand is stored in eax.
-                    cg.emit.emitStore(right.toReg(), 0, eax.toReg());
+                    cg.emit.emit("movl", stackManager.reify(left), stackManager.reify(eax));
 
                     // Number to be divided by is stored in ebx.
-                    cg.emit.emitStore(left.toReg(), 0, ebx.toReg());
+                    cg.emit.emit("movl", stackManager.reify(right), stackManager.reify(ebx));
 
                     // Result is stored in eax.
                     cg.emit.emitRaw("cdq");
-                    cg.emit.emit("idiv", ebx.toReg());
+                    cg.emit.emit("idiv", stackManager.reify(ebx));
 
                     out = eax;
                     break;
                 case B_MOD:
                     // Operand is stored in eax.
-                    cg.emit.emitStore(right.toReg(), 0, eax.toReg());
+                    cg.emit.emit("movl", stackManager.reify(right), stackManager.reify(eax));
 
                     // Number to be divided by is stored in ebx.
-                    cg.emit.emitStore(left.toReg(), 0, ebx.toReg());
+                    cg.emit.emit("movl", stackManager.reify(left), stackManager.reify(ebx));
 
                     // Remainder is stored in edx.
                     cg.emit.emitRaw("cdq");
-                    cg.emit.emit("idiv", ebx.toReg());
+                    cg.emit.emit("idiv", stackManager.reify(ebx));
 
                     out = edx;
                     break;
@@ -156,11 +149,10 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	@Override
 	public Value booleanConst(BooleanConst ast, StackManager stackManager) {
         Value v = stackManager.getRegisterWithLowByte();
-        stackManager.reify(v);
 
         String booleanValue = (ast.value == true) ? constant(1) : constant(0);
 
-        cg.emit.emit("movb", booleanValue, v.toReg().lowByteVersion().toString());
+        cg.emit.emit("movb", booleanValue, stackManager.reify(v).lowByteVersion().toString());
         return v;
     }
 
@@ -169,14 +161,13 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 		Value v = stackManager.getRegister();
 
         stackManager.emitCallerSave();
-        stackManager.reify(v);
 
         cg.emit.emit("sub", constant(16), STACK_REG);
-		cg.emit.emit("leal", AssemblyEmitter.registerOffset(8, STACK_REG), v.toReg());
-		cg.emit.emitStore(v.toReg(), 4, STACK_REG);
+		cg.emit.emit("leal", AssemblyEmitter.registerOffset(8, STACK_REG), stackManager.reify(v));
+		cg.emit.emitStore(stackManager.reify(v), 4, STACK_REG);
 		cg.emit.emitStore("$STR_D", 0, STACK_REG);
 		cg.emit.emit("call", SCANF);
-		cg.emit.emitLoad(8, STACK_REG, v.toReg());
+		cg.emit.emitLoad(8, STACK_REG, stackManager.reify(v));
 		cg.emit.emit("add", constant(16), STACK_REG);
 
         return v;
@@ -194,10 +185,8 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         Value arrayAddr = gen(ast.left(), stackManager);
         Value index = gen(ast.right(), stackManager);
 
-        stackManager.reify(arrayAddr);
-        stackManager.reify(index);
-
-        cg.emit.emit("leal", AssemblyEmitter.arrayAddress(arrayAddr.toReg(),index.toReg()), arrayAddr.toReg());
+        String addr = AssemblyEmitter.arrayAddress(stackManager.reify(arrayAddr), stackManager.reify(index));
+        cg.emit.emit("leal", addr, stackManager.reify(arrayAddr));
 
         stackManager.release(index);
         return arrayAddr;
@@ -206,17 +195,15 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	@Override
 	public Value intConst(IntConst ast, StackManager stackManager) {
         Value reg = stackManager.getRegister();
-        stackManager.reify(reg);
-        cg.emit.emit("movl", constant(ast.value), reg.toString());
+        cg.emit.emit("movl", constant(ast.value), stackManager.reify(reg));
         return reg;
 	}
 
 	@Override
 	public Value field(Field ast, StackManager stackManager) {
         Value objAddr = gen(ast.arg(), stackManager);
-        stackManager.reify(objAddr);
 
-        cg.emit.emit("leal", AssemblyEmitter.registerOffset(ast.sym.offset, objAddr.toReg()), objAddr.toReg());
+        cg.emit.emit("leal", AssemblyEmitter.registerOffset(ast.sym.offset, stackManager.reify(objAddr)), stackManager.reify(objAddr));
 
         return objAddr;
 	}
@@ -230,29 +217,26 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	@Override
 	public Value newObject(NewObject ast, StackManager stackManager) {
-		{
-            // TODO: Support for class hierarchy.
+        // TODO: Support for class hierarchy.
 
-            Value ptr = stackManager.getRegister();
-            int fieldSize = ast.type.getFieldSize();
+        Value ptr = stackManager.getRegister();
+        int fieldSize = ast.type.getFieldSize();
 
-            stackManager.emitCallerSave();
-            cg.emit.emit("sub", constant(16), STACK_REG);
+        stackManager.emitCallerSave();
+        // cg.emit.emit("sub", constant(16), STACK_REG);
 
-            // The desired block size in bytes is passed in EDI.
-            Value edi = stackManager.getRegister(RegisterManager.Register.EDI);
-            stackManager.reify(edi);
-            cg.emit.emitStore(constant(fieldSize), 0, edi.toReg());
+        // The desired block size in bytes is passed in EDI.
+        Value edi = stackManager.getRegister(RegisterManager.Register.EDI);
+        cg.emit.emitStore(constant(fieldSize), 0, stackManager.reify(edi));
 
-            // The resulting pointer is saved in EAX.
-            cg.emit.emit("call", Config.CALLOC);
-            Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
-            stackManager.reify(eax);
-            cg.emit.emitMove(eax.toSrc(), ptr.toReg());
-            cg.emit.emit("add", constant(16), STACK_REG);
+        // The resulting pointer is saved in EAX.
+        cg.emit.emit("call", Config.CALLOC);
+        Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
+        cg.emit.emitMove(stackManager.reify(eax), stackManager.reify(ptr));
 
-            return ptr;
-		}
+        // cg.emit.emit("add", constant(16), STACK_REG);
+
+        return ptr;
 	}
 
 	@Override
@@ -281,8 +265,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         argsWithoutReceiver.forEach(argExpr -> {
             // TODO check if pushl or pushb
             Value argValue = visit(argExpr, stackManager);
-            stackManager.reify(argValue);
-            cg.emit.emit("pushl", argValue.toReg());
+            cg.emit.emit("pushl", stackManager.reify(argValue));
         });
 
         // Call the function.
@@ -294,19 +277,18 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	@Override
 	public Value unaryOp(UnaryOp ast, StackManager stackManager) {
         Value argValue = gen(ast.arg(), stackManager);
-        stackManager.reify(argValue);
 
         switch (ast.operator) {
         case U_PLUS:
             break;
 
         case U_MINUS:
-            cg.emit.emit("negl", argValue.toReg());
+            cg.emit.emit("negl", stackManager.reify(argValue));
             break;
 
         case U_BOOL_NOT:
-            cg.emit.emit("negl", argValue.toReg());
-            cg.emit.emit("incl", argValue.toReg());
+            cg.emit.emit("negl", stackManager.reify(argValue));
+            cg.emit.emit("incl", stackManager.reify(argValue));
             break;
         }
 
@@ -316,13 +298,12 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	@Override
 	public Value var(Var ast, StackManager stackManager) {
         Value reg = stackManager.getRegister();
-        stackManager.reify(reg);
 
         switch (ast.sym.kind) {
         case LOCAL:
         case PARAM:
             reg.src = ast.sym.offset;
-            cg.emit.emitLoad(ast.sym.offset, BASE_REG, reg.toReg());
+            cg.emit.emitLoad(ast.sym.offset, BASE_REG, stackManager.reify(reg));
             break;
         case FIELD:
             // TODO
