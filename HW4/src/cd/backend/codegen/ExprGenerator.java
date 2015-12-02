@@ -213,12 +213,15 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
             cg.emit.emit("sub", constant(16), STACK_REG);
 
             // The desired block size in bytes is passed in EDI.
-            // May need to be refactored to use StackManager?
-            cg.emit.emitStore(constant(fieldSize), 0, RegisterManager.Register.EDI);
+            Value edi = stackManager.getRegister(RegisterManager.Register.EDI);
+            stackManager.reify(edi);
+            cg.emit.emitStore(constant(fieldSize), 0, edi.toReg());
 
             // The resulting pointer is saved in EAX.
             cg.emit.emit("call", Config.CALLOC);
-            cg.emit.emitMove(RegisterManager.Register.EAX, ptr.toSrc());
+            Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
+            stackManager.reify(eax);
+            cg.emit.emitMove(eax.toSrc(), ptr.toReg());
             cg.emit.emit("add", constant(16), STACK_REG);
 
             return ptr;
