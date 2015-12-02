@@ -109,15 +109,17 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
                 cg.emit.emit("notl", out.toReg());
             }
         } else {
+            Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
+            Value ebx = stackManager.getRegister(RegisterManager.Register.EBX);
+            Value edx = stackManager.getRegister(RegisterManager.Register.EDX);
+
             switch (ast.operator) {
                 case B_DIV:
                     // Operand is stored in eax.
-                    Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
                     stackManager.reify(eax);
                     cg.emit.emitStore(right.toReg(), 0, eax.toReg());
 
                     // Number to be divided by is stored in ebx.
-                    Value ebx = stackManager.getRegister(RegisterManager.Register.EBX);
                     stackManager.reify(ebx);
                     cg.emit.emitStore(left.toReg(), 0, ebx.toReg());
 
@@ -128,7 +130,19 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
                     out = eax;
                     break;
                 case B_MOD:
-                    // TODO
+                    // Operand is stored in eax.
+                    stackManager.reify(eax);
+                    cg.emit.emitStore(right.toReg(), 0, eax.toReg());
+
+                    // Number to be divided by is stored in ebx.
+                    stackManager.reify(ebx);
+                    cg.emit.emitStore(left.toReg(), 0, ebx.toReg());
+
+                    // Remainder is stored in edx.
+                    cg.emit.emitRaw("cdq");
+                    cg.emit.emit("idiv", ebx.toReg());
+
+                    out = edx;
                     break;
                 default:
                     throw new RuntimeException("Unknown operator " + ast.operator);
