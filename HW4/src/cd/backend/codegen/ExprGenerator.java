@@ -240,9 +240,9 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	@Override
 	public Value nullConst(NullConst ast, StackManager stackManager) {
-		{
-			throw new ToDoException();
-		}
+        Value v = stackManager.getRegister();
+        cg.emit.emitMove(constant(0), stackManager.reify(v));
+        return v;
 	}
 
 	@Override
@@ -265,7 +265,6 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         Collections.reverse(argsWithoutReceiver);
 
         argsWithoutReceiver.forEach(argExpr -> {
-            // TODO check if pushl or pushb
             Value argValue = visit(argExpr, stackManager);
             cg.emit.emit("pushl", stackManager.reify(argValue));
             stackManager.release(argValue);
