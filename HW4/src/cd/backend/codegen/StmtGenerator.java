@@ -12,7 +12,6 @@ import cd.util.debug.AstOneLine;
 import java.util.List;
 
 import static cd.backend.codegen.AssemblyEmitter.constant;
-import static cd.backend.codegen.RegisterManager.BASE_REG;
 import static cd.backend.codegen.RegisterManager.STACK_REG;
 
 /**
@@ -50,8 +49,8 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         currentClassSym = ast.sym;
 
         // Create vtable entries.
-        cg.emit.emitLabel(getVtableLabel(ast.sym));
-        ast.methods().stream().reduce(4, (nextOffset, methodDecl) -> {
+        cg.emit.emitLabel(ast.sym.getVtableLabel());
+        ast.methods().stream().reduce(0, (nextOffset, methodDecl) -> {
             cg.emit.emitConstantData(getMethodLabel(ast.sym, methodDecl.sym));
             methodDecl.sym.offset = nextOffset;
             return nextOffset + Config.SIZEOF_PTR;
@@ -226,10 +225,6 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         String ret = "L" + Integer.toString(labelCounter);
         labelCounter++;
         return ret;
-    }
-
-    private String getVtableLabel(Symbol.ClassSymbol clsSym) {
-        return clsSym.name;
     }
 
     /** Returns a unique method label. */

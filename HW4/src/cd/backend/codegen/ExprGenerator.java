@@ -12,6 +12,7 @@ import java.util.*;
 
 import static cd.Config.SCANF;
 import static cd.backend.codegen.AssemblyEmitter.constant;
+import static cd.backend.codegen.AssemblyEmitter.labelAddress;
 import static cd.backend.codegen.AssemblyEmitter.registerOffset;
 import static cd.backend.codegen.RegisterManager.BASE_REG;
 import static cd.backend.codegen.RegisterManager.STACK_REG;
@@ -219,24 +220,25 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	@Override
 	public Value newObject(NewObject ast, StackManager stackManager) {
         // TODO: Support for class hierarchy.
-        Value ptr = stackManager.getRegister();
-        int fieldSize = ast.type.getFieldSize();
+        // Reserve space for the vtable pointer.
+        int objSize = Config.SIZEOF_PTR + ast.type.getFieldSize();
 
         stackManager.emitCallerSave();
-        // cg.emit.emit("sub", constant(16), STACK_REG);
 
-        // The desired block size in bytes is passed in EDI.
-        Value edi = stackManager.getRegister(RegisterManager.Register.EDI);
-        cg.emit.emitMove(constant(fieldSize), stackManager.reify(edi));
+        // Pass calloc arguments size and num.
+        cg.emit.emit("subl", constant(16), STACK_REG);
+        cg.emit.emitStore(constant(objSize), 4, STACK_REG);
+        cg.emit.emitStore(constant(1), 0, STACK_REG);
+        cg.emit.emit("call", Config.CALLOC);
+        cg.emit.emit("addl", constant(16), STACK_REG);
 
         // The resulting pointer is saved in EAX.
-        cg.emit.emit("call", Config.CALLOC);
         Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
-        cg.emit.emitMove(stackManager.reify(eax), stackManager.reify(ptr));
 
-        // cg.emit.emit("add", constant(16), STACK_REG);
+        // Set the vtable pointer.
+        cg.emit.emitStore(labelAddress(ast.type.getVtableLabel()), 0, stackManager.reify(eax));
 
-        return ptr;
+        return eax;
 	}
 
 	@Override

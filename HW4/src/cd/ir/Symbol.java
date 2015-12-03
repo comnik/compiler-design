@@ -29,6 +29,9 @@ public abstract class Symbol {
         /** Returns the size of all fields pertaining to this type. */
 		public abstract int getFieldSize();
 
+        /** Returns the label of the vtable associated with this type. */
+        public abstract String getVtableLabel();
+
 		public abstract TypeSymbol getSuperType();
 		
 		public boolean isSuperTypeOf(TypeSymbol sub) {
@@ -74,6 +77,11 @@ public abstract class Symbol {
             }
         }
 
+        @Override
+        public String getVtableLabel() {
+            throw new RuntimeException("Primitive types don't have a vtable.");
+        }
+
 		public boolean isReferenceType() {
 			return false;
 		}
@@ -102,6 +110,9 @@ public abstract class Symbol {
         public int getFieldSize() {
             return getRefSize();
         }
+
+        @Override
+        public String getVtableLabel() { return null; }
 
 		public boolean isReferenceType() {
 			return true;
@@ -147,9 +158,10 @@ public abstract class Symbol {
                     .reduce(0, Integer::sum);
         }
 
-		public boolean isReferenceType() {
-			return true;
-		}
+        @Override
+        public String getVtableLabel() { return this.name; }
+
+		public boolean isReferenceType() { return true; }
 		
 		public TypeSymbol getSuperType() {
 			return superClass;
