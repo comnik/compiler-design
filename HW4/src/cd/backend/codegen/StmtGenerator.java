@@ -55,11 +55,12 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         cg.emit.emitConstantData(ast.sym.superClass.getVtableLabel());
 
         // Create vtable entries.
-        ast.methods().stream().reduce(4, (nextOffset, methodDecl) -> {
-            cg.emit.emitConstantData(getMethodLabel(ast.sym, methodDecl.sym));
-            methodDecl.sym.offset = nextOffset;
-            return nextOffset + Config.SIZEOF_PTR;
-        }, (o1, o2) -> o1);
+        ast.sym.getVTable().values().stream()
+                .reduce(4, (nextOffset, binding) -> {
+                    cg.emit.emitConstantData(getMethodLabel(binding.a, binding.b));
+                    binding.b.offset = nextOffset;
+                    return nextOffset + Config.SIZEOF_PTR;
+                }, (o1, o2) -> o1);
 
         // Set field offsets.
         ast.fields().stream().reduce(4, (nextOffset, varDecl) -> {

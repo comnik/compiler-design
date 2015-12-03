@@ -1,11 +1,9 @@
 package cd.ir;
 
 import cd.Config;
+import cd.util.Tuple;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class Symbol {
 	
@@ -176,6 +174,24 @@ public abstract class Symbol {
 				return superClass.getMethod(name);
 			return msym;
 		}
+
+        /** Returns an ordered map representing this classes full vtable. */
+        public LinkedHashMap<String,Tuple<ClassSymbol,MethodSymbol>> getVTable() {
+            LinkedHashMap<String,Tuple<ClassSymbol,MethodSymbol>> methodMap;
+            if (superClass == objectType) {
+                methodMap = new LinkedHashMap<String,Tuple<ClassSymbol,MethodSymbol>>();
+            } else {
+                methodMap = superClass.getVTable();
+            }
+
+            // Overwrite with our own implementations.
+            this.ast.methods().stream()
+                    .forEach(methodDecl -> {
+                        methodMap.put(methodDecl.sym.name, new Tuple<ClassSymbol, MethodSymbol>(this,methodDecl.sym));
+                    });
+
+            return methodMap;
+        }
 	}
 
 	public static class MethodSymbol extends Symbol {

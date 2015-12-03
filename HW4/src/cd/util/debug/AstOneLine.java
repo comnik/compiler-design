@@ -161,7 +161,7 @@ public class AstOneLine {
 		public String var(Var ast, Void arg) {
 			{
 				if (ast.sym != null) {
-					String symName = ast.sym.toString(); 
+					String symName = ast.sym.toString();
 					if (ast.name == null || ast.name.equals(symName))
 						return symName;
 					
