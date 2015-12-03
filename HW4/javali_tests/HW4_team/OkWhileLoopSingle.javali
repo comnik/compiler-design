@@ -1,11 +1,9 @@
 /* Test a simple while loop. */
 class Main {
-    int i;
 
     void main() {
-       // int k;
-    int i;
-       // k = 5;
+        int i;
+
         i = 0;
 
         while (i < 5) {
