@@ -1,0 +1,13 @@
+// Test for division by zero.
+
+class Main {
+	void main() {
+		int i0, i1;
+		i0 = 0;
+
+        i1 = 1 / i0;
+
+		write(i1);
+		writeln();
+	}
+}
