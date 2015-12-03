@@ -48,9 +48,14 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         // Set the current class symbol.
         currentClassSym = ast.sym;
 
-        // Create vtable entries.
+        // Emit vtable label.
         cg.emit.emitLabel(ast.sym.getVtableLabel());
-        ast.methods().stream().reduce(0, (nextOffset, methodDecl) -> {
+
+        // Emit superclass link.
+        cg.emit.emitConstantData(ast.sym.superClass.getVtableLabel());
+
+        // Create vtable entries.
+        ast.methods().stream().reduce(4, (nextOffset, methodDecl) -> {
             cg.emit.emitConstantData(getMethodLabel(ast.sym, methodDecl.sym));
             methodDecl.sym.offset = nextOffset;
             return nextOffset + Config.SIZEOF_PTR;

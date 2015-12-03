@@ -7,6 +7,7 @@ import cd.Config;
 import cd.Main;
 import cd.backend.codegen.RegisterManager.Register;
 import cd.ir.Ast.ClassDecl;
+import cd.ir.Symbol;
 
 public class AstCodeGenerator {
 
@@ -69,6 +70,7 @@ public class AstCodeGenerator {
 
         emit.emitRaw(Config.TEXT_SECTION);
 
+        emitObjectVtable();
         for (ClassDecl ast : astRoots) {
             sg.gen(ast);
         }
@@ -101,6 +103,10 @@ public class AstCodeGenerator {
             emit.emit("subl", stackSize, RegisterManager.STACK_REG);
         }
 
+    }
+
+    private void emitObjectVtable() {
+        emit.emitLabel(Symbol.ClassSymbol.objectType.getVtableLabel());
     }
 
 	protected void emitMethodSuffix(boolean returnNull) {
