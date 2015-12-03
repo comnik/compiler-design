@@ -240,6 +240,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         // Pass calloc arguments size and num.
         cg.emit.emit("subl", constant(16), STACK_REG);
         cg.emit.emitStore(stackManager.reify(arraySize), 4, STACK_REG);
+        cg.emit.emit("incl", AssemblyEmitter.registerOffset(4, STACK_REG));
         cg.emit.emitStore(constant(1), 0, STACK_REG);
         cg.emit.emit("call", Config.CALLOC);
         cg.emit.emit("addl", constant(16), STACK_REG);
@@ -247,8 +248,9 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         // The resulting pointer is saved in EAX.
         Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
 
-        // Set the vtable pointer.
-        cg.emit.emitStore(labelAddress(ast.type.getVtableLabel()), 0, stackManager.reify(eax));
+        // Store the size.
+        cg.emit.emitStore(stackManager.reify(arraySize), 0, stackManager.reify(eax));
+        cg.emit.emit("leal", AssemblyEmitter.registerOffset(4, stackManager.reify(eax)), stackManager.reify(eax));
 
         return eax;
 	}
