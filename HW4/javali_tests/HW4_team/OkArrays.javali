@@ -1,0 +1,29 @@
+// Test for array functionality.
+
+class Main {
+	void main() {
+		int i0, i1 , i2, i3;
+		int r0, r1;
+		int[] a;
+
+		i0 = 0;
+		i1 = 1;
+		i2 = 2;
+		i3 = 3;
+
+        a = new int[4];
+		a[0] = i0;
+		a[1] = i1;
+		a[2] = i2;
+		a[3] = i3;
+
+		r0 = a[0];
+        r1 = a[1];
+
+		write(r0);
+		writeln();
+
+		write(r1);
+		writeln();
+	}
+}
