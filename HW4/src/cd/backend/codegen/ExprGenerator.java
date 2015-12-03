@@ -116,6 +116,14 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
             switch (ast.operator) {
                 case B_DIV:
+
+                    // RUNTIME CHECK: DIVISION BY ZERO
+                    String continueLabel = cg.emit.uniqueLabel();
+                    cg.emit.emit("cmpl", constant(0), stackManager.reify(right));
+                    cg.emit.emit("jne", continueLabel);
+                    cg.emit.emitExit(ExitCode.DIVISION_BY_ZERO);
+                    cg.emit.emitLabel(continueLabel);
+
                     // Operand is stored in eax.
                     cg.emit.emit("movl", stackManager.reify(left), stackManager.reify(eax));
 
