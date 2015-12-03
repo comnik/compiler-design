@@ -1,0 +1,12 @@
+// Test for array size checking.
+
+class Main {
+	void main() {
+		int i0;
+		int[] a;
+
+		i0 = 0;
+
+        a = new int[-1];
+	}
+}
