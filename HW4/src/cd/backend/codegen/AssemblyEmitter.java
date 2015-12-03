@@ -4,7 +4,11 @@ import java.io.IOException;
 import java.io.Writer;
 
 import cd.Config;
+import cd.backend.ExitCode;
 import cd.backend.codegen.RegisterManager.Register;
+import com.sun.tools.javah.Util;
+
+import static cd.backend.codegen.RegisterManager.STACK_REG;
 
 public class AssemblyEmitter {
 	public Writer out;
@@ -157,4 +161,11 @@ public class AssemblyEmitter {
 			throw new RuntimeException(e);
 		}
 	}
+
+    void emitExit(ExitCode eCode) {
+        emit("sub", constant(16), STACK_REG);
+        emitStore(constant(eCode.value), 0, STACK_REG);
+        emit("call", Config.EXIT);
+        emit("add", constant(16), STACK_REG);
+    }
 }
