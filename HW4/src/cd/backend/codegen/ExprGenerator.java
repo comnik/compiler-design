@@ -204,11 +204,13 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	@Override
 	public Value field(Field ast, StackManager stackManager) {
         Value objAddr = gen(ast.arg(), stackManager);
+        Value field = stackManager.getRegister();
 
-        cg.emit.emitLoad(ast.sym.offset, stackManager.reify(objAddr), stackManager.reify(objAddr));
+        cg.emit.emitLoad(ast.sym.offset, stackManager.reify(objAddr), stackManager.reify(field));
 
-        objAddr.src = ast.sym.offset;
-        return objAddr;
+        field.base = objAddr;
+        field.src = ast.sym.offset;
+        return field;
 	}
 
 	@Override

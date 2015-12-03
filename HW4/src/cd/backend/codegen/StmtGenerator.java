@@ -181,10 +181,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         Value target = cg.eg.gen(ast.left(), stackManager);
         Value value = cg.eg.gen(ast.right(), stackManager);
 
-        stackManager.reify(target);
-        stackManager.reify(value);
-
-        cg.emit.emit("movl", value.toSrc(), target.toOffset());
+        cg.emit.emit("movl", stackManager.reify(value), stackManager.toOffset(target));
 
         stackManager.release(value);
         return null;

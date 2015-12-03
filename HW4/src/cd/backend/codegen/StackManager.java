@@ -49,6 +49,7 @@ public class StackManager {
         protected int offset = NO_OFFSET;
 
         protected int src = NO_OFFSET;
+        protected Value base = null;
 
         // Physical register holding the value at this offset (if any).
         protected Register reg = null;
@@ -69,14 +70,6 @@ public class StackManager {
             } else {
                 return reg.toString();
             }
-        }
-
-        public String toOffset() {
-            return AssemblyEmitter.registerOffset(this.src, RegisterManager.BASE_REG);
-        }
-
-        public String toSrc() {
-            return isDetached() ? this.toOffset() : reg.toString();
         }
     }
 
@@ -131,6 +124,14 @@ public class StackManager {
         }
 
         return v.reg;
+    }
+
+    public String toOffset(Value v) {
+        if (v.base == null) {
+            return AssemblyEmitter.registerOffset(v.src, RegisterManager.BASE_REG);
+        } else {
+            return AssemblyEmitter.registerOffset(v.src, reify(v.base));
+        }
     }
 
     /** Emits code to persist all caller saved registers in use. */
