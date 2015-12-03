@@ -153,7 +153,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         String doneLabel = getAndIncrementLabel();
 
         // Check loop condition initially.
-		cg.emit.emit("cmpl", "$0", reg.toString());
+		cg.emit.emit("cmpl", constant(0), stackManager.reify(reg));
 		cg.emit.emit("jle", doneLabel);
 
 		// Main while loop.
@@ -162,7 +162,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 
         // Check if loop condition has changed.
         reg = cg.eg.gen(ast.condition(), stackManager);
-		cg.emit.emit("cmpl", "$0", reg.toString());
+		cg.emit.emit("cmpl", constant(0), stackManager.reify(reg));
 		cg.emit.emit("jg", loopLabel);
 
         // We're done.
