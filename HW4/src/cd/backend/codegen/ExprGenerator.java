@@ -189,9 +189,21 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	@Override
 	public Value cast(Cast ast, StackManager stackManager) {
-		{
-			throw new ToDoException();
-		}
+        Value obj = cg.eg.gen(ast.arg(), stackManager);
+        Value vtablePtr = stackManager.getRegister();
+        Value targetPtr = stackManager.getRegister();
+
+        // Runtime check for validity of cast.
+        String continueLabel = cg.emit.uniqueLabel();
+
+        cg.emit.emitLoad(0, stackManager.reify(obj), stackManager.reify(vtablePtr));
+        cg.emit.emit("movl", AssemblyEmitter.labelAddress(ast.typeName), stackManager.reify(targetPtr));
+        cg.emit.emit("cmpl", stackManager.reify(vtablePtr), stackManager.reify(targetPtr));
+        cg.emit.emit("je", continueLabel);
+        cg.emit.emitExit(ExitCode.INVALID_DOWNCAST);
+        cg.emit.emitLabel(continueLabel);
+
+        return obj;
 	}
 
 	@Override
