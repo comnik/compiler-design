@@ -162,10 +162,20 @@ public class AssemblyEmitter {
 		}
 	}
 
+    /** Emits code for the specified exit code. */
     void emitExit(ExitCode eCode) {
         emit("sub", constant(16), STACK_REG);
         emitStore(constant(eCode.value), 0, STACK_REG);
         emit("call", Config.EXIT);
         emit("add", constant(16), STACK_REG);
+    }
+
+    /** Emits code that checks for a null pointer. */
+    void emitCheckNull(Register reg) {
+        String continueLabel = uniqueLabel();
+        emit("cmpl", constant(0), reg);
+        emit("jne", continueLabel);
+        emitExit(ExitCode.NULL_POINTER);
+        emitLabel(continueLabel);
     }
 }
