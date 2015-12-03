@@ -14,7 +14,6 @@ import java.util.*;
 import static cd.Config.SCANF;
 import static cd.backend.codegen.AssemblyEmitter.constant;
 import static cd.backend.codegen.AssemblyEmitter.labelAddress;
-import static cd.backend.codegen.AssemblyEmitter.registerOffset;
 import static cd.backend.codegen.RegisterManager.BASE_REG;
 import static cd.backend.codegen.RegisterManager.STACK_REG;
 
@@ -228,32 +227,30 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	@Override
 	public Value newArray(NewArray ast, StackManager stackManager) {
-		{
-            // Get size of the array.
-            Value arraySize = cg.eg.gen(ast.arg(), stackManager);
+        // Get size of the array.
+        Value arraySize = cg.eg.gen(ast.arg(), stackManager);
 
-            // RUNTIME CHECK: INVALID ARRAY SIZE
-            String continueLabel = cg.emit.uniqueLabel();
-            cg.emit.emit("cmpl", constant(-1), stackManager.reify(arraySize));
-            cg.emit.emit("jg", continueLabel);
-            cg.emit.emitExit(ExitCode.INVALID_ARRAY_SIZE);
-            cg.emit.emitLabel(continueLabel);
+        // RUNTIME CHECK: INVALID ARRAY SIZE
+        String continueLabel = cg.emit.uniqueLabel();
+        cg.emit.emit("cmpl", constant(-1), stackManager.reify(arraySize));
+        cg.emit.emit("jg", continueLabel);
+        cg.emit.emitExit(ExitCode.INVALID_ARRAY_SIZE);
+        cg.emit.emitLabel(continueLabel);
 
-            // Pass calloc arguments size and num.
-            cg.emit.emit("subl", constant(16), STACK_REG);
-            cg.emit.emitStore(stackManager.reify(arraySize), 4, STACK_REG);
-            cg.emit.emitStore(constant(1), 0, STACK_REG);
-            cg.emit.emit("call", Config.CALLOC);
-            cg.emit.emit("addl", constant(16), STACK_REG);
+        // Pass calloc arguments size and num.
+        cg.emit.emit("subl", constant(16), STACK_REG);
+        cg.emit.emitStore(stackManager.reify(arraySize), 4, STACK_REG);
+        cg.emit.emitStore(constant(1), 0, STACK_REG);
+        cg.emit.emit("call", Config.CALLOC);
+        cg.emit.emit("addl", constant(16), STACK_REG);
 
-            // The resulting pointer is saved in EAX.
-            Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
+        // The resulting pointer is saved in EAX.
+        Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
 
-            // Set the vtable pointer.
-            cg.emit.emitStore(labelAddress(ast.type.getVtableLabel()), 0, stackManager.reify(eax));
+        // Set the vtable pointer.
+        cg.emit.emitStore(labelAddress(ast.type.getVtableLabel()), 0, stackManager.reify(eax));
 
-            return eax;
-		}
+        return eax;
 	}
 
 	@Override

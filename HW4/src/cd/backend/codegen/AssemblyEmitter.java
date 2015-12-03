@@ -1,12 +1,11 @@
 package cd.backend.codegen;
 
-import java.io.IOException;
-import java.io.Writer;
-
 import cd.Config;
 import cd.backend.ExitCode;
 import cd.backend.codegen.RegisterManager.Register;
-import com.sun.tools.javah.Util;
+
+import java.io.IOException;
+import java.io.Writer;
 
 import static cd.backend.codegen.RegisterManager.STACK_REG;
 
