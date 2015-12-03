@@ -114,13 +114,12 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 	@Override
 	public Value ifElse(IfElse ast, StackManager stackManager) {
 		Value reg = cg.eg.gen(ast.condition(), stackManager);
-        stackManager.reify(reg);
 
 		String doneLabel = getAndIncrementLabel();
 
         if (ast.otherwise() == null) {
             // Just an if statement, no else part.
-            cg.emit.emit("cmpl", constant(0), reg.toSrc());
+            cg.emit.emit("cmpl", constant(0), stackManager.reify(reg));
             cg.emit.emit("je", doneLabel);
 
             // Then branch.
@@ -131,7 +130,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
             String thenLabel = getAndIncrementLabel();
             String otherwiseLabel = getAndIncrementLabel();
 
-            cg.emit.emit("cmpl", constant(0), reg.toSrc());
+            cg.emit.emit("cmpl", constant(0), stackManager.reify(reg));
             cg.emit.emit("je", otherwiseLabel);
 
             // Then branch.
