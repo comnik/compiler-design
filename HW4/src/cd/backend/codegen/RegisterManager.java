@@ -114,6 +114,13 @@ public class RegisterManager {
 		registers.add(reg);
 	}
 
+    /** Manually marks a register as in use. */
+    public void markUsed(Register reg) {
+        if (registers.contains(reg)) {
+            registers.remove(reg);
+        }
+    }
+
 	/**
 	 * Returns whether the register is currently non-free
 	 */

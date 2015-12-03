@@ -105,6 +105,7 @@ public class StackManager {
     }
 
     public void release(Value value) {
+        codeGen.emit.emitComment("Releasing " + value.reg);
         if (!value.isDetached())
             detach(value);
 
@@ -166,6 +167,9 @@ public class StackManager {
     /** Associates a stack offset with a physical register to hold its value. Will not load the value! */
     private void attach(Value value, Register reg) {
         value.reg = reg;
+
+        // Mark the register as used.
+        codeGen.rm.markUsed(value.reg);
         registerMap.put(value.reg, value);
 
         // Update the queue.
@@ -175,7 +179,6 @@ public class StackManager {
 
     /** Disassociates a stack offset from the register holding its value. */
     private void detach(Value value) {
-        codeGen.emit.emitComment("Detaching " + value);
         if (codeGen.rm.isInUse(value.reg))
             codeGen.rm.releaseRegister(value.reg);
 
@@ -187,10 +190,11 @@ public class StackManager {
     /** Writes a virtual registers value onto the stack. */
     private void writeback(Value value) {
         // If this vreg is not on the stack yet, get a new offset.
-        if (!value.onStack())
+        if (!value.onStack()) {
             allocate(value);
+        }
 
-        codeGen.emit.emitComment("Writing back " + value + " onto the stack.");
+        codeGen.emit.emitComment("Writing back " + value.reg + " onto the stack.");
         codeGen.emit.emitStore(value.reg, value.offset, RegisterManager.BASE_REG);
     }
 
@@ -221,9 +225,10 @@ public class StackManager {
     /** Emits assembly to load the value of the stack offset into reg. */
     private void load(Value value, Register reg) {
         if (value.onStack()) {
+            codeGen.emit.emitComment("Restoring " + reg + " from " + value);
             codeGen.emit.emitLoad(value.offset, RegisterManager.BASE_REG, reg);
         } else {
-            throw new RuntimeException("Can't 'load' a stack offset that is not on the stack.");
+            codeGen.emit.emitComment("Can't 'load' a stack offset that is not on the stack. Ignoring.");
         }
     }
 }

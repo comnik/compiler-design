@@ -102,6 +102,9 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
             cg.emit.emit("cmpl", stackManager.reify(right), stackManager.reify(out)); // Set flags.
             cg.emit.emit(compToCondition.get(ast.operator), stackManager.reify(out).lowByteVersion().toString());
 
+            // Sign extend the boolean result.
+            cg.emit.emit("movzb", stackManager.reify(out).lowByteVersion().toString(), stackManager.reify(out));
+
             if (ast.operator == BOp.B_NOT_EQUAL) {
                 // For not equal we will have to invert the result.
                 cg.emit.emit("notl", stackManager.reify(out));
@@ -109,7 +112,6 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         } else {
             Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
             Value ebx = stackManager.getRegister(RegisterManager.Register.EBX);
-            Value edx = stackManager.getRegister(RegisterManager.Register.EDX);
 
             switch (ast.operator) {
                 case B_DIV:
@@ -123,20 +125,23 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
                     cg.emit.emitRaw("cdq");
                     cg.emit.emit("idiv", stackManager.reify(ebx));
 
+                    stackManager.release(ebx);
                     out = eax;
                     break;
                 case B_MOD:
                     // Operand is stored in eax.
-                    cg.emit.emit("movl", stackManager.reify(right), stackManager.reify(eax));
+                    cg.emit.emit("movl", stackManager.reify(left), stackManager.reify(eax));
 
                     // Number to be divided by is stored in ebx.
-                    cg.emit.emit("movl", stackManager.reify(left), stackManager.reify(ebx));
+                    cg.emit.emit("movl", stackManager.reify(right), stackManager.reify(ebx));
 
                     // Remainder is stored in edx.
                     cg.emit.emitRaw("cdq");
                     cg.emit.emit("idiv", stackManager.reify(ebx));
 
-                    out = edx;
+                    stackManager.release(eax);
+                    stackManager.release(ebx);
+                    out = stackManager.getRegister(RegisterManager.Register.EDX);
                     break;
                 default:
                     throw new RuntimeException("Unknown operator " + ast.operator);
@@ -144,7 +149,6 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         }
 
 		stackManager.release(right);
-
 		return out;
 	}
 
