@@ -2,6 +2,7 @@ package cd.backend.codegen;
 
 import cd.Config;
 import cd.ToDoException;
+import cd.backend.ExitCode;
 import cd.backend.codegen.StackManager.Value;
 import cd.ir.Ast.*;
 import cd.ir.Ast.BinaryOp.BOp;
@@ -220,7 +221,30 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	@Override
 	public Value newArray(NewArray ast, StackManager stackManager) {
 		{
-			throw new ToDoException();
+            // Get size of the array.
+            Value arraySize = cg.eg.gen(ast.arg(), stackManager);
+
+            // Array size check.
+            String continueLabel = cg.emit.uniqueLabel();
+            cg.emit.emit("cmpl", constant(-1), stackManager.reify(arraySize));
+            cg.emit.emit("jg", continueLabel);
+            cg.emit.emitExit(ExitCode.INVALID_ARRAY_SIZE);
+            cg.emit.emitLabel(continueLabel);
+
+            // Pass calloc arguments size and num.
+            cg.emit.emit("subl", constant(16), STACK_REG);
+            cg.emit.emitStore(stackManager.reify(arraySize), 4, STACK_REG);
+            cg.emit.emitStore(constant(1), 0, STACK_REG);
+            cg.emit.emit("call", Config.CALLOC);
+            cg.emit.emit("addl", constant(16), STACK_REG);
+
+            // The resulting pointer is saved in EAX.
+            Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
+
+            // Set the vtable pointer.
+            cg.emit.emitStore(labelAddress(ast.type.getVtableLabel()), 0, stackManager.reify(eax));
+
+            return eax;
 		}
 	}
 
