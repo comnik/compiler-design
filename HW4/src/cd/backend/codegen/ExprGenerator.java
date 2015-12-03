@@ -154,7 +154,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
         String booleanValue = (ast.value == true) ? constant(1) : constant(0);
 
-        cg.emit.emit("movb", booleanValue, stackManager.reify(v).lowByteVersion().toString());
+        cg.emit.emit("movl", booleanValue, stackManager.reify(v));
         return v;
     }
 
@@ -207,6 +207,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
         cg.emit.emitLoad(ast.sym.offset, stackManager.reify(objAddr), stackManager.reify(objAddr));
 
+        objAddr.src = ast.sym.offset;
         return objAddr;
 	}
 
