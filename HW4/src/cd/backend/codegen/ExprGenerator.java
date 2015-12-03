@@ -202,6 +202,9 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         String addr = AssemblyEmitter.arrayAddress(stackManager.reify(arrayAddr), stackManager.reify(index));
         cg.emit.emit("leal", addr, stackManager.reify(arrayAddr));
 
+        arrayAddr.base = arrayAddr;
+        arrayAddr.src = 0;
+
         stackManager.release(index);
         return arrayAddr;
 	}
