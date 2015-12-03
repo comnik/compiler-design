@@ -232,7 +232,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
             // Get size of the array.
             Value arraySize = cg.eg.gen(ast.arg(), stackManager);
 
-            // Array size check.
+            // RUNTIME CHECK: INVALID ARRAY SIZE
             String continueLabel = cg.emit.uniqueLabel();
             cg.emit.emit("cmpl", constant(-1), stackManager.reify(arraySize));
             cg.emit.emit("jg", continueLabel);
