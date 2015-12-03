@@ -205,7 +205,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	public Value field(Field ast, StackManager stackManager) {
         Value objAddr = gen(ast.arg(), stackManager);
 
-        cg.emit.emit("leal", AssemblyEmitter.registerOffset(ast.sym.offset, stackManager.reify(objAddr)), stackManager.reify(objAddr));
+        cg.emit.emitLoad(ast.sym.offset, stackManager.reify(objAddr), stackManager.reify(objAddr));
 
         return objAddr;
 	}
@@ -219,7 +219,6 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	@Override
 	public Value newObject(NewObject ast, StackManager stackManager) {
-        // TODO: Support for class hierarchy.
         // Reserve space for the vtable pointer.
         int objSize = Config.SIZEOF_PTR + ast.type.getFieldSize();
 
@@ -317,9 +316,6 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         case PARAM:
             reg.src = ast.sym.offset;
             cg.emit.emitLoad(ast.sym.offset, BASE_REG, stackManager.reify(reg));
-            break;
-        case FIELD:
-            // TODO
             break;
         default:
             throw new RuntimeException("Unknown kind " + ast.sym.kind);

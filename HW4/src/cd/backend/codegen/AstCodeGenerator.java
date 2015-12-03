@@ -6,6 +6,7 @@ import java.util.List;
 import cd.Config;
 import cd.Main;
 import cd.backend.codegen.RegisterManager.Register;
+import cd.ir.Ast;
 import cd.ir.Ast.ClassDecl;
 import cd.ir.Symbol;
 
@@ -70,17 +71,37 @@ public class AstCodeGenerator {
 
         emit.emitRaw(Config.TEXT_SECTION);
 
+        Symbol.ClassSymbol mainCls = null;
+
         emitObjectVtable();
         for (ClassDecl ast : astRoots) {
+            if (ast.sym.name.equals("Main")) {
+                mainCls = ast.sym;
+            }
             sg.gen(ast);
         }
 
-        // Emit the start of execution.
+        emitBootstrapping(mainCls);
+    }
+
+    /** Emits code to start execution of the javali code's Main.main(). */
+    private void emitBootstrapping(Symbol.ClassSymbol mainCls) {
         emit.emitRaw(".globl " + Config.MAIN);
         emit.emitLabel(Config.MAIN);
 
         emitMethodPrefix(0);
+
+        Ast.NewObject mainObj = new Ast.NewObject("Main");
+        mainObj.type = mainCls;
+
+        StackManager stackManager = new StackManager(0, this);
+        StackManager.Value mainRef = eg.newObject(mainObj, stackManager);
+
+        // The receiver is passed as the first argument.
+        emit.emit("pushl", stackManager.reify(mainRef));
+
         emit.emit("call", "__Main_main");
+
         emitMethodSuffix(true);
     }
 
@@ -102,7 +123,6 @@ public class AstCodeGenerator {
         if (stackSize > 0) {
             emit.emit("subl", stackSize, RegisterManager.STACK_REG);
         }
-
     }
 
     private void emitObjectVtable() {

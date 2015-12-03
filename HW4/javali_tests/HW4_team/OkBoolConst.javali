@@ -8,6 +8,12 @@ class Main {
         b1 = true;
         b2 = false;
         res = b1 && b2;
+
+        if (res) {
+            write(0);
+        } else {
+            write(1);
+        }
         writeln();
     }
 }

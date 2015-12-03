@@ -67,15 +67,7 @@ public abstract class Symbol {
 		}		
 
         @Override
-        public int getFieldSize() {
-            if (this == booleanType) {
-                return 1;
-            } else if (this == voidType) {
-                return 1;
-            } else {
-                return 4;
-            }
-        }
+        public int getFieldSize() { return Config.SIZEOF_PTR; }
 
         @Override
         public String getVtableLabel() {
@@ -107,9 +99,7 @@ public abstract class Symbol {
 			this.elementType = elementType;
 		}
 
-        public int getFieldSize() {
-            return getRefSize();
-        }
+        public int getFieldSize() { return Config.SIZEOF_PTR; }
 
         @Override
         public String getVtableLabel() { return null; }
@@ -152,10 +142,16 @@ public abstract class Symbol {
 
         // Go through the fields of the class and sum their sizes.
         public int getFieldSize() {
-            return fields.keySet()
-                    .stream()
-                    .map(a -> getField(a).type.getFieldSize())
-                    .reduce(0, Integer::sum);
+            // TODO Careful with ordering here.
+            int size = fields.keySet().stream()
+                    .mapToInt(a -> fields.get(a).type.getFieldSize())
+                    .sum();
+
+            if (superClass != objectType) {
+                return superClass.getFieldSize() + size;
+            } else {
+                return size;
+            }
         }
 
         @Override
