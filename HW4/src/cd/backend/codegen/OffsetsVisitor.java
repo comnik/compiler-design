@@ -35,7 +35,6 @@ public class OffsetsVisitor extends AstVisitor<Void,Void> {
         // Set field offsets.
         ast.sym.getFields().values().stream()
                 .reduce(4, (nextOffset, varSym) -> {
-                    System.out.println("Field " + varSym.name + " @ " + nextOffset);
                     varSym.offset = nextOffset;
                     return nextOffset + varSym.type.getFieldSize();
                 }, (o1, o2) -> o1);

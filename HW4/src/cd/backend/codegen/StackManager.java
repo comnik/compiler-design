@@ -139,6 +139,7 @@ public class StackManager {
 
     /** Emits code to persist all caller saved registers in use. */
     public void emitCallerSave() {
+        codeGen.emit.emitComment("Regs in use " + registerMap.keySet());
         codeGen.emit.emitComment("Persisting CALLER_SAVE registers...");
         for (Register reg : RegisterManager.CALLER_SAVE) {
             Value v = registerMap.get(reg);

@@ -171,7 +171,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	@Override
 	public Value builtInRead(BuiltInRead ast, StackManager stackManager) {
-		Value v = stackManager.getRegister();
+        Value v = stackManager.getRegister();
 
         stackManager.beginMethodCall();
 
@@ -179,11 +179,14 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 		cg.emit.emitStore(stackManager.reify(v), 4, STACK_REG);
 		cg.emit.emitStore("$STR_D", 0, STACK_REG);
 		cg.emit.emit("call", SCANF);
-		cg.emit.emitLoad(8, STACK_REG, stackManager.reify(v));
+
+        // Return value stored
+        Value result = stackManager.getRegister();
+        cg.emit.emitLoad(8, STACK_REG, stackManager.reify(result));
 
         stackManager.endMethodCall();
 
-        return v;
+        return result;
 	}
 
 	@Override
