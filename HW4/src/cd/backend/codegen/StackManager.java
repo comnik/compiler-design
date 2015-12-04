@@ -105,7 +105,7 @@ public class StackManager {
     }
 
     public void release(Value value) {
-        codeGen.emit.emitComment("Releasing " + value.reg);
+        // codeGen.emit.emitComment("Releasing " + value.reg);
         if (!value.isDetached())
             detach(value);
 
@@ -194,7 +194,7 @@ public class StackManager {
             allocate(value);
         }
 
-        codeGen.emit.emitComment("Writing back " + value.reg + " onto the stack.");
+        // codeGen.emit.emitComment("Writing back " + value.reg + " onto the stack.");
         codeGen.emit.emitStore(value.reg, value.offset, RegisterManager.BASE_REG);
     }
 
