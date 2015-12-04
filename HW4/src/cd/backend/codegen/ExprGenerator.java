@@ -211,6 +211,9 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         Value index = gen(ast.right(), stackManager);
         Value arrayVal = stackManager.getRegister();
 
+        // RUNTIME CHECK: NULL POINTER
+        cg.emit.emitCheckNull(stackManager.reify(arrayAddr));
+
         String addr = AssemblyEmitter.arrayAddress(stackManager.reify(arrayAddr), stackManager.reify(index));
         cg.emit.emit("movl", addr, stackManager.reify(arrayVal));
         cg.emit.emit("leal", addr, stackManager.reify(arrayAddr));
@@ -233,6 +236,9 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	public Value field(Field ast, StackManager stackManager) {
         Value objAddr = gen(ast.arg(), stackManager);
         Value field = stackManager.getRegister();
+
+        // RUNTIME CHECK: NULL POINTER
+        cg.emit.emitCheckNull(stackManager.reify(objAddr));
 
         cg.emit.emitLoad(ast.sym.offset, stackManager.reify(objAddr), stackManager.reify(field));
 
@@ -314,6 +320,9 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         stackManager.emitCallerSave();
 
         Value receiver = gen(ast.receiver(), stackManager);
+
+        // RUNTIME CHECK: NULL POINTER
+        cg.emit.emitCheckNull(stackManager.reify(receiver));
 
         // We have to push arguments in reverse order onto the stack.
         List<Expr> argsWithoutReceiver = new ArrayList<Expr>();
