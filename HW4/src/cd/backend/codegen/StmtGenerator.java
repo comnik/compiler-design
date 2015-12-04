@@ -63,10 +63,11 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
                 }, (o1, o2) -> o1);
 
         // Set field offsets.
-        ast.fields().stream().reduce(4, (nextOffset, varDecl) -> {
-            varDecl.sym.offset = nextOffset;
-            return nextOffset + varDecl.sym.type.getFieldSize();
-        }, (o1, o2) -> o1);
+        ast.sym.getFields().values().stream()
+                .reduce(4, (nextOffset, varSym) -> {
+                    varSym.offset = nextOffset;
+                    return nextOffset + varSym.type.getFieldSize();
+                }, (o1, o2) -> o1);
 
         return visitChildren(ast, stackManager);
     }

@@ -192,6 +192,23 @@ public abstract class Symbol {
 
             return methodMap;
         }
+
+        public LinkedHashMap<String,VariableSymbol> getFields() {
+            LinkedHashMap<String,VariableSymbol> fieldMap;
+            if (superClass == objectType) {
+                fieldMap = new LinkedHashMap<String,VariableSymbol>();
+            } else {
+                fieldMap = superClass.getFields();
+            }
+
+            // Overwrite with our own fields.
+            this.ast.fields().stream()
+                    .forEach(varDecl -> {
+                        fieldMap.put(varDecl.sym.name, varDecl.sym);
+                    });
+
+            return fieldMap;
+        }
 	}
 
 	public static class MethodSymbol extends Symbol {
