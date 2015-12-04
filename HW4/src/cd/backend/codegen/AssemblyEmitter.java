@@ -176,4 +176,26 @@ public class AssemblyEmitter {
         emitExit(ExitCode.NULL_POINTER);
         emitLabel(continueLabel);
     }
+
+    void emitCheckBounds(StackManager stackManager, StackManager.Value arrayAddr, StackManager.Value index) {
+        String continueLabel1 = uniqueLabel();
+        String continueLabel2 = uniqueLabel();
+
+        // Load array size.
+        StackManager.Value arraySize = stackManager.getRegister();
+        emitLoad(-4, stackManager.reify(arrayAddr), stackManager.reify(arraySize));
+
+        // If index < 0, then exit.
+        emit("cmpl", constant(0), stackManager.reify(index));
+        emit("jge", continueLabel1);
+        emitExit(ExitCode.INVALID_ARRAY_BOUNDS);
+        emitLabel(continueLabel1);
+
+        // If index > array size, then exit.
+        emit("decl", stackManager.reify(arraySize));
+        emit("cmpl", stackManager.reify(arraySize), stackManager.reify(index));
+        emit("jle", continueLabel2);
+        emitExit(ExitCode.INVALID_ARRAY_BOUNDS);
+        emitLabel(continueLabel2);
+    }
 }

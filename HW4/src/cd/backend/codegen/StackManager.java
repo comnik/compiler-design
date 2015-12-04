@@ -50,6 +50,7 @@ public class StackManager {
 
         protected int src = NO_OFFSET;
         protected Value base = null;
+        protected Value idx = null;
 
         // Physical register holding the value at this offset (if any).
         protected Register reg = null;
@@ -132,8 +133,10 @@ public class StackManager {
     public String toOffset(Value v) {
         if (v.base == null) {
             return AssemblyEmitter.registerOffset(v.src, RegisterManager.BASE_REG);
-        } else {
+        } else if (v.idx == null) {
             return AssemblyEmitter.registerOffset(v.src, reify(v.base));
+        } else {
+            return AssemblyEmitter.arrayAddress(reify(v.base), reify(v.idx));
         }
     }
 
