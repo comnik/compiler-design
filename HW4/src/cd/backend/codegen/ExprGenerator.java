@@ -214,7 +214,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         Value index = gen(ast.right(), stackManager);
 
         // RUNTIME CHECK: NULL POINTER
-        // cg.emit.emitCheckNull(stackManager.reify(arrayAddr));
+        cg.emit.emitCheckNull(stackManager.reify(arrayAddr));
 
         // RUNTIME CHECK: INVALID ARRAY BOUNDS
         // cg.emit.emitCheckBounds(stackManager, arrayAddr, index);
@@ -259,11 +259,11 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         Value arraySize = cg.eg.gen(ast.arg(), stackManager);
 
         // RUNTIME CHECK: INVALID ARRAY SIZE
-        /*String continueLabel = cg.emit.uniqueLabel();
+        String continueLabel = cg.emit.uniqueLabel();
         cg.emit.emit("cmpl", constant(-1), stackManager.reify(arraySize));
         cg.emit.emit("jg", continueLabel);
         cg.emit.emitExit(ExitCode.INVALID_ARRAY_SIZE);
-        cg.emit.emitLabel(continueLabel);*/
+        cg.emit.emitLabel(continueLabel);
 
         stackManager.beginMethodCall();
 
