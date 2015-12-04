@@ -214,6 +214,25 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         // RUNTIME CHECK: NULL POINTER
         cg.emit.emitCheckNull(stackManager.reify(arrayAddr));
 
+        // RUNTIME CHECK: INVALID ARRAY BOUNDS
+        String continueLabel1 = cg.emit.uniqueLabel();
+        String continueLabel2 = cg.emit.uniqueLabel();
+        Value arraySize = stackManager.getRegister();
+        // Load array size into arraySize.
+        cg.emit.emitLoad(-4, stackManager.reify(arrayAddr), stackManager.reify(arraySize));
+        // If index < 0, then exit.
+        cg.emit.emit("cmpl", constant(0), stackManager.reify(index));
+        cg.emit.emit("jge", continueLabel1);
+        cg.emit.emitExit(ExitCode.INVALID_ARRAY_BOUNDS);
+        cg.emit.emitLabel(continueLabel1);
+        // If index > array size, then exit.
+        cg.emit.emit("decl", stackManager.reify(arraySize));
+        cg.emit.emit("cmpl", stackManager.reify(arraySize), stackManager.reify(index));
+        cg.emit.emit("jle", continueLabel2);
+        cg.emit.emitExit(ExitCode.INVALID_ARRAY_BOUNDS);
+        cg.emit.emitLabel(continueLabel2);
+
+        // Continue with computation.
         String addr = AssemblyEmitter.arrayAddress(stackManager.reify(arrayAddr), stackManager.reify(index));
         cg.emit.emit("movl", addr, stackManager.reify(arrayVal));
         cg.emit.emit("leal", addr, stackManager.reify(arrayAddr));
