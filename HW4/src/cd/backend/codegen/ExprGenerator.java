@@ -1,7 +1,6 @@
 package cd.backend.codegen;
 
 import cd.Config;
-import cd.ToDoException;
 import cd.backend.ExitCode;
 import cd.backend.codegen.StackManager.Value;
 import cd.ir.Ast.*;
@@ -210,15 +209,17 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	public Value index(Index ast, StackManager stackManager) {
         Value arrayAddr = gen(ast.left(), stackManager);
         Value index = gen(ast.right(), stackManager);
+        Value arrayVal = stackManager.getRegister();
 
         String addr = AssemblyEmitter.arrayAddress(stackManager.reify(arrayAddr), stackManager.reify(index));
         cg.emit.emit("leal", addr, stackManager.reify(arrayAddr));
+        cg.emit.emit("movl", addr, stackManager.reify(arrayVal));
 
         arrayAddr.base = arrayAddr;
         arrayAddr.src = 0;
 
         stackManager.release(index);
-        return arrayAddr;
+        return arrayVal;
 	}
 
 	@Override
