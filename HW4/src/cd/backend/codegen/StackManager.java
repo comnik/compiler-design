@@ -244,8 +244,10 @@ public class StackManager {
     /** Frees up a physical register, by spilling it onto memory. */
     private void spill(Register reg) {
         Value target = registerMap.get(reg);
-        if (target == null)
-            throw new RuntimeException("Tried to spill 'null'.");
+        if (target == null) {
+            System.out.println("Tried to spill 'null'.");
+            return;
+        }
 
         writeback(target);
 

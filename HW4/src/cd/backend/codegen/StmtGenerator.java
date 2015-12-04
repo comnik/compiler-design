@@ -204,10 +204,17 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 
 	@Override
 	public Value returnStmt(ReturnStmt ast, StackManager stackManager) {
-        Value result = cg.eg.gen(ast.arg(), stackManager);
-        Value returnValue = stackManager.getRegister(RegisterManager.RESULT_REG);
+        Value returnValue;
 
-        cg.emit.emit("movl", stackManager.reify(result), stackManager.reify(returnValue));
+        if (ast.arg() != null) {
+            Value result = cg.eg.gen(ast.arg(), stackManager);
+            returnValue = stackManager.getRegister(RegisterManager.RESULT_REG);
+            cg.emit.emit("movl", stackManager.reify(result), stackManager.reify(returnValue));
+        } else {
+            returnValue = stackManager.getRegister(RegisterManager.RESULT_REG);
+            cg.emit.emitMove(constant(0), stackManager.reify(returnValue));
+        }
+
         return returnValue;
 	}
 

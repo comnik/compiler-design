@@ -244,7 +244,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         Value field = stackManager.getRegister();
 
         // RUNTIME CHECK: NULL POINTER
-        //cg.emit.emitCheckNull(stackManager.reify(objAddr));
+        cg.emit.emitCheckNull(stackManager.reify(objAddr));
 
         cg.emit.emitLoad(ast.sym.offset, stackManager.reify(objAddr), stackManager.reify(field));
 
@@ -281,9 +281,11 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         stackManager.endMethodCall();
 
         // Store the size.
+        //Value addr = stackManager.getRegister();
         cg.emit.emitStore(stackManager.reify(arraySize), 0, stackManager.reify(result));
         cg.emit.emit("leal", AssemblyEmitter.registerOffset(4, stackManager.reify(result)), stackManager.reify(result));
 
+        //return addr;
         return result;
 	}
 
