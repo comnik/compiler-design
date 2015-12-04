@@ -74,6 +74,11 @@ public class AstCodeGenerator {
         Symbol.ClassSymbol mainCls = null;
 
         emitObjectVtable();
+        OffsetsVisitor offsetsVisitor = new OffsetsVisitor(this);
+        for (ClassDecl ast : astRoots) {
+            offsetsVisitor.visit(ast, null);
+        }
+
         for (ClassDecl ast : astRoots) {
             if (ast.sym.name.equals("Main")) {
                 mainCls = ast.sym;

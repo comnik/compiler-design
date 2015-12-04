@@ -43,32 +43,9 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 	}
 
     @Override
-    /** Constructs the virtual method table for this class. */
     public Value classDecl(ClassDecl ast, StackManager stackManager) {
         // Set the current class symbol.
         currentClassSym = ast.sym;
-
-        // Emit vtable label.
-        cg.emit.emitLabel(ast.sym.getVtableLabel());
-
-        // Emit superclass link.
-        cg.emit.emitConstantData(ast.sym.superClass.getVtableLabel());
-
-        // Create vtable entries.
-        ast.sym.getVTable().values().stream()
-                .reduce(4, (nextOffset, binding) -> {
-                    cg.emit.emitConstantData(getMethodLabel(binding.a, binding.b));
-                    binding.b.offset = nextOffset;
-                    return nextOffset + Config.SIZEOF_PTR;
-                }, (o1, o2) -> o1);
-
-        // Set field offsets.
-        ast.sym.getFields().values().stream()
-                .reduce(4, (nextOffset, varSym) -> {
-                    varSym.offset = nextOffset;
-                    return nextOffset + varSym.type.getFieldSize();
-                }, (o1, o2) -> o1);
-
         return visitChildren(ast, stackManager);
     }
 
