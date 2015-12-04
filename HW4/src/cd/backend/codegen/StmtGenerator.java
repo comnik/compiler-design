@@ -84,7 +84,9 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 
         // Generate code for the body.
         cg.emitMethodPrefix(stackSize);
+        stackManager.emitCalleeSave();
         visit(ast.body(), stackManager);
+        stackManager.emitCalleeRestore();
 		cg.emitMethodSuffix(true);
 
 		return null;
@@ -177,7 +179,9 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 
         cg.emit.emitStore("$STR_D", 0, STACK_REG);
         cg.emit.emit("call", Config.PRINTF);
-        cg.emit.emit("add", constant(16), STACK_REG);
+        cg.emit.emit("addl", constant(16), STACK_REG);
+
+        stackManager.emitCallerRestore();
 
         stackManager.release(printfArg);
         return null;
@@ -187,10 +191,12 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 	public Value builtInWriteln(BuiltInWriteln ast, StackManager stackManager) {
         stackManager.emitCallerSave();
 
-        cg.emit.emit("sub", constant(16), STACK_REG);
+        cg.emit.emit("subl", constant(16), STACK_REG);
 		cg.emit.emitStore("$STR_NL", 0, STACK_REG);
 		cg.emit.emit("call", Config.PRINTF);
-		cg.emit.emit("add", constant(16), STACK_REG);
+		cg.emit.emit("addl", constant(16), STACK_REG);
+
+        stackManager.emitCallerRestore();
 
 		return null;
 	}

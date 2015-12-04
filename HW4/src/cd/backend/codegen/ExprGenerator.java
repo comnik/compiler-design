@@ -173,15 +173,15 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	public Value builtInRead(BuiltInRead ast, StackManager stackManager) {
 		Value v = stackManager.getRegister();
 
-        stackManager.emitCallerSave();
+        stackManager.beginMethodCall();
 
-        cg.emit.emit("sub", constant(16), STACK_REG);
-		cg.emit.emit("leal", AssemblyEmitter.registerOffset(8, STACK_REG), stackManager.reify(v));
+        cg.emit.emit("leal", AssemblyEmitter.registerOffset(8, STACK_REG), stackManager.reify(v));
 		cg.emit.emitStore(stackManager.reify(v), 4, STACK_REG);
 		cg.emit.emitStore("$STR_D", 0, STACK_REG);
 		cg.emit.emit("call", SCANF);
 		cg.emit.emitLoad(8, STACK_REG, stackManager.reify(v));
-		cg.emit.emit("add", constant(16), STACK_REG);
+
+        stackManager.endMethodCall();
 
         return v;
 	}
@@ -278,22 +278,26 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         cg.emit.emitExit(ExitCode.INVALID_ARRAY_SIZE);
         cg.emit.emitLabel(continueLabel);
 
+        stackManager.beginMethodCall();
+
         // Pass calloc arguments size and num.
-        cg.emit.emit("subl", constant(16), STACK_REG);
         cg.emit.emitStore(stackManager.reify(arraySize), 4, STACK_REG);
         cg.emit.emit("incl", AssemblyEmitter.registerOffset(4, STACK_REG));
         cg.emit.emitStore(constant(1), 0, STACK_REG);
         cg.emit.emit("call", Config.CALLOC);
-        cg.emit.emit("addl", constant(16), STACK_REG);
 
         // The resulting pointer is saved in EAX.
         Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
+        Value result = stackManager.getRegister();
+        cg.emit.emitMove(stackManager.reify(eax), stackManager.reify(result));
+
+        stackManager.endMethodCall();
 
         // Store the size.
-        cg.emit.emitStore(stackManager.reify(arraySize), 0, stackManager.reify(eax));
-        cg.emit.emit("leal", AssemblyEmitter.registerOffset(4, stackManager.reify(eax)), stackManager.reify(eax));
+        cg.emit.emitStore(stackManager.reify(arraySize), 0, stackManager.reify(result));
+        cg.emit.emit("leal", AssemblyEmitter.registerOffset(4, stackManager.reify(result)), stackManager.reify(result));
 
-        return eax;
+        return result;
 	}
 
 	@Override
@@ -301,22 +305,24 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         // Reserve space for the vtable pointer.
         int objSize = Config.SIZEOF_PTR + ast.type.getFieldSize();
 
-        stackManager.emitCallerSave();
+        stackManager.beginMethodCall();
 
         // Pass calloc arguments size and num.
-        cg.emit.emit("subl", constant(16), STACK_REG);
         cg.emit.emitStore(constant(objSize), 4, STACK_REG);
         cg.emit.emitStore(constant(1), 0, STACK_REG);
         cg.emit.emit("call", Config.CALLOC);
-        cg.emit.emit("addl", constant(16), STACK_REG);
 
         // The resulting pointer is saved in EAX.
         Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
+        Value result = stackManager.getRegister();
+        cg.emit.emitMove(stackManager.reify(eax), stackManager.reify(result));
+
+        stackManager.endMethodCall();
 
         // Set the vtable pointer.
-        cg.emit.emitStore(labelAddress(ast.type.getVtableLabel()), 0, stackManager.reify(eax));
+        cg.emit.emitStore(labelAddress(ast.type.getVtableLabel()), 0, stackManager.reify(result));
 
-        return eax;
+        return result;
 	}
 
 	@Override
@@ -363,9 +369,15 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         cg.emit.emitLoad(ast.sym.offset, stackManager.reify(funcAddr), stackManager.reify(funcAddr));
         cg.emit.emit("call", "*"+stackManager.reify(funcAddr));
 
+        Value result = stackManager.getRegister();
+        cg.emit.emitMove(stackManager.reify(stackManager.getRegister(RegisterManager.RESULT_REG)), stackManager.reify(result));
+
+        stackManager.emitCallerRestore();
+
         stackManager.release(funcAddr);
         stackManager.release(receiver);
-        return stackManager.getRegister(RegisterManager.RESULT_REG);
+        stackManager.release(stackManager.getRegister(RegisterManager.RESULT_REG));
+        return result;
 	}
 
 	@Override

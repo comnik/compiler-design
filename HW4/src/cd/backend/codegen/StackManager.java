@@ -54,6 +54,8 @@ public class StackManager {
         // Physical register holding the value at this offset (if any).
         protected Register reg = null;
 
+        private boolean callerSaved = false;
+
         /** Returns true iff this virtual register was spilled onto memory. */
         public boolean isDetached() {
             return (this.reg == null);
@@ -139,12 +141,49 @@ public class StackManager {
     public void emitCallerSave() {
         codeGen.emit.emitComment("Persisting CALLER_SAVE registers...");
         for (Register reg : RegisterManager.CALLER_SAVE) {
-            Value value = registerMap.get(reg);
-            if (value != null) {
-                writeback(value);
-                // markDirty(value);
+            Value v = registerMap.get(reg);
+            if (v != null) {
+                v.callerSaved = true;
+                codeGen.emit.emit("pushl", reg);
             }
         }
+    }
+
+    public void emitCallerRestore() {
+        codeGen.emit.emitComment("Restoring CALLER_SAVE registers...");
+        for (int i = RegisterManager.CALLER_SAVE.length - 1; i >= 0; i--) {
+            Register reg = RegisterManager.CALLER_SAVE[i];
+            Value v = registerMap.get(reg);
+            if (v != null && v.callerSaved) {
+                v.callerSaved = false;
+                codeGen.emit.emit("popl", reg);
+            }
+        }
+    }
+
+    public void emitCalleeSave() {
+        codeGen.emit.emitComment("Persisting CALLEE_SAVE registers...");
+        for (Register reg : RegisterManager.CALLEE_SAVE) {
+            codeGen.emit.emit("pushl", reg);
+        }
+    }
+
+    public void emitCalleeRestore() {
+        codeGen.emit.emitComment("Restoring CALLEE_SAVE registers...");
+        for (int i = RegisterManager.CALLEE_SAVE.length - 1; i >= 0; i--) {
+            Register reg = RegisterManager.CALLEE_SAVE[i];
+            codeGen.emit.emit("popl", reg);
+        }
+    }
+
+    public void beginMethodCall() {
+        emitCallerSave();
+        codeGen.emit.emit("subl", AssemblyEmitter.constant(16), RegisterManager.STACK_REG);
+    }
+
+    public void endMethodCall() {
+        codeGen.emit.emit("addl", AssemblyEmitter.constant(16), RegisterManager.STACK_REG);
+        emitCallerRestore();
     }
 
 
