@@ -79,14 +79,6 @@ public abstract class Symbol {
 		public TypeSymbol getSuperType() {
 			throw new RuntimeException("should not call this on PrimitiveTypeSymbol");
 		}
-
-        @Override
-        public int getRefSize() {
-            if (this == booleanType)
-                return 1;
-
-            return super.getRefSize();
-        }
 	}
 	
 	public static class ArrayTypeSymbol extends TypeSymbol {

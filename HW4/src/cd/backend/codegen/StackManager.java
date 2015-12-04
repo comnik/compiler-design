@@ -193,14 +193,14 @@ public class StackManager {
     /** Allocates a place on the stack, to store the registers contents. */
     private void allocate(Value v) {
         if (!v.onStack()) {
-            Integer reusableOffset = offsetPool.poll();
+            /*Integer reusableOffset = offsetPool.poll();
             if (reusableOffset != null) {
                 // We can reuse an existing offset.
                 v.offset = reusableOffset;
-            } else {
-                v.offset = this.stackTop;
-                this.stackTop -= RegisterManager.SIZEOF_REG;
-            }
+            } else {*/
+            v.offset = this.stackTop;
+            this.stackTop -= RegisterManager.SIZEOF_REG;
+            //}
         }
     }
 

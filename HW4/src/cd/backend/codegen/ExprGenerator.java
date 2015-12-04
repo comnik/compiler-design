@@ -212,7 +212,6 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	public Value index(Index ast, StackManager stackManager) {
         Value arrayAddr = gen(ast.left(), stackManager);
         Value index = gen(ast.right(), stackManager);
-        Value arrayVal = stackManager.getRegister();
 
         // RUNTIME CHECK: NULL POINTER
         cg.emit.emitCheckNull(stackManager.reify(arrayAddr));
@@ -231,11 +230,12 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         // If index > array size, then exit.
         cg.emit.emit("decl", stackManager.reify(arraySize));
         cg.emit.emit("cmpl", stackManager.reify(arraySize), stackManager.reify(index));
-        cg.emit.emit("jle", continueLabel2);
+        cg.emit.emit("jg", continueLabel2);
         cg.emit.emitExit(ExitCode.INVALID_ARRAY_BOUNDS);
         cg.emit.emitLabel(continueLabel2);
 
         // Continue with computation.
+        Value arrayVal = stackManager.getRegister();
         String addr = AssemblyEmitter.arrayAddress(stackManager.reify(arrayAddr), stackManager.reify(index));
         cg.emit.emit("movl", addr, stackManager.reify(arrayVal));
         cg.emit.emit("leal", addr, stackManager.reify(arrayAddr));
