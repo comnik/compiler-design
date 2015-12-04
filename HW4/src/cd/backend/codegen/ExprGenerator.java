@@ -130,7 +130,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
                     // Result is stored in eax.
                     cg.emit.emitRaw("cdq");
-                    cg.emit.emit("idiv", stackManager.reify(ebx));
+                    cg.emit.emit("idivl", stackManager.reify(ebx));
 
                     stackManager.release(ebx);
                     out = eax;
@@ -144,7 +144,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
                     // Remainder is stored in edx.
                     cg.emit.emitRaw("cdq");
-                    cg.emit.emit("idiv", stackManager.reify(ebx));
+                    cg.emit.emit("idivl", stackManager.reify(ebx));
 
                     stackManager.release(eax);
                     stackManager.release(ebx);
