@@ -149,7 +149,7 @@ public class AstOneLine {
 		
 		@Override
 		public String returnStmt(ReturnStmt ast, Void arg) {
-			return ast.arg() != null ? String.format("return %s", str(ast.arg())) : "return";
+            return (ast.arg() != null) ? String.format("return %s", str(ast.arg())) : "return";
 		}
 
 		@Override

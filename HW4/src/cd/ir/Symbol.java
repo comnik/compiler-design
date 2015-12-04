@@ -142,7 +142,7 @@ public abstract class Symbol {
         public int getFieldSize() {
             // TODO Careful with ordering here.
             int size = fields.keySet().stream()
-                    .mapToInt(a -> fields.get(a).type.getFieldSize())
+                    .mapToInt(a -> fields.get(a).type.getRefSize())
                     .sum();
 
             if (superClass != objectType) {
