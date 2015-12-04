@@ -87,7 +87,8 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         stackManager.emitCalleeSave();
         visit(ast.body(), stackManager);
         stackManager.emitCalleeRestore();
-		cg.emitMethodSuffix(true);
+
+		cg.emitMethodSuffix(ast.sym.returnType == Symbol.PrimitiveTypeSymbol.voidType);
 
 		return null;
 	}
