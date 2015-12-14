@@ -1,0 +1,16 @@
+/* Test a simple while loop. */
+class Main {
+
+    void main() {
+        int i;
+
+        i = 0;
+
+        while (i < 5) {
+            i = i + 1;
+        }
+
+        write(i);
+        writeln();
+   }
+}

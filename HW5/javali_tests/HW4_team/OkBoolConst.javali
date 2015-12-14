@@ -1,0 +1,19 @@
+/* Test boolean constants. */
+class Main {
+    boolean b1;
+    boolean b2;
+
+    void main() {
+        boolean res;
+        b1 = true;
+        b2 = false;
+        res = b1 && b2;
+
+        if (res) {
+            write(0);
+        } else {
+            write(1);
+        }
+        writeln();
+    }
+}

@@ -1,0 +1,18 @@
+// Test for array bounds checking.
+
+class Main {
+	void main() {
+		int i0;
+		int[] a;
+
+		i0 = 0;
+
+        a = new int[5];
+        a[0] = 1;
+
+        i0 = a[0];
+
+        write(i0);
+        writeln();
+	}
+}

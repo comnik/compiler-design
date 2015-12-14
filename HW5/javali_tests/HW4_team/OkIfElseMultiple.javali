@@ -1,0 +1,29 @@
+/* Test multiple if else statements. */
+class Main {
+
+    void main() {
+        int i;
+        i = 2;
+        if (i < 3) {
+            write(i);
+            writeln();
+        } else {
+            write(10);
+            writeln();
+        }
+
+        if (i == 5) {
+            write(i);
+            writeln();
+        } else {
+            if (i == 6){
+                writeln();
+            } else {
+                write(i);
+                writeln();
+            }
+            write(10);
+            writeln();
+        }
+   }
+}
