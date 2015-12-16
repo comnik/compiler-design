@@ -4,5 +4,4 @@
 *.err
 *.s
 *.bin
-HW3/bin
-HW4/bin/
+*/bin/
