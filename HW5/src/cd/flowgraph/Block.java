@@ -14,10 +14,10 @@ public class Block {
     public final List<Block> successors = new ArrayList<>();
 
     // All expressions generated inside this block.
-    public final Set<Expr> gen = new HashSet<>();
+    public final Set<String> gen = new HashSet<>();
 
     // All expressions invalidated inside this block.
-    public final Set<Expr> kill = new HashSet<>();
+    public final Set<String> kill = new HashSet<>();
 
     public Block(Block... predecessors) {
         Stream.of(predecessors).forEach(pred -> Block.link(pred, this));
@@ -29,15 +29,15 @@ public class Block {
     }
 
     /** Returns the set of all available expressions before this block executes. */
-    public Set<Expr> input() {
-        Set<Expr> union = new HashSet<>();
+    public Set<String> input() {
+        Set<String> union = new HashSet<>();
         predecessors.stream().forEach(pred -> union.addAll(pred.out()));
         return union;
     }
 
     /** Returns the set of all expressions that are valid after this block executes. */
-    public Set<Expr> out() {
-        Set<Expr> union = new HashSet<>(input());
+    public Set<String> out() {
+        Set<String> union = new HashSet<>(input());
         union.removeAll(kill);
         union.addAll(gen);
 

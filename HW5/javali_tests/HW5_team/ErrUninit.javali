@@ -1,0 +1,25 @@
+// Verifies the uninit checker.
+
+class Main {
+    int foo;
+
+    void main() {
+        int x, y, z;
+
+        foo = 2;
+
+        // d1
+        x = 1;
+
+        if (0 < 2) {
+            // d3
+            z = 0;
+
+            // d4 THIS SHOULD FAIL!
+            x = 500 + y;
+        } else {
+            // d6
+            y = 1000 + x;
+        }
+   }
+}

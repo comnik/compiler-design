@@ -2,7 +2,9 @@ package cd.flowgraph;
 
 import cd.ir.Ast;
 import cd.ir.AstVisitor;
+import cd.ir.Symbol;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -30,8 +32,18 @@ public class GraphCreatorVisitor extends AstVisitor<Block,Block> {
     @Override
     public Block assign(Ast.Assign ast, Block block) {
         // Update the blocks kill-set.
-        block.kill.addAll(ast.kills.stream().map(Ast.Assign::left).collect(Collectors.toList()));
+        for (Ast.Assign assign : ast.kills) {
+            toVar(assign.left()).ifPresent(justVar -> block.kill.add(justVar.name));
+        }
         return block;
+    }
+
+    private Optional<Symbol.VariableSymbol> toVar(Ast.Expr expr) {
+        try {
+            return Optional.of(((Ast.Var) expr).sym);
+        } catch (ClassCastException ex) {
+            return Optional.empty();
+        }
     }
 
     // Block perimeters.

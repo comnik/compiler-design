@@ -484,7 +484,7 @@ public abstract class Ast {
 	 *  represented by {@code left()}.
 	 */
 	public static class Assign extends Stmt {
-        public final List<Assign> kills = new ArrayList<Assign>();
+        public final List<Assign> kills = new ArrayList<>();
 		
 		public Assign(Expr left, Expr right) {
 			super(2);
