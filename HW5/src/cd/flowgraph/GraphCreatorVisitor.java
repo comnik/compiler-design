@@ -25,6 +25,14 @@ public class GraphCreatorVisitor extends AstVisitor<Block,Block> {
     }
 
     @Override
+    public Block visitChildren(Ast ast, Block block) {
+        Block lastValue = block;
+        for (Ast child : ast.children())
+            lastValue = visit(child, block);
+        return lastValue;
+    }
+
+    @Override
     public Block methodDecl(Ast.MethodDecl ast, Block block) {
         return visit(ast.body(), block);
     }
@@ -54,11 +62,13 @@ public class GraphCreatorVisitor extends AstVisitor<Block,Block> {
         Block ifElseBlock = new Block();
 
         if (ast.then() != null) {
-            Block.link(visit(ast.then(), new Block(prev)), ifElseBlock);
+            Block thenBlock = visit(ast.then(), new Block(prev));
+            Block.link(thenBlock, ifElseBlock);
         }
 
         if (ast.otherwise() != null) {
-            Block.link(visit(ast.otherwise(), new Block(prev)), ifElseBlock);
+            Block otherwiseBlock = visit(ast.otherwise(), new Block(prev));
+            Block.link(otherwiseBlock, ifElseBlock);
         }
 
         return ifElseBlock;

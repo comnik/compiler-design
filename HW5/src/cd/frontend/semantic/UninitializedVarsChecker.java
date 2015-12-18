@@ -21,7 +21,12 @@ public class UninitializedVarsChecker extends AstVisitor<Void,Block> {
 
     private Optional<Symbol.VariableSymbol> toVar(Ast.Expr expr) {
         try {
-            return Optional.of(((Ast.Var) expr).sym);
+            Ast.Var var = (Ast.Var) expr;
+            if (var.sym.kind == Symbol.VariableSymbol.Kind.LOCAL) {
+                return Optional.of(var.sym);
+            } else {
+                return Optional.empty();
+            }
         } catch (ClassCastException ex) {
             return Optional.empty();
         }
@@ -30,9 +35,6 @@ public class UninitializedVarsChecker extends AstVisitor<Void,Block> {
     @Override
     public Void assign(Ast.Assign ast, Block block) {
         // Update this blocks gen set.
-        for (Ast.Assign assign : ast.kills) {
-            toVar(assign.left()).ifPresent(justVar -> block.gen.remove(justVar.name));
-        }
         toVar(ast.left()).ifPresent(justVar -> block.gen.add(justVar.name));
 
         return visit(ast.right(), block);
@@ -40,9 +42,12 @@ public class UninitializedVarsChecker extends AstVisitor<Void,Block> {
 
     @Override
     public Void var(Ast.Var ast, Block block) throws SemanticFailure {
-        if (ast.sym.kind == Symbol.VariableSymbol.Kind.LOCAL && !block.out().contains(ast.name)) {
-            System.out.println("Block out: " + block.out());
-            System.out.println("Looking for: " + ast.name);
+        if (ast.sym.kind == Symbol.VariableSymbol.Kind.LOCAL && !block.input().contains(ast.name) && !block.gen.contains(ast.name)) {
+            /* System.out.println("Block out: " + block.out());
+            System.out.println("Block gen: " + block.gen);
+            System.out.println("Block in: " + block.input());
+            System.out.println("Block kill: " + block.kill);
+            System.out.println("Looking for: " + ast.name);*/
             throw new SemanticFailure(SemanticFailure.Cause.POSSIBLY_UNINITIALIZED);
         }
         return null;
