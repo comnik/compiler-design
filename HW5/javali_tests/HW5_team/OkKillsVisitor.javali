@@ -2,10 +2,11 @@
 
 class Main {
     int foo;
-    foo = 2;
 
     void main() {
         int x, y, z;
+
+        foo = 2;
 
         // d1
         x = 1;
@@ -26,7 +27,7 @@ class Main {
             foo = 5;
 
             // d5
-            x 37;
+            x = 37;
         }
         else {
             // d6
