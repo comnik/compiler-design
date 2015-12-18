@@ -11,13 +11,13 @@ import java.util.stream.Stream;
 public class Block {
 
     private final Set<Block> predecessors = new HashSet<>();
-    private final Set<Block> successors = new HashSet<>();
+    public final List<Block> successors = new ArrayList<>();
 
     // All expressions generated inside this block.
-    private final Set<Expr> gen = new HashSet<>();
+    public final Set<Expr> gen = new HashSet<>();
 
     // All expressions invalidated inside this block.
-    private final Set<Expr> kill = new HashSet<>();
+    public final Set<Expr> kill = new HashSet<>();
 
     public Block(Block... predecessors) {
         Stream.of(predecessors).forEach(pred -> Block.link(pred, this));
@@ -28,20 +28,19 @@ public class Block {
         succ.predecessors.add(pred);
     }
 
-    // TODO
+    /** Returns the set of all available expressions before this block executes. */
     public Set<Expr> input() {
-        Set<Expr> union = new HashSet<>(gen);
-        union.addAll(gen);
+        Set<Expr> union = new HashSet<>();
+        predecessors.stream().forEach(pred -> union.addAll(pred.out()));
         return union;
     }
 
     /** Returns the set of all expressions that are valid after this block executes. */
     public Set<Expr> out() {
-        // Union of in and gen.
         Set<Expr> union = new HashSet<>(input());
-        union.addAll(gen);
-        // Remove kill.
         union.removeAll(kill);
+        union.addAll(gen);
+
         return union;
     }
 
