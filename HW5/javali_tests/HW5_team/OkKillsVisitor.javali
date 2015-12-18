@@ -1,0 +1,42 @@
+// Verifies the behavior of the KillsVisitor.
+
+class Main {
+    int foo;
+    foo = 2;
+
+    void main() {
+        int x, y, z;
+
+        // d1
+        x = 1;
+
+        // d2
+        y = 2;
+
+
+        foo = 3;
+
+        if (0 < 2) {
+            // d3
+            z = 0;
+
+            // d4
+            x = 500;
+
+            foo = 5;
+
+            // d5
+            x 37;
+        }
+        else {
+            // d6
+            y = 1000;
+
+            // d7
+            y = -1000;
+        }
+
+        // d8
+        y = 0;
+   }
+}
