@@ -44,4 +44,25 @@ public class Block {
         return union;
     }
 
+    public String dump() {
+        StringBuilder sb = new StringBuilder();
+        String indent = "";
+
+        dump(sb, indent);
+
+        return sb.toString();
+    }
+
+    public void dump(StringBuilder sb, String indent) {
+        sb
+                .append(indent)
+                .append(this.toString())
+                .append("\n");
+
+        this.successors.forEach(succ -> succ.dump(sb, indent + "| "));
+    }
+
+    public String toString() {
+        return "[Block] " + super.toString();
+    }
 }

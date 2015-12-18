@@ -38,6 +38,9 @@ public class SemanticAnalyzer {
             classDecls.forEach(classDecl -> {
                 new KillsVisitor().visit(classDecl, null);
                 Block cfgRoot = new GraphCreatorVisitor().createGraph(classDecl);
+
+                // System.out.println(cfgRoot.dump());
+
                 uninitChecker.check(classDecl, cfgRoot);
             });
         }

@@ -37,9 +37,8 @@ public class KillsVisitor extends AstVisitor<VariableSymbol, Void> {
                 assignList.forEach(assignment -> assignment.kills.add(ast));
                 ast.kills.addAll(assignList);
 
-                // Debugging
-                System.out.println(ast + " kills " + assignList);
-                System.out.println("Likewise, " + assignList + " kills " + ast);
+                // System.out.println(ast + " kills " + assignList);
+                // System.out.println("Likewise, " + assignList + " kills " + ast);
             } else {
                 // Initialize the assign list.
                 assignList = new ArrayList<>();
