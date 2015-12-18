@@ -9,7 +9,9 @@ import com.sun.org.apache.xml.internal.serializer.utils.SystemIDResolver;
 import com.sun.org.apache.xpath.internal.operations.Bool;
 import sun.jvm.hotspot.debugger.cdbg.Sym;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,8 +19,7 @@ import java.util.Map;
  */
 public class KillsVisitor extends AstVisitor<VariableSymbol, Void> {
 
-    private final Map<String, Ast.Assign> assigns =
-            new HashMap<String, Ast.Assign>();
+    private final Map<String, List<Ast.Assign>> assigns = new HashMap<>();
 
     @Override
     public VariableSymbol assign(Ast.Assign ast, Void arg) {
@@ -27,23 +28,25 @@ public class KillsVisitor extends AstVisitor<VariableSymbol, Void> {
 
         // Only do something if the left expr is a var and a local at that.
         if (vSymbol != null && vSymbol.kind.equals(VariableSymbol.Kind.LOCAL)) {
-            // Check uf the left var is already assigned to before.
+            List<Ast.Assign> assignList;
+
+            // Check if the left var is already assigned to before.
             if (assigns.containsKey(vSymbol.name)) {
                 // Update killset of all previous assigns, and the current one.
-                assigns.forEach((k,v) -> {
-                    if (k.equals(vSymbol.name)) {
-                        v.kills.add(ast);
-                        ast.kills.add(v);
+                assignList = assigns.get(vSymbol.name);
+                assignList.forEach(assignment -> assignment.kills.add(ast));
+                ast.kills.addAll(assignList);
 
-                        // Debugging
-                        System.out.println(ast.toString() + " kills " + v.toString());
-                        System.out.println("Likewise, " + v.toString() + " kills " + ast.toString());
-
-                    }
-                });
+                // Debugging
+                System.out.println(ast + " kills " + assignList);
+                System.out.println("Likewise, " + assignList + " kills " + ast);
+            } else {
+                // Initialize the assign list.
+                assignList = new ArrayList<>();
             }
-            // Add the assign to the global list.
-            assigns.put(vSymbol.name, ast);
+
+            assignList.add(ast);
+            assigns.put(vSymbol.name, assignList);
         }
 
         return null;
