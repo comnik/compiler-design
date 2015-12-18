@@ -7,10 +7,7 @@ import cd.ir.Symbol.VariableSymbol;
 import cd.util.Pair;
 import cd.util.debug.AstOneLine;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public abstract class Ast {
 
@@ -487,6 +484,7 @@ public abstract class Ast {
 	 *  represented by {@code left()}.
 	 */
 	public static class Assign extends Stmt {
+        public final List<Assign> kills = new ArrayList<Assign>();
 		
 		public Assign(Expr left, Expr right) {
 			super(2);
