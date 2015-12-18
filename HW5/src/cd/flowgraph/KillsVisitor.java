@@ -17,7 +17,7 @@ import java.util.Map;
  */
 public class KillsVisitor extends AstVisitor<VariableSymbol, Void> {
 
-    public final Map<String, Ast.Assign> assigns =
+    private final Map<String, Ast.Assign> assigns =
             new HashMap<String, Ast.Assign>();
 
     @Override

@@ -1,20 +1,5 @@
 package cd;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.BailErrorStrategy;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
-
 import cd.backend.codegen.AstCodeGenerator;
 import cd.frontend.parser.JavaliAstVisitor;
 import cd.frontend.parser.JavaliLexer;
@@ -26,6 +11,14 @@ import cd.ir.Ast.ClassDecl;
 import cd.ir.Symbol;
 import cd.ir.Symbol.TypeSymbol;
 import cd.util.debug.AstDump;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.BailErrorStrategy;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /** 
  * The main entrypoint for the compiler.  Consists of a series
@@ -64,18 +57,23 @@ public class Main {
 	/** Parse command line, invoke compile() routine */
 	public static void main(String args[]) throws IOException {
 		Main m = new Main();
-		
+
+		// Optional checks
+		boolean checkUnint = false;
+
 		for (String arg : args) {
 			if (arg.equals("-d"))
 				m.debug = new OutputStreamWriter(System.err);
-			else {
+			else if (arg.equals("-uninit")) {
+				checkUnint = true;
+			} else {
 				FileReader fin = new FileReader(arg);
 
 				// Parse:
 				List<ClassDecl> astRoots = m.parse(fin);
 				
 				// Run the semantic check:
-				m.semanticCheck(astRoots);
+				m.semanticCheck(astRoots, checkUnint);
 				
 				// Generate code:
 				String sFile = arg + Config.ASMEXT;
@@ -114,9 +112,9 @@ public class Main {
 	}
 	
 	
-	public void semanticCheck(List<ClassDecl> astRoots) {
+	public void semanticCheck(List<ClassDecl> astRoots, boolean checkUnint) {
 		{
-			new SemanticAnalyzer(this).check(astRoots);
+			new SemanticAnalyzer(this).check(astRoots, checkUnint);
 		}
 	}
 	

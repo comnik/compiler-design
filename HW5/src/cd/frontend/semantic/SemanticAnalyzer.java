@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cd.Main;
+import cd.flowgraph.Block;
+import cd.flowgraph.GraphCreatorVisitor;
+import cd.flowgraph.KillsVisitor;
 import cd.frontend.semantic.SemanticFailure.Cause;
 import cd.ir.Ast.ClassDecl;
 import cd.ir.Ast.MethodDecl;
@@ -22,17 +25,25 @@ public class SemanticAnalyzer {
 		this.main = main;
 	}
 	
-	public void check(List<ClassDecl> classDecls) 
+	public void check(List<ClassDecl> classDecls, boolean checkUnint)
 	throws SemanticFailure {
-		{
-			SymTable<TypeSymbol> typeSymbols = createSymbols(classDecls);
-			checkInheritance(classDecls);
-			checkStartPoint(typeSymbols);
-			checkMethodBodies(typeSymbols, classDecls);
-			
-			rewriteMethodBodies(classDecls);
-			main.allTypeSymbols = typeSymbols.allSymbols();
-		}
+
+        SymTable<TypeSymbol> typeSymbols = createSymbols(classDecls);
+        checkInheritance(classDecls);
+        checkStartPoint(typeSymbols);
+        checkMethodBodies(typeSymbols, classDecls);
+
+        if (checkUnint) {
+            UninitializedVarsChecker uninitChecker = new UninitializedVarsChecker();
+            classDecls.forEach(classDecl -> {
+                new KillsVisitor().visit(classDecl, null);
+                Block cfgRoot = new GraphCreatorVisitor().createGraph(classDecl);
+                uninitChecker.check(classDecl, cfgRoot);
+            });
+        }
+
+        rewriteMethodBodies(classDecls);
+        main.allTypeSymbols = typeSymbols.allSymbols();
 	}
 
 	/**
