@@ -1,0 +1,20 @@
+/* Tests an edge case in CFG generation. */
+
+class Main {
+
+    void main() {
+        boolean resBool;
+        int resInt;
+
+        // LESS THAN
+        resBool = (1 < 2);
+        if (resBool) { write(1); }
+        writeln();
+
+        // LESS THAN OR EQUAL
+        resBool = (1 <= 1);
+        if (resBool) { write(1); }
+        writeln();
+    }
+
+}
