@@ -146,8 +146,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
                     cg.emit.emitRaw("cdq");
                     cg.emit.emit("idivl", stackManager.reify(ebx));
 
-                    stackManager.release(eax);
-                    stackManager.release(ebx);
+                    stackManager.release(eax, ebx);
                     out = stackManager.getRegister(RegisterManager.Register.EDX);
                     break;
                 default:
@@ -173,7 +172,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 	public Value builtInRead(BuiltInRead ast, StackManager stackManager) {
         Value v = stackManager.getRegister();
 
-        stackManager.beginMethodCall();
+        int padding = stackManager.emitCallerSave();
 
         cg.emit.emit("leal", AssemblyEmitter.registerOffset(8, STACK_REG), stackManager.reify(v));
 		cg.emit.emitStore(stackManager.reify(v), 4, STACK_REG);
@@ -184,7 +183,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         Value result = stackManager.getRegister();
         cg.emit.emitLoad(8, STACK_REG, stackManager.reify(result));
 
-        stackManager.endMethodCall();
+        stackManager.emitCallerRestore(padding);
 
         return result;
 	}
@@ -265,7 +264,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         cg.emit.emitExit(ExitCode.INVALID_ARRAY_SIZE);
         cg.emit.emitLabel(continueLabel);
 
-        stackManager.beginMethodCall();
+        int padding = stackManager.emitCallerSave();
 
         // Pass calloc arguments size and num.
         cg.emit.emitStore(stackManager.reify(arraySize), 4, STACK_REG);
@@ -278,7 +277,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         Value result = stackManager.getRegister();
         cg.emit.emitMove(stackManager.reify(eax), stackManager.reify(result));
 
-        stackManager.endMethodCall();
+        stackManager.emitCallerRestore(padding);
 
         // Store the size.
         //Value addr = stackManager.getRegister();
@@ -294,7 +293,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         // Reserve space for the vtable pointer.
         int objSize = Config.SIZEOF_PTR + ast.type.getFieldSize();
 
-        stackManager.beginMethodCall();
+        int padding = stackManager.emitCallerSave();
 
         // Pass calloc arguments size and num.
         cg.emit.emitStore(constant(objSize), 4, STACK_REG);
@@ -306,7 +305,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         Value result = stackManager.getRegister();
         cg.emit.emitMove(stackManager.reify(eax), stackManager.reify(result));
 
-        stackManager.endMethodCall();
+        stackManager.emitCallerRestore(padding);
 
         // Set the vtable pointer.
         cg.emit.emitStore(labelAddress(ast.type.getVtableLabel()), 0, stackManager.reify(result));
@@ -331,7 +330,7 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	@Override
 	public Value methodCall(MethodCallExpr ast, StackManager stackManager) {
-        stackManager.emitCallerSave();
+        int padding = stackManager.emitCallerSave();
 
         Value receiver = gen(ast.receiver(), stackManager);
 
@@ -361,11 +360,9 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         Value result = stackManager.getRegister();
         cg.emit.emitMove(stackManager.reify(stackManager.getRegister(RegisterManager.RESULT_REG)), stackManager.reify(result));
 
-        stackManager.emitCallerRestore();
+        stackManager.emitCallerRestore(padding);
+        stackManager.release(funcAddr, receiver, stackManager.getRegister(RegisterManager.RESULT_REG));
 
-        stackManager.release(funcAddr);
-        stackManager.release(receiver);
-        stackManager.release(stackManager.getRegister(RegisterManager.RESULT_REG));
         return result;
 	}
 

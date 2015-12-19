@@ -84,10 +84,11 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 
         // Generate code for the body.
         cg.emitMethodPrefix(stackSize);
-        stackManager.emitCalleeSave();
-        visit(ast.body(), stackManager);
-        stackManager.emitCalleeRestore();
+        int padding = stackManager.emitCalleeSave();
 
+        visit(ast.body(), stackManager);
+
+        stackManager.emitCalleeRestore(padding);
 		cg.emitMethodSuffix(ast.sym.returnType == Symbol.PrimitiveTypeSymbol.voidType);
 
 		return null;
@@ -172,7 +173,7 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
 	public Value builtInWrite(BuiltInWrite ast, StackManager stackManager) {
         Value printfArg = cg.eg.gen(ast.arg(), stackManager);
 
-        stackManager.emitCallerSave();
+        int padding = stackManager.emitCallerSave();
 
         cg.emit.emit("subl", constant(16), STACK_REG);
 
@@ -182,22 +183,22 @@ class StmtGenerator extends AstVisitor<Value, StackManager> {
         cg.emit.emit("call", Config.PRINTF);
         cg.emit.emit("addl", constant(16), STACK_REG);
 
-        stackManager.emitCallerRestore();
-
+        stackManager.emitCallerRestore(padding);
         stackManager.release(printfArg);
+
         return null;
 	}
 
 	@Override
 	public Value builtInWriteln(BuiltInWriteln ast, StackManager stackManager) {
-        stackManager.emitCallerSave();
+        int padding = stackManager.emitCallerSave();
 
         cg.emit.emit("subl", constant(16), STACK_REG);
 		cg.emit.emitStore("$STR_NL", 0, STACK_REG);
 		cg.emit.emit("call", Config.PRINTF);
 		cg.emit.emit("addl", constant(16), STACK_REG);
 
-        stackManager.emitCallerRestore();
+        stackManager.emitCallerRestore(padding);
 
 		return null;
 	}

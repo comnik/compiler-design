@@ -6,6 +6,8 @@ import cd.backend.codegen.RegisterManager.ByteRegister;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Provides virtual registers, handles spilling.
@@ -30,7 +32,6 @@ public class StackManager {
 
     // A pool of free offsets to reuse.
     private Queue<Integer> offsetPool = new LinkedBlockingQueue<>();
-
 
     public StackManager(int stackTop, AstCodeGenerator codeGen) {
         this.codeGen = codeGen;
@@ -107,13 +108,18 @@ public class StackManager {
         return getRegister(byteReg);
     }
 
-    public void release(Value value) {
-        // codeGen.emit.emitComment("Releasing " + value.reg);
-        if (!value.isDetached())
-            detach(value);
+    public void release(Value... values) {
+        Stream.of(values).forEach(value -> {
+            // codeGen.emit.emitComment("Releasing " + value.reg);
+            if (!value.isDetached()) {
+                detach(value);
+            }
 
-        if (value.onStack())
-            offsetPool.add(value.offset);
+            if (value.onStack()) {
+                // Return the now freed offset back to the offset pool, to be used by the next value to be allocated.
+                offsetPool.add(value.offset);
+            }
+        });
     }
 
     /**
@@ -140,58 +146,74 @@ public class StackManager {
         }
     }
 
-    /** Emits code to persist all caller saved registers in use. */
-    public void emitCallerSave() {
-        codeGen.emit.emitComment("Regs in use " + registerMap.keySet());
-        codeGen.emit.emitComment("Persisting CALLER_SAVE registers...");
-        for (Register reg : RegisterManager.CALLER_SAVE) {
-            Value v = registerMap.get(reg);
-            if (v != null) {
-                v.callerSaved = true;
-                codeGen.emit.emit("pushl", reg);
-            }
-        }
+    public int emitCallerSave() {
+        // codeGen.emit.emitComment("Regs in use " + registerMap.keySet());
+        // codeGen.emit.emitComment("Persisting CALLER_SAVE registers...");
+        return saveRegisters(RegisterManager.CALLER_SAVE);
     }
 
-    public void emitCallerRestore() {
-        codeGen.emit.emitComment("Restoring CALLER_SAVE registers...");
-        for (int i = RegisterManager.CALLER_SAVE.length - 1; i >= 0; i--) {
-            Register reg = RegisterManager.CALLER_SAVE[i];
+    public void emitCallerRestore(int padding) {
+        // codeGen.emit.emitComment("Restoring CALLER_SAVE registers...");
+        restoreRegisters(RegisterManager.CALLER_SAVE, padding);
+    }
+
+    public int emitCalleeSave() {
+        // codeGen.emit.emitComment("Persisting CALLEE_SAVE registers...");
+        return saveRegisters(RegisterManager.CALLEE_SAVE);
+    }
+
+    public void emitCalleeRestore(int padding) {
+        // codeGen.emit.emitComment("Restoring CALLEE_SAVE registers...");
+        restoreRegisters(RegisterManager.CALLEE_SAVE, padding);
+    }
+
+
+    // Persisting and restoring registers.
+
+    /**
+     * Emits code to persist each register in the given array, provided it is in use.
+     * Returns the number of bytes added for alignment, such that the stack can be
+     * completely freed up on restore.
+     */
+    private int saveRegisters(Register[] regsToSave) {
+        List<Register> inUse = Stream
+                .of(regsToSave)
+                .filter(registerMap::containsKey)
+                .collect(Collectors.toList());
+
+        int stackSpaceNeeded = inUse.size() * RegisterManager.SIZEOF_REG;
+        int stackSpaceWithPadding = alignedTo16(stackSpaceNeeded);
+        codeGen.emit.emit("subl", AssemblyEmitter.constant(stackSpaceWithPadding), RegisterManager.STACK_REG);
+
+        inUse.stream().reduce(0, (nextOffset, reg) -> {
+            registerMap.get(reg).callerSaved = true;
+            codeGen.emit.emit("movl", reg, AssemblyEmitter.registerOffset(nextOffset, RegisterManager.STACK_REG));
+
+            return nextOffset + RegisterManager.SIZEOF_REG;
+        }, (o1, o2) -> o1);
+
+        // Calculate the number of alignment bytes.
+        return stackSpaceWithPadding - stackSpaceNeeded;
+    }
+
+    /** Complement to saveRegisters() */
+    private void restoreRegisters(Register[] regsToRestore, int padding) {
+        for (int i = regsToRestore.length - 1; i >= 0; i--) {
+            Register reg = regsToRestore[i];
             Value v = registerMap.get(reg);
             if (v != null && v.callerSaved) {
                 v.callerSaved = false;
                 codeGen.emit.emit("popl", reg);
             }
         }
-    }
 
-    public void emitCalleeSave() {
-        codeGen.emit.emitComment("Persisting CALLEE_SAVE registers...");
-        for (Register reg : RegisterManager.CALLEE_SAVE) {
-            codeGen.emit.emit("pushl", reg);
+        if (padding > 0) {
+            codeGen.emit.emit("addl", AssemblyEmitter.constant(padding), RegisterManager.STACK_REG);
         }
     }
 
-    public void emitCalleeRestore() {
-        codeGen.emit.emitComment("Restoring CALLEE_SAVE registers...");
-        for (int i = RegisterManager.CALLEE_SAVE.length - 1; i >= 0; i--) {
-            Register reg = RegisterManager.CALLEE_SAVE[i];
-            codeGen.emit.emit("popl", reg);
-        }
-    }
 
-    public void beginMethodCall() {
-        emitCallerSave();
-        codeGen.emit.emit("subl", AssemblyEmitter.constant(16), RegisterManager.STACK_REG);
-    }
-
-    public void endMethodCall() {
-        codeGen.emit.emit("addl", AssemblyEmitter.constant(16), RegisterManager.STACK_REG);
-        emitCallerRestore();
-    }
-
-
-    // Util
+    // Values <-> Registers, Register spilling.
 
     /** Allocates a place on the stack, to store the registers contents. */
     private void allocate(Value v) {
@@ -275,5 +297,17 @@ public class StackManager {
         } else {
             codeGen.emit.emitComment("Can't 'load' a stack offset that is not on the stack. Ignoring.");
         }
+    }
+
+
+    // Util
+
+    /** Returns the next highest multiple y of 16, such that x < y. */
+    public static int alignedTo16(int x) {
+        int y = 16;
+        while (x > y) {
+            y += 16;
+        }
+        return y;
     }
 }

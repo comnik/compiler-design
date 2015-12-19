@@ -121,7 +121,7 @@ public class AstCodeGenerator {
         if (Config.systemKind == Config.SystemKind.MACOSX) {
             // Align the stack to 16 bytes.
             emit.emit("andl", AssemblyEmitter.constant(-16), RegisterManager.STACK_REG);
-            stackSize = alignedTo16(stackSize);
+            stackSize = StackManager.alignedTo16(stackSize);
         }
 
         // Make space on the stack, if required.
@@ -140,13 +140,4 @@ public class AstCodeGenerator {
 		emit.emitRaw("leave");
 		emit.emitRaw("ret");
 	}
-
-    /** Returns the next highest multiple y of 16, such that x < y. */
-    private int alignedTo16(int x) {
-        int y = 16;
-        while (x > y) {
-            y += 16;
-        }
-        return y;
-    }
 }
