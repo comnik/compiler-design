@@ -182,8 +182,7 @@ public class StackManager {
                 .collect(Collectors.toList());
 
         int stackSpaceNeeded = inUse.size() * RegisterManager.SIZEOF_REG;
-        int stackSpaceWithPadding = alignedTo16(stackSpaceNeeded);
-        codeGen.emit.emit("subl", AssemblyEmitter.constant(stackSpaceWithPadding), RegisterManager.STACK_REG);
+        int stackSpaceWithPadding = allocateAligned(stackSpaceNeeded);
 
         inUse.stream().reduce(0, (nextOffset, reg) -> {
             registerMap.get(reg).callerSaved = true;
@@ -207,9 +206,7 @@ public class StackManager {
             }
         }
 
-        if (padding > 0) {
-            codeGen.emit.emit("addl", AssemblyEmitter.constant(padding), RegisterManager.STACK_REG);
-        }
+        free(padding);
     }
 
 
@@ -302,12 +299,36 @@ public class StackManager {
 
     // Util
 
+    /**
+     * Allocates the specified number of bytes plus padding, to ensure a 16-byte alignment.
+     * Returns the number of padding bytes.
+     */
+    public int allocateAligned(int numBytes) {
+        int stackSpaceWithPadding = alignedTo16(numBytes);
+
+        if (stackSpaceWithPadding > 0) {
+            codeGen.emit.emit("subl", AssemblyEmitter.constant(stackSpaceWithPadding), RegisterManager.STACK_REG);
+        }
+
+        return stackSpaceWithPadding;
+    }
+
+    public void free(int numBytes) {
+        if (numBytes > 0) {
+            codeGen.emit.emit("addl", AssemblyEmitter.constant(numBytes), RegisterManager.STACK_REG);
+        }
+    }
+
     /** Returns the next highest multiple y of 16, such that x < y. */
     public static int alignedTo16(int x) {
-        int y = 16;
-        while (x > y) {
-            y += 16;
+        if (x == 0) {
+            return 0;
+        } else {
+            int y = 16;
+            while (x > y) {
+                y += 16;
+            }
+            return y;
         }
-        return y;
     }
 }

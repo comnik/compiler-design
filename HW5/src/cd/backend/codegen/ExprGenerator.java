@@ -267,10 +267,12 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         int padding = stackManager.emitCallerSave();
 
         // Pass calloc arguments size and num.
+        int callocPadding = stackManager.allocateAligned(8);
         cg.emit.emitStore(stackManager.reify(arraySize), 4, STACK_REG);
         cg.emit.emit("incl", AssemblyEmitter.registerOffset(4, STACK_REG));
         cg.emit.emitStore(constant(1), 0, STACK_REG);
         cg.emit.emit("call", Config.CALLOC);
+        stackManager.free(callocPadding);
 
         // The resulting pointer is saved in EAX.
         Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
@@ -296,9 +298,11 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
         int padding = stackManager.emitCallerSave();
 
         // Pass calloc arguments size and num.
+        int callocPadding = stackManager.allocateAligned(8);
         cg.emit.emitStore(constant(objSize), 4, STACK_REG);
         cg.emit.emitStore(constant(1), 0, STACK_REG);
         cg.emit.emit("call", Config.CALLOC);
+        stackManager.free(callocPadding);
 
         // The resulting pointer is saved in EAX.
         Value eax = stackManager.getRegister(RegisterManager.Register.EAX);
@@ -330,32 +334,41 @@ class ExprGenerator extends ExprVisitor<Value, StackManager> {
 
 	@Override
 	public Value methodCall(MethodCallExpr ast, StackManager stackManager) {
-        int padding = stackManager.emitCallerSave();
-
+        // First we evaluate who is receiving the method call
+        // and ensure that it is not a null pointer.
         Value receiver = gen(ast.receiver(), stackManager);
-
-        // RUNTIME CHECK: NULL POINTER
         cg.emit.emitCheckNull(stackManager.reify(receiver));
 
-        // We have to push arguments in reverse order onto the stack.
-        List<Expr> argsWithoutReceiver = new ArrayList<Expr>();
-        argsWithoutReceiver.addAll(ast.argumentsWithoutReceiver());
-        Collections.reverse(argsWithoutReceiver);
-
-        argsWithoutReceiver.forEach(argExpr -> {
-            Value argValue = visit(argExpr, stackManager);
-            cg.emit.emit("pushl", stackManager.reify(argValue));
-            stackManager.release(argValue);
-        });
-
-        // The receiver is passed as the first argument.
-        cg.emit.emit("pushl", stackManager.reify(receiver));
-
-        // Lookup function address and call.
+        // Then we evaluate the location of the actual method to call.
         Value funcAddr = stackManager.getRegister();
         cg.emit.emitLoad(0, stackManager.reify(receiver), stackManager.reify(funcAddr));
         cg.emit.emitLoad(ast.sym.offset, stackManager.reify(funcAddr), stackManager.reify(funcAddr));
-        cg.emit.emit("call", "*"+stackManager.reify(funcAddr));
+
+        // Now we persist the caller-save registers that are in use.
+        int padding = stackManager.emitCallerSave();
+
+        {
+            // We then have to push arguments in reverse order onto the stack.
+            int stackSpaceNeeded = (ast.argumentsWithoutReceiver().size() + 1) * RegisterManager.SIZEOF_REG; // add 1 for the receiver
+            int stackSpaceWithPadding = stackManager.allocateAligned(stackSpaceNeeded);
+
+            ast.argumentsWithoutReceiver().stream()
+                    .map(argExpr -> visit(argExpr, stackManager))
+                    .reduce(4, (nextOffset, argValue) -> {
+                        cg.emit.emitStore(stackManager.reify(argValue), nextOffset, STACK_REG);
+                        stackManager.release(argValue);
+
+                        return nextOffset + RegisterManager.SIZEOF_REG;
+                    }, (o1, o2) -> o1);
+
+            // The receiver is passed as the first argument.
+            cg.emit.emitStore(stackManager.reify(receiver), 0, STACK_REG);
+
+            // Now we can call the function.
+            cg.emit.emit("call", "*" + stackManager.reify(funcAddr));
+
+            stackManager.free(stackSpaceWithPadding);
+        }
 
         Value result = stackManager.getRegister();
         cg.emit.emitMove(stackManager.reify(stackManager.getRegister(RegisterManager.RESULT_REG)), stackManager.reify(result));
