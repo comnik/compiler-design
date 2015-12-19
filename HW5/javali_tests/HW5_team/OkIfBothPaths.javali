@@ -1,0 +1,19 @@
+/* Ensures the special case of a variable being defined in both if cases. */
+
+class Main {
+	void main() {
+		int x;
+		boolean somePredicate;
+
+		somePredicate = true;
+
+		if (somePredicate) {
+			x = 1;
+		} else {
+			x = 0;
+		}
+
+		write (x);
+		writeln();
+	}
+}

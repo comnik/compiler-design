@@ -1,0 +1,16 @@
+/* Ensures that if conditions are checked for uninitialized vars. */
+
+class Main {
+    int foo;
+
+    void main() {
+        int x, y;
+
+        y = 10;
+
+        // THIS SHOULD FAIL!
+        if (x < 2) {
+            y = 0;
+        }
+    }
+}
