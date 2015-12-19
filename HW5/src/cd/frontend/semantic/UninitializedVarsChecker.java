@@ -12,7 +12,7 @@ import java.util.Optional;
  * local variables as operands.
  * Controlled by the -uninit flag.
  */
-public class UninitializedVarsChecker extends AstVisitor<Void,Block> {
+public class UninitializedVarsChecker extends AstVisitor<Block,Block> {
 
     /** More meaningful wrapper around visit(), takes the ast root and the cfg root. */
     public void check(Ast ast, Block cfg) throws SemanticFailure {
@@ -33,7 +33,21 @@ public class UninitializedVarsChecker extends AstVisitor<Void,Block> {
     }
 
     @Override
-    public Void assign(Ast.Assign ast, Block block) {
+    public Block visit(Ast ast, Block block) {
+        System.out.println("Ast node " + ast + " at block " + block);
+        return super.visit(ast, block);
+    }
+
+    @Override
+    public Block visitChildren(Ast ast, Block block) {
+        Block currentBlock = block;
+        for (Ast child : ast.children())
+            currentBlock = visit(child, currentBlock);
+        return currentBlock;
+    }
+
+    @Override
+    public Block assign(Ast.Assign ast, Block block) {
         // Update this blocks gen set.
         toVar(ast.left()).ifPresent(justVar -> block.gen.add(justVar.name));
 
@@ -41,39 +55,50 @@ public class UninitializedVarsChecker extends AstVisitor<Void,Block> {
     }
 
     @Override
-    public Void var(Ast.Var ast, Block block) throws SemanticFailure {
+    public Block var(Ast.Var ast, Block block) throws SemanticFailure {
+        System.out.println("\tLooking for " + ast.name);
+        System.out.println("\tBlock in: " + block.input());
+        System.out.println("\tBlock gen: " + block.gen);
+        System.out.println("\tBlock kill: " + block.kill);
+        System.out.println("\tBlock out: " + block.out());
+
         if (ast.sym.kind == Symbol.VariableSymbol.Kind.LOCAL && !block.input().contains(ast.name) && !block.gen.contains(ast.name)) {
-            /* System.out.println("Block out: " + block.out());
-            System.out.println("Block gen: " + block.gen);
-            System.out.println("Block in: " + block.input());
-            System.out.println("Block kill: " + block.kill);
-            System.out.println("Looking for: " + ast.name);*/
             throw new SemanticFailure(SemanticFailure.Cause.POSSIBLY_UNINITIALIZED);
         }
-        return null;
+        return block;
     }
 
     // Block perimeters.
 
     @Override
-    public Void ifElse(Ast.IfElse ast, Block prev) {
-        // The current block, prev, ends here.
-        visit(ast.then(), prev.successors.get(0));
+    public Block ifElse(Ast.IfElse ast, Block prev) {
+        // Check the condition.
+        visit(ast.condition(), prev);
 
-        if (ast.otherwise() != null) {
-            visit(ast.otherwise(), prev.successors.get(1));
+        // The current block, prev, ends here.
+        Block block = prev;
+        if (prev.successors.size() > 0) {
+            block = visit(ast.then(), prev.successors.get(0));
         }
 
-        return null;
+        if (ast.otherwise() != null && prev.successors.size() > 1) {
+            System.out.println(ast.otherwise());
+            block = visit(ast.otherwise(), prev.successors.get(1));
+        }
+
+        return block;
     }
 
     @Override
-    public Void whileLoop(Ast.WhileLoop ast, Block prev) {
-        // The current block, prev, ends here.
-        if (ast.body() != null) {
-            visit(ast.body(), prev.successors.get(0));
-        }
+    public Block whileLoop(Ast.WhileLoop ast, Block prev) {
+        // Check the condition.
+        visit(ast.condition(), prev);
 
-        return null;
+        // The current block, prev, ends here.
+        if (ast.body() != null && prev.successors.size() > 0) {
+           return visit(ast.body(), prev.successors.get(0));
+        } else {
+            return prev;
+        }
     }
 }

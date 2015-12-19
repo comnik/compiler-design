@@ -40,9 +40,9 @@ public class GraphCreatorVisitor extends AstVisitor<Block,Block> {
     @Override
     public Block assign(Ast.Assign ast, Block block) {
         // Update the blocks kill-set.
-        for (Ast.Assign assign : ast.kills) {
+        /*for (Ast.Assign assign : ast.kills) {
             toVar(assign.left()).ifPresent(justVar -> block.kill.add(justVar.name));
-        }
+        }*/
         return block;
     }
 

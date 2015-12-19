@@ -10,7 +10,7 @@ import java.util.stream.Stream;
  */
 public class Block {
 
-    private final Set<Block> predecessors = new HashSet<>();
+    public final Set<Block> predecessors = new HashSet<>();
     public final List<Block> successors = new ArrayList<>();
 
     // All expressions generated inside this block.
