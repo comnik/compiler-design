@@ -12,7 +12,7 @@ We check if an operand might be uninitialized,
 by performing a lookup in the blocks **input** and
 **gen** sets. The **gen** set is calculated in the same visitor, such that definitions generated after an expressions are not taken into account.
 
-We tested our implementation by running the existing tests and checking if any of them fail with thew new POSSIBLY_UNINITIALIZED cause, which would indicate a problem in our implementation. We also added two new test-cases which we expected to fail with the new cause.
+We tested our implementation by running the existing tests and checking if any of them fail with thew new POSSIBLY_UNINITIALIZED cause, which would indicate a problem in our implementation. We also added some new test-cases which we expected to fail with the new cause.
 
 Situations that require the exact method presented
 in the lecture slides might fail with our implementation, but we did not find such a situation during our testing.
