@@ -112,7 +112,7 @@ public class Main {
 	}
 
     public void semanticCheck(List<ClassDecl> astRoots) {
-        semanticCheck(astRoots, true);
+        semanticCheck(astRoots, false);
     }
 	
 	public void semanticCheck(List<ClassDecl> astRoots, boolean checkUnint) {

@@ -1,14 +1,14 @@
 package cd.backend.codegen;
 
-import java.io.Writer;
-import java.util.List;
-
 import cd.Config;
 import cd.Main;
 import cd.backend.codegen.RegisterManager.Register;
 import cd.ir.Ast;
 import cd.ir.Ast.ClassDecl;
 import cd.ir.Symbol;
+
+import java.io.Writer;
+import java.util.List;
 
 public class AstCodeGenerator {
 
